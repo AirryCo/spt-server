@@ -1,6 +1,6 @@
 {
     "sptVersion": "3.10.0",
-    "projectName": "SPT",
+    "projectName": "AirryCo's SPT Linux",
     "compatibleTarkovVersion": "0.15.5.33420",
     "serverName": "SPT Server",
     "profileSaveIntervalSeconds": 15,
