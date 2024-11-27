@@ -34,7 +34,7 @@ export class CustomizationCallbacks {
      */
     public getTraderSuits(url: string, info: IEmptyRequestData, sessionID: string): IGetBodyResponseData<ISuit[]> {
         const splittedUrl = url.split("/");
-        const traderID = splittedUrl[splittedUrl.length - 2];
+        const traderID = splittedUrl[splittedUrl.length - 3];
 
         return this.httpResponse.getBody(this.customizationController.getTraderSuits(traderID, sessionID));
     }

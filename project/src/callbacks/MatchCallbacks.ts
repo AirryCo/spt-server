@@ -1,5 +1,6 @@
 import { MatchController } from "@spt/controllers/MatchController";
 import { IEmptyRequestData } from "@spt/models/eft/common/IEmptyRequestData";
+import { IMetrics } from "@spt/models/eft/common/tables/IMatch";
 import { IGetBodyResponseData } from "@spt/models/eft/httpResponse/IGetBodyResponseData";
 import { INullResponseData } from "@spt/models/eft/httpResponse/INullResponseData";
 import { IEndLocalRaidRequestData } from "@spt/models/eft/match/IEndLocalRaidRequestData";
@@ -43,10 +44,11 @@ export class MatchCallbacks {
     }
 
     /** Handle client/match/group/exit_from_menu */
-    public exitToMenu(url: string, info: IEmptyRequestData, sessionID: string): INullResponseData {
+    public exitFromMenu(url: string, info: IEmptyRequestData, sessionID: string): INullResponseData {
         return this.httpResponse.nullResponse();
     }
 
+    /** Handle client/match/group/current */
     public groupCurrent(
         url: string,
         info: IEmptyRequestData,
@@ -55,10 +57,12 @@ export class MatchCallbacks {
         return this.httpResponse.getBody({ squad: [] });
     }
 
+    /** Handle client/match/group/looking/start */
     public startGroupSearch(url: string, info: IEmptyRequestData, sessionID: string): INullResponseData {
         return this.httpResponse.nullResponse();
     }
 
+    /** Handle client/match/group/looking/stop */
     public stopGroupSearch(url: string, info: IEmptyRequestData, sessionID: string): INullResponseData {
         return this.httpResponse.nullResponse();
     }
@@ -112,7 +116,13 @@ export class MatchCallbacks {
         return this.httpResponse.getBody(true);
     }
 
+    /** Handle client/putMetrics */
     public putMetrics(url: string, request: IPutMetricsRequestData, sessionId: string): INullResponseData {
+        return this.httpResponse.nullResponse();
+    }
+
+    /** Handle client/analytics/event-disconnect */
+    public eventDisconnect(url: string, request: IPutMetricsRequestData, sessionId: string): INullResponseData {
         return this.httpResponse.nullResponse();
     }
 
@@ -133,8 +143,8 @@ export class MatchCallbacks {
     }
 
     /** Handle client/getMetricsConfig */
-    public getMetrics(url: string, info: any, sessionID: string): IGetBodyResponseData<string> {
-        return this.httpResponse.getBody(this.jsonUtil.serialize(this.databaseService.getMatch().metrics));
+    public getMetrics(url: string, info: any, sessionID: string): IGetBodyResponseData<IMetrics> {
+        return this.httpResponse.getBody(this.databaseService.getMatch().metrics);
     }
 
     /**

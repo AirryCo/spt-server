@@ -1,7 +1,7 @@
 import { IPmcData } from "@spt/models/eft/common/IPmcData";
-import { BodyPartsHealth, Health } from "@spt/models/eft/common/tables/IBotBase";
+import { IBodyPartsHealth, IHealth } from "@spt/models/eft/common/tables/IBotBase";
 import { ISyncHealthRequestData } from "@spt/models/eft/health/ISyncHealthRequestData";
-import { Effects, ISptProfile } from "@spt/models/eft/profile/ISptProfile";
+import { IEffects, ISptProfile } from "@spt/models/eft/profile/ISptProfile";
 import { ConfigTypes } from "@spt/models/enums/ConfigTypes";
 import { IHealthConfig } from "@spt/models/spt/config/IHealthConfig";
 import { ILogger } from "@spt/models/spt/utils/ILogger";
@@ -35,7 +35,7 @@ export class HealthHelper {
 
         if (!profile.vitality) {
             // Occurs on newly created profiles
-            profile.vitality = { health: undefined!, effects: undefined! };
+            profile.vitality = { health: undefined, effects: undefined };
         }
         profile.vitality.health = {
             Hydration: 0,
@@ -74,7 +74,7 @@ export class HealthHelper {
      */
     public updateProfileHealthPostRaid(
         pmcData: IPmcData,
-        postRaidHealth: Health,
+        postRaidHealth: IHealth,
         sessionID: string,
         isDead: boolean,
     ): void {
@@ -132,8 +132,9 @@ export class HealthHelper {
      * @param postRaidBodyParts Post-raid body part data
      * @param profileData Player profile on server
      */
-    protected transferPostRaidLimbEffectsToProfile(postRaidBodyParts: BodyPartsHealth, profileData: IPmcData): void {
+    protected transferPostRaidLimbEffectsToProfile(postRaidBodyParts: IBodyPartsHealth, profileData: IPmcData): void {
         // Iterate over each body part
+        const effectsToIgnore = ["Dehydration", "Exhaustion"];
         for (const bodyPartId in postRaidBodyParts) {
             // Get effects on body part from profile
             const bodyPartEffects = postRaidBodyParts[bodyPartId].Effects;
@@ -141,13 +142,21 @@ export class HealthHelper {
                 const effectDetails = bodyPartEffects[effect];
 
                 // Null guard
-                if (!profileData.Health.BodyParts[bodyPartId].Effects) {
-                    profileData.Health.BodyParts[bodyPartId].Effects = {};
-                }
+                profileData.Health.BodyParts[bodyPartId].Effects ||= {};
 
-                // Already exists on server profile, skip
+                // Effect already exists on limb in server profile, skip
                 const profileBodyPartEffects = profileData.Health.BodyParts[bodyPartId].Effects;
                 if (profileBodyPartEffects[effect]) {
+                    if (effectsToIgnore.includes(effect)) {
+                        // Get rid of certain effects we dont want to persist out of raid
+                        profileBodyPartEffects[effect] = undefined;
+                    }
+
+                    continue;
+                }
+
+                if (effectsToIgnore.includes(effect)) {
+                    // Do not pass some effects to out of raid profile
                     continue;
                 }
 
@@ -176,7 +185,7 @@ export class HealthHelper {
         const fullProfile = this.saveServer.getProfile(sessionID);
         const profileEffects = fullProfile.vitality.effects;
 
-        this.storeHydrationEnergyTempInProfile(fullProfile, request.Hydration!, request.Energy!, request.Temperature!);
+        this.storeHydrationEnergyTempInProfile(fullProfile, request.Hydration, request.Energy, request.Temperature);
 
         // Process request data into profile
         for (const bodyPart in postRaidBodyParts) {
@@ -266,7 +275,7 @@ export class HealthHelper {
     protected saveEffects(
         pmcData: IPmcData,
         sessionId: string,
-        bodyPartsWithEffects: Effects,
+        bodyPartsWithEffects: IEffects,
         deleteExistingEffects = true,
     ): void {
         if (!this.healthConfig.save.effects) {

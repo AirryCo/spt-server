@@ -17,6 +17,15 @@ export class HashUtil {
         return mongoid();
     }
 
+    /**
+     * is the passed in string a valid mongo id
+     * @param stringToCheck String to check
+     * @returns True when string is a valid mongo id
+     */
+    public isValidMongoId(stringToCheck: string) {
+        return /^[a-fA-F0-9]{24}$/.test(stringToCheck);
+    }
+
     public generateMd5ForData(data: string): string {
         return this.generateHashForData("md5", data);
     }

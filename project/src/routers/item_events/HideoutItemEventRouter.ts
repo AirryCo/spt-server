@@ -25,6 +25,8 @@ export class HideoutItemEventRouter extends ItemEventRouterDefinition {
             new HandledRoute(HideoutEventActions.HIDEOUT_RECORD_SHOOTING_RANGE_POINTS, false),
             new HandledRoute(HideoutEventActions.HIDEOUT_IMPROVE_AREA, false),
             new HandledRoute(HideoutEventActions.HIDEOUT_CANCEL_PRODUCTION_COMMAND, false),
+            new HandledRoute(HideoutEventActions.HIDEOUT_CIRCLE_OF_CULTIST_PRODUCTION_START, false),
+            new HandledRoute(HideoutEventActions.HIDEOUT_DELETE_PRODUCTION_COMMAND, false),
         ];
     }
 
@@ -60,6 +62,10 @@ export class HideoutItemEventRouter extends ItemEventRouterDefinition {
                 return this.hideoutCallbacks.improveArea(pmcData, body, sessionID);
             case HideoutEventActions.HIDEOUT_CANCEL_PRODUCTION_COMMAND:
                 return this.hideoutCallbacks.cancelProduction(pmcData, body, sessionID);
+            case HideoutEventActions.HIDEOUT_CIRCLE_OF_CULTIST_PRODUCTION_START:
+                return this.hideoutCallbacks.circleOfCultistProductionStart(pmcData, body, sessionID);
+            case HideoutEventActions.HIDEOUT_DELETE_PRODUCTION_COMMAND:
+                return this.hideoutCallbacks.hideoutDeleteProductionCommand(pmcData, body, sessionID);
             default:
                 throw new Error(`Unhandled event ${url} request: ${JSON.stringify(body)}`);
         }

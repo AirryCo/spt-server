@@ -1,11 +1,11 @@
 export interface IHideoutUpgradeRequestData {
     Action: "HideoutUpgrade";
     areaType: number;
-    items: HideoutItem[];
+    items: IHideoutItem[];
     timestamp: number;
 }
 
-export interface HideoutItem {
+export interface IHideoutItem {
     count: number;
     id: string;
 }

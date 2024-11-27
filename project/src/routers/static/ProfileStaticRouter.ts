@@ -3,7 +3,7 @@ import { RouteAction, StaticRouter } from "@spt/di/Router";
 import { IPmcData } from "@spt/models/eft/common/IPmcData";
 import { IGetBodyResponseData } from "@spt/models/eft/httpResponse/IGetBodyResponseData";
 import { INullResponseData } from "@spt/models/eft/httpResponse/INullResponseData";
-import { GetProfileStatusResponseData } from "@spt/models/eft/profile/GetProfileStatusResponseData";
+import { IGetProfileStatusResponseData } from "@spt/models/eft/profile/GetProfileStatusResponseData";
 import { ICreateProfileResponse } from "@spt/models/eft/profile/ICreateProfileResponse";
 import { IGetOtherProfileResponse } from "@spt/models/eft/profile/IGetOtherProfileResponse";
 import { ISearchFriendResponse } from "@spt/models/eft/profile/ISearchFriendResponse";
@@ -92,7 +92,7 @@ export class ProfileStaticRouter extends StaticRouter {
                     info: any,
                     sessionID: string,
                     output: string,
-                ): Promise<IGetBodyResponseData<GetProfileStatusResponseData>> => {
+                ): Promise<IGetBodyResponseData<IGetProfileStatusResponseData>> => {
                     return this.profileCallbacks.getProfileStatus(url, info, sessionID);
                 },
             ),

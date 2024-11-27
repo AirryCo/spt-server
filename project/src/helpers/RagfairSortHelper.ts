@@ -61,8 +61,8 @@ export class RagfairSortHelper {
 
     protected sortOffersByBarter(a: IRagfairOffer, b: IRagfairOffer): number {
         const moneyTpls = Object.values<string>(Money);
-        const aIsOnlyMoney = a.requirements.length == 1 && moneyTpls.includes(a.requirements[0]._tpl) ? 1 : 0;
-        const bIsOnlyMoney = b.requirements.length == 1 && moneyTpls.includes(b.requirements[0]._tpl) ? 1 : 0;
+        const aIsOnlyMoney = a.requirements.length === 1 && moneyTpls.includes(a.requirements[0]._tpl) ? 1 : 0;
+        const bIsOnlyMoney = b.requirements.length === 1 && moneyTpls.includes(b.requirements[0]._tpl) ? 1 : 0;
         return aIsOnlyMoney - bIsOnlyMoney;
     }
 

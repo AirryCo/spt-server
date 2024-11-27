@@ -1,7 +1,8 @@
 import { ItemHelper } from "@spt/helpers/ItemHelper";
+import { ProfileHelper } from "@spt/helpers/ProfileHelper";
 import { TraderHelper } from "@spt/helpers/TraderHelper";
 import { IPmcData } from "@spt/models/eft/common/IPmcData";
-import { Item } from "@spt/models/eft/common/tables/IItem";
+import { IItem } from "@spt/models/eft/common/tables/IItem";
 import { ITraderBase } from "@spt/models/eft/common/tables/ITrader";
 import { BonusType } from "@spt/models/enums/BonusType";
 import { ConfigTypes } from "@spt/models/enums/ConfigTypes";
@@ -23,7 +24,7 @@ import { inject, injectable } from "tsyringe";
 
 @injectable()
 export class InsuranceService {
-    protected insured: Record<string, Record<string, Item[]>> = {};
+    protected insured: Record<string, Record<string, IItem[]>> = {};
     protected insuranceConfig: IInsuranceConfig;
 
     constructor(
@@ -35,6 +36,7 @@ export class InsuranceService {
         @inject("TimeUtil") protected timeUtil: TimeUtil,
         @inject("SaveServer") protected saveServer: SaveServer,
         @inject("TraderHelper") protected traderHelper: TraderHelper,
+        @inject("ProfileHelper") protected profileHelper: ProfileHelper,
         @inject("LocalisationService") protected localisationService: LocalisationService,
         @inject("MailSendService") protected mailSendService: MailSendService,
         @inject("ConfigServer") protected configServer: ConfigServer,
@@ -57,7 +59,7 @@ export class InsuranceService {
      * @param sessionId Profile id (session id)
      * @returns Item array
      */
-    public getInsurance(sessionId: string): Record<string, Item[]> {
+    public getInsurance(sessionId: string): Record<string, IItem[]> {
         return this.insured[sessionId];
     }
 
@@ -66,12 +68,13 @@ export class InsuranceService {
     }
 
     /**
-     * Sends stored insured items as message to player
-     * @param pmcData profile to send insured items to
+     * Sends `i will go look for your stuff` trader message +
+     * Store lost insurance items inside profile for later retreval
+     * @param pmcData Profile to send insured items to
      * @param sessionID SessionId of current player
-     * @param mapId Id of the map player died/exited that caused the insurance to be issued on
+     * @param mapId Id of the location player died/exited that caused the insurance to be issued on
      */
-    public sendInsuredItems(pmcData: IPmcData, sessionID: string, mapId: string): void {
+    public startPostRaidInsuranceLostProcess(pmcData: IPmcData, sessionID: string, mapId: string): void {
         // Get insurance items for each trader
         const globals = this.databaseService.getGlobals();
         for (const traderId in this.getInsurance(sessionID)) {
@@ -111,7 +114,7 @@ export class InsuranceService {
             this.saveServer.getProfile(sessionID).insurance.push({
                 scheduledTime: this.getInsuranceReturnTimestamp(pmcData, traderBase),
                 traderId: traderId,
-                maxStorageTime: this.timeUtil.getHoursAsSeconds(traderBase.insurance.max_storage_time),
+                maxStorageTime: this.getMaxInsuranceStorageTime(traderBase),
                 systemData: systemData,
                 messageType: MessageType.INSURANCE_RETURN,
                 messageTemplateId: this.randomUtil.getArrayValue(dialogueTemplates.insuranceFound),
@@ -138,11 +141,13 @@ export class InsuranceService {
             return this.timeUtil.getTimestamp() + this.insuranceConfig.returnTimeOverrideSeconds;
         }
 
-        const insuranceReturnTimeBonus = pmcData.Bonuses.find(
-            (bonus) => bonus.type === BonusType.INSURANCE_RETURN_TIME,
+        const insuranceReturnTimeBonusSum = this.profileHelper.getBonusValueFromProfile(
+            pmcData,
+            BonusType.INSURANCE_RETURN_TIME,
         );
-        const insuranceReturnTimeBonusPercent =
-            1.0 - (insuranceReturnTimeBonus ? Math.abs(insuranceReturnTimeBonus!.value ?? 0) : 0) / 100;
+
+        // A negative bonus implies a faster return, since we subtract later, invert the value here
+        const insuranceReturnTimeBonusPercent = -(insuranceReturnTimeBonusSum / 100);
 
         const traderMinReturnAsSeconds = trader.insurance.min_return_hour * TimeUtil.ONE_HOUR_AS_SECONDS;
         const traderMaxReturnAsSeconds = trader.insurance.max_return_hour * TimeUtil.ONE_HOUR_AS_SECONDS;
@@ -166,8 +171,9 @@ export class InsuranceService {
             randomisedReturnTimeSeconds *= editionModifier.multiplier;
         }
 
-        // Current time + randomised time calculated above
-        return this.timeUtil.getTimestamp() + randomisedReturnTimeSeconds * insuranceReturnTimeBonusPercent;
+        // Calculate the final return time based on our bonus percent
+        const finalReturnTimeSeconds = randomisedReturnTimeSeconds * (1.0 - insuranceReturnTimeBonusPercent);
+        return this.timeUtil.getTimestamp() + finalReturnTimeSeconds;
     }
 
     /**
@@ -183,6 +189,15 @@ export class InsuranceService {
         for (const [traderId, items] of Object.entries(insuranceData)) {
             this.insured[sessionID][traderId] = this.itemHelper.adoptOrphanedItems(rootID, items);
         }
+    }
+
+    protected getMaxInsuranceStorageTime(traderBase: ITraderBase): number {
+        if (this.insuranceConfig.storageTimeOverrideSeconds > 0) {
+            // Override exists, use instead of traders value
+            return this.insuranceConfig.storageTimeOverrideSeconds;
+        }
+
+        return this.timeUtil.getHoursAsSeconds(traderBase.insurance.max_storage_time);
     }
 
     /**
@@ -208,18 +223,22 @@ export class InsuranceService {
      */
     public mapInsuredItemsToTrader(
         sessionId: string,
-        lostInsuredItems: Item[],
+        lostInsuredItems: IItem[],
         pmcProfile: IPmcData,
     ): IInsuranceEquipmentPkg[] {
         const result: IInsuranceEquipmentPkg[] = [];
 
         for (const lostItem of lostInsuredItems) {
-            const insuranceDetails = pmcProfile.InsuredItems.find((insuredItem) => insuredItem.itemId == lostItem._id);
+            const insuranceDetails = pmcProfile.InsuredItems.find((insuredItem) => insuredItem.itemId === lostItem._id);
             if (!insuranceDetails) {
                 this.logger.error(
                     `unable to find insurance details for item id: ${lostItem._id} with tpl: ${lostItem._tpl}`,
                 );
 
+                continue;
+            }
+
+            if (this.itemCannotBeLostOnDeath(lostItem, pmcProfile.Inventory.items)) {
                 continue;
             }
 
@@ -233,6 +252,25 @@ export class InsuranceService {
         }
 
         return result;
+    }
+
+    /**
+     * Some items should never be returned in insurance but BSG send them in the request
+     * @param lostItem Item being returned in insurance
+     * @param inventoryItems Player inventory
+     * @returns True if item
+     */
+    protected itemCannotBeLostOnDeath(lostItem: IItem, inventoryItems: IItem[]): boolean {
+        if (lostItem.slotId?.toLowerCase().startsWith("specialslot")) {
+            return true;
+        }
+
+        // We check secure container items even tho they are omitted from lostInsuredItems, just in case
+        if (this.itemHelper.itemIsInsideContainer(lostItem, "SecuredContainer", inventoryItems)) {
+            return true;
+        }
+
+        return false;
     }
 
     /**
@@ -291,7 +329,7 @@ export class InsuranceService {
      * @param traderId Trader item insured with
      * @param itemToAdd Insured item (with children)
      */
-    public addInsuranceItemToArray(sessionId: string, traderId: string, itemToAdd: Item): void {
+    public addInsuranceItemToArray(sessionId: string, traderId: string, itemToAdd: IItem): void {
         this.insured[sessionId][traderId].push(itemToAdd);
     }
 
@@ -302,7 +340,7 @@ export class InsuranceService {
      * @param traderId Trader item is insured with
      * @returns price in roubles
      */
-    public getRoublePriceToInsureItemWithTrader(pmcData: IPmcData, inventoryItem: Item, traderId: string): number {
+    public getRoublePriceToInsureItemWithTrader(pmcData: IPmcData, inventoryItem: IItem, traderId: string): number {
         const price =
             this.itemHelper.getStaticItemPrice(inventoryItem._tpl) *
             (this.traderHelper.getLoyaltyLevel(traderId, pmcData).insurance_price_coef / 100);

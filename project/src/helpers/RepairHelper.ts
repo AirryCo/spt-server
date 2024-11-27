@@ -1,5 +1,5 @@
-import { Item } from "@spt/models/eft/common/tables/IItem";
-import { ITemplateItem, Props } from "@spt/models/eft/common/tables/ITemplateItem";
+import { IItem } from "@spt/models/eft/common/tables/IItem";
+import { IProps, ITemplateItem } from "@spt/models/eft/common/tables/ITemplateItem";
 import { ConfigTypes } from "@spt/models/enums/ConfigTypes";
 import { IRepairConfig } from "@spt/models/spt/config/IRepairConfig";
 import { ILogger } from "@spt/models/spt/utils/ILogger";
@@ -34,7 +34,7 @@ export class RepairHelper {
      * @param applyMaxDurabilityDegradation should item have max durability reduced
      */
     public updateItemDurability(
-        itemToRepair: Item,
+        itemToRepair: IItem,
         itemToRepairDetails: ITemplateItem,
         isArmor: boolean,
         amountToRepair: number,
@@ -136,7 +136,7 @@ export class RepairHelper {
      * @returns Amount to reduce max durability by
      */
     protected getRandomisedWeaponRepairDegradationValue(
-        itemProps: Props,
+        itemProps: IProps,
         isRepairKit: boolean,
         weaponMax: number,
         traderQualityMultipler: number,

@@ -407,12 +407,12 @@
         "COVER_SELF_ALWAYS_IF_DAMAGED": false,
         "DAMAGE_REDUCTION_TIME_SEC": 20,
         "DANGER_POINT_CHOOSE_COEF": 1,
-        "DEFAULT_BEAR_BEHAVIOUR": "Ignore",
+        "DEFAULT_BEAR_BEHAVIOUR": "Neutral",
         "DEFAULT_ENEMY_BEAR": false,
         "DEFAULT_ENEMY_SAVAGE": false,
         "DEFAULT_ENEMY_USEC": false,
-        "DEFAULT_SAVAGE_BEHAVIOUR": "Ignore",
-        "DEFAULT_USEC_BEHAVIOUR": "Ignore",
+        "DEFAULT_SAVAGE_BEHAVIOUR": "Neutral",
+        "DEFAULT_USEC_BEHAVIOUR": "Neutral",
         "DIST_TO_ENEMY_YO_CAN_HEAL": 30,
         "DIST_TO_FOUND_SQRT": 400,
         "DIST_TO_STOP_RUN_ENEMY": 15,
@@ -890,12 +890,12 @@
         "COVER_SELF_ALWAYS_IF_DAMAGED": false,
         "DAMAGE_REDUCTION_TIME_SEC": 20,
         "DANGER_POINT_CHOOSE_COEF": 1,
-        "DEFAULT_BEAR_BEHAVIOUR": "Ignore",
+        "DEFAULT_BEAR_BEHAVIOUR": "Neutral",
         "DEFAULT_ENEMY_BEAR": false,
         "DEFAULT_ENEMY_SAVAGE": false,
         "DEFAULT_ENEMY_USEC": false,
-        "DEFAULT_SAVAGE_BEHAVIOUR": "Ignore",
-        "DEFAULT_USEC_BEHAVIOUR": "Ignore",
+        "DEFAULT_SAVAGE_BEHAVIOUR": "Neutral",
+        "DEFAULT_USEC_BEHAVIOUR": "Neutral",
         "DIST_TO_ENEMY_YO_CAN_HEAL": 30,
         "DIST_TO_FOUND_SQRT": 400,
         "DIST_TO_STOP_RUN_ENEMY": 15,
@@ -1373,12 +1373,12 @@
         "COVER_SELF_ALWAYS_IF_DAMAGED": false,
         "DAMAGE_REDUCTION_TIME_SEC": 20,
         "DANGER_POINT_CHOOSE_COEF": 1,
-        "DEFAULT_BEAR_BEHAVIOUR": "Ignore",
+        "DEFAULT_BEAR_BEHAVIOUR": "Neutral",
         "DEFAULT_ENEMY_BEAR": false,
         "DEFAULT_ENEMY_SAVAGE": false,
         "DEFAULT_ENEMY_USEC": false,
-        "DEFAULT_SAVAGE_BEHAVIOUR": "Ignore",
-        "DEFAULT_USEC_BEHAVIOUR": "Ignore",
+        "DEFAULT_SAVAGE_BEHAVIOUR": "Neutral",
+        "DEFAULT_USEC_BEHAVIOUR": "Neutral",
         "DIST_TO_ENEMY_YO_CAN_HEAL": 30,
         "DIST_TO_FOUND_SQRT": 400,
         "DIST_TO_STOP_RUN_ENEMY": 15,
@@ -1856,12 +1856,12 @@
         "COVER_SELF_ALWAYS_IF_DAMAGED": false,
         "DAMAGE_REDUCTION_TIME_SEC": 20,
         "DANGER_POINT_CHOOSE_COEF": 1,
-        "DEFAULT_BEAR_BEHAVIOUR": "Ignore",
+        "DEFAULT_BEAR_BEHAVIOUR": "Neutral",
         "DEFAULT_ENEMY_BEAR": false,
         "DEFAULT_ENEMY_SAVAGE": false,
         "DEFAULT_ENEMY_USEC": false,
-        "DEFAULT_SAVAGE_BEHAVIOUR": "Ignore",
-        "DEFAULT_USEC_BEHAVIOUR": "Ignore",
+        "DEFAULT_SAVAGE_BEHAVIOUR": "Neutral",
+        "DEFAULT_USEC_BEHAVIOUR": "Neutral",
         "DIST_TO_ENEMY_YO_CAN_HEAL": 30,
         "DIST_TO_FOUND_SQRT": 400,
         "DIST_TO_STOP_RUN_ENEMY": 15,
@@ -2028,16 +2028,23 @@
     }
   },
   "experience": {
-    "aggressorBonus": 0,
+    "aggressorBonus": {
+      "normal": 0
+    },
     "level": {
       "max": 1,
       "min": 0
     },
     "reward": {
-      "max": 275,
-      "min": 275
+      "normal": {
+        "max": 275,
+        "min": 275
+      }
     },
-    "standingForKill": 0
+    "standingForKill": {
+      "normal": 0
+    },
+    "useSimpleAnimator": false
   },
   "firstName": [
     "Ирбис",

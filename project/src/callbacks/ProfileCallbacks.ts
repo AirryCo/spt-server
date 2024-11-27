@@ -5,7 +5,7 @@ import { IPmcData } from "@spt/models/eft/common/IPmcData";
 import { IGetBodyResponseData } from "@spt/models/eft/httpResponse/IGetBodyResponseData";
 import { INullResponseData } from "@spt/models/eft/httpResponse/INullResponseData";
 import { IGetMiniProfileRequestData } from "@spt/models/eft/launcher/IGetMiniProfileRequestData";
-import { GetProfileStatusResponseData } from "@spt/models/eft/profile/GetProfileStatusResponseData";
+import { IGetProfileStatusResponseData } from "@spt/models/eft/profile/GetProfileStatusResponseData";
 import { ICreateProfileResponse } from "@spt/models/eft/profile/ICreateProfileResponse";
 import { IGetOtherProfileRequest } from "@spt/models/eft/profile/IGetOtherProfileRequest";
 import { IGetOtherProfileResponse } from "@spt/models/eft/profile/IGetOtherProfileResponse";
@@ -129,7 +129,7 @@ export class ProfileCallbacks {
         url: string,
         info: IEmptyRequestData,
         sessionID: string,
-    ): IGetBodyResponseData<GetProfileStatusResponseData> {
+    ): IGetBodyResponseData<IGetProfileStatusResponseData> {
         return this.httpResponse.getBody(this.profileController.getProfileStatus(sessionID));
     }
 

@@ -20,18 +20,6 @@ export class HealthCallbacks {
     ) {}
 
     /**
-     * Custom spt server request found in modules/HealthSynchronizer.cs
-     * @param url
-     * @param info HealthListener.Instance.CurrentHealth class
-     * @param sessionID session id
-     * @returns empty response, no data sent back to client
-     */
-    public syncHealth(url: string, info: ISyncHealthRequestData, sessionID: string): IGetBodyResponseData<string> {
-        this.healthController.saveVitality(this.profileHelper.getPmcProfile(sessionID), info, sessionID);
-        return this.httpResponse.emptyResponse();
-    }
-
-    /**
      * Custom spt server request found in modules/QTEPatch.cs
      * @param url
      * @param info HealthListener.Instance.CurrentHealth class

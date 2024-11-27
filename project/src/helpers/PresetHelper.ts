@@ -116,9 +116,9 @@ export class PresetHelper {
     }
 
     /**
-     * Get the default preset for passed in item id
-     * @param templateId Item id to get preset for
-     * @returns Null if no default preset, otherwise IPreset
+     * Get a cloned default preset for passed in item tpl
+     * @param templateId Item tpl to get preset for
+     * @returns undefined if no default preset, otherwise IPreset
      */
     public getDefaultPreset(templateId: string): IPreset | undefined {
         if (!this.hasPreset(templateId)) {

@@ -1,10 +1,10 @@
-import { Daum } from "@spt/models/eft/itemEvent/IItemEventRouterRequest";
+import { IDaum } from "@spt/models/eft/itemEvent/IItemEventRouterRequest";
 import { LogBackgroundColor } from "@spt/models/spt/logging/LogBackgroundColor";
 import { LogTextColor } from "@spt/models/spt/logging/LogTextColor";
 import { ILogger } from "@spt/models/spt/utils/ILogger";
 
 export class WinstonLogger implements ILogger {
-    writeToLogFile(data: string | Daum): void {}
+    writeToLogFile(data: string | IDaum): void {}
 
     log(data: string | Record<string, unknown> | Error, color: string, backgroundColor?: string): void {}
 

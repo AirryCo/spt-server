@@ -11,7 +11,7 @@ import { IGetMailDialogViewResponseData } from "@spt/models/eft/dialog/IGetMailD
 import { IRemoveUserGroupMailRequest } from "@spt/models/eft/dialog/IRemoveUserGroupMailRequest";
 import { IGetBodyResponseData } from "@spt/models/eft/httpResponse/IGetBodyResponseData";
 import { INullResponseData } from "@spt/models/eft/httpResponse/INullResponseData";
-import { DialogueInfo } from "@spt/models/eft/profile/ISptProfile";
+import { IDialogueInfo } from "@spt/models/eft/profile/ISptProfile";
 import { inject, injectable } from "tsyringe";
 
 @injectable()
@@ -36,7 +36,7 @@ export class DialogStaticRouter extends StaticRouter {
                     info: any,
                     sessionID: string,
                     output: string,
-                ): Promise<IGetBodyResponseData<DialogueInfo[]>> => {
+                ): Promise<IGetBodyResponseData<IDialogueInfo[]>> => {
                     return this.dialogueCallbacks.getMailDialogList(url, info, sessionID);
                 },
             ),
@@ -58,7 +58,7 @@ export class DialogStaticRouter extends StaticRouter {
                     info: any,
                     sessionID: string,
                     output: string,
-                ): Promise<IGetBodyResponseData<DialogueInfo>> => {
+                ): Promise<IGetBodyResponseData<IDialogueInfo>> => {
                     return this.dialogueCallbacks.getMailDialogInfo(url, info, sessionID);
                 },
             ),

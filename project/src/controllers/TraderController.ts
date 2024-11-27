@@ -3,13 +3,16 @@ import { ProfileHelper } from "@spt/helpers/ProfileHelper";
 import { TraderAssortHelper } from "@spt/helpers/TraderAssortHelper";
 import { TraderHelper } from "@spt/helpers/TraderHelper";
 import { ITraderAssort, ITraderBase } from "@spt/models/eft/common/tables/ITrader";
+import { IGetItemPricesResponse } from "@spt/models/eft/game/IGetItemPricesResponse";
 import { ConfigTypes } from "@spt/models/enums/ConfigTypes";
+import { Money } from "@spt/models/enums/Money";
 import { Traders } from "@spt/models/enums/Traders";
 import { ITraderConfig } from "@spt/models/spt/config/ITraderConfig";
 import { ILogger } from "@spt/models/spt/utils/ILogger";
 import { ConfigServer } from "@spt/servers/ConfigServer";
 import { DatabaseService } from "@spt/services/DatabaseService";
 import { FenceService } from "@spt/services/FenceService";
+import { RagfairPriceService } from "@spt/services/RagfairPriceService";
 import { TraderAssortService } from "@spt/services/TraderAssortService";
 import { TraderPurchasePersisterService } from "@spt/services/TraderPurchasePersisterService";
 import { TimeUtil } from "@spt/utils/TimeUtil";
@@ -28,6 +31,7 @@ export class TraderController {
         @inject("ProfileHelper") protected profileHelper: ProfileHelper,
         @inject("TraderHelper") protected traderHelper: TraderHelper,
         @inject("TraderAssortService") protected traderAssortService: TraderAssortService,
+        @inject("RagfairPriceService") protected ragfairPriceService: RagfairPriceService,
         @inject("TraderPurchasePersisterService")
         protected traderPurchasePersisterService: TraderPurchasePersisterService,
         @inject("FenceService") protected fenceService: FenceService,
@@ -160,5 +164,21 @@ export class TraderController {
     /** Handle client/trading/api/getTraderAssort */
     public getAssort(sessionId: string, traderId: string): ITraderAssort {
         return this.traderAssortHelper.getAssort(sessionId, traderId);
+    }
+
+    /** Handle client/items/prices/TRADERID */
+    public getItemPrices(sessionId: string, traderId: string): IGetItemPricesResponse {
+        const handbookPrices = this.ragfairPriceService.getAllStaticPrices();
+        const handbookPricesClone = this.cloner.clone(handbookPrices);
+
+        return {
+            supplyNextTime: this.traderHelper.getNextUpdateTimestamp(traderId),
+            prices: handbookPricesClone,
+            currencyCourses: {
+                "5449016a4bdc2d6f028b456f": handbookPrices[Money.ROUBLES],
+                "569668774bdc2da2298b4568": handbookPrices[Money.EUROS],
+                "5696686a4bdc2da3298b456a": handbookPrices[Money.DOLLARS],
+            },
+        };
     }
 }

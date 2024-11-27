@@ -25,7 +25,7 @@ export class LocaleService {
      * @returns dictionary
      */
     public getLocaleDb(): Record<string, string> {
-        const desiredLocale = this.databaseServer.getTables().locales!.global[this.getDesiredGameLocale()];
+        const desiredLocale = this.databaseServer.getTables().locales.global[this.getDesiredGameLocale()];
         if (desiredLocale) {
             return desiredLocale;
         }
@@ -34,7 +34,7 @@ export class LocaleService {
             `Unable to find desired locale file using locale: ${this.getDesiredGameLocale()} from config/locale.json, falling back to 'en'`,
         );
 
-        return this.databaseServer.getTables().locales!.global.en;
+        return this.databaseServer.getTables().locales.global.en;
     }
 
     /**
@@ -83,7 +83,7 @@ export class LocaleService {
      * Get the full locale of the computer running the server lowercased e.g. en-gb / pt-pt
      * @returns string
      */
-    protected getPlatformForServerLocale(): string {
+    public getPlatformForServerLocale(): string {
         const platformLocale = this.getPlatformLocale();
         if (!platformLocale) {
             this.logger.warning("System language could not be found, falling back to english");
@@ -96,6 +96,11 @@ export class LocaleService {
             // Chek if base language (e.g. CN / EN / DE) exists
             const languageCode = platformLocale.language.toLocaleLowerCase();
             if (this.localeConfig.serverSupportedLocales.includes(languageCode)) {
+                if (baseNameCode === "zh") {
+                    // Handle edge case of zh
+                    return "zh-cn";
+                }
+
                 return languageCode;
             }
 
@@ -118,7 +123,7 @@ export class LocaleService {
             return "en";
         }
 
-        const locales = this.databaseServer.getTables().locales!;
+        const locales = this.databaseServer.getTables().locales;
         const baseNameCode = platformLocale.baseName?.toLocaleLowerCase();
         if (baseNameCode && locales.global[baseNameCode]) {
             return baseNameCode;

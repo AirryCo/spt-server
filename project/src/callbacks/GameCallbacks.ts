@@ -13,7 +13,9 @@ import { IGameModeResponse } from "@spt/models/eft/game/IGameModeResponse";
 import { IGameStartResponse } from "@spt/models/eft/game/IGameStartResponse";
 import { IGetRaidTimeRequest } from "@spt/models/eft/game/IGetRaidTimeRequest";
 import { IGetRaidTimeResponse } from "@spt/models/eft/game/IGetRaidTimeResponse";
+import { ISendSurveyOpinionRequest } from "@spt/models/eft/game/ISendSurveyOpinionRequest";
 import { IServerDetails } from "@spt/models/eft/game/IServerDetails";
+import { ISurveyResponseData } from "@spt/models/eft/game/ISurveyResponseData";
 import { IVersionValidateRequestData } from "@spt/models/eft/game/IVersionValidateRequestData";
 import { IGetBodyResponseData } from "@spt/models/eft/httpResponse/IGetBodyResponseData";
 import { INullResponseData } from "@spt/models/eft/httpResponse/INullResponseData";
@@ -169,7 +171,27 @@ export class GameCallbacks implements OnLoad {
      * Handle /client/survey
      * @returns INullResponseData
      */
-    public getSurvey(url: string, request: IEmptyRequestData, sessionID: string): INullResponseData {
+    public getSurvey(
+        url: string,
+        request: IEmptyRequestData,
+        sessionId: string,
+    ): INullResponseData | IGetBodyResponseData<ISurveyResponseData> {
+        return this.httpResponse.getBody(this.gameController.getSurvey(sessionId));
+    }
+
+    /**
+     * Handle client/survey/view
+     * @returns INullResponseData
+     */
+    public getSurveyView(url: string, request: any, sessionId: string): INullResponseData {
+        return this.httpResponse.nullResponse();
+    }
+
+    /**
+     * Handle client/survey/opinion
+     * @returns INullResponseData
+     */
+    public sendSurveyOpinion(url: string, request: ISendSurveyOpinionRequest, sessionId: string): INullResponseData {
         return this.httpResponse.nullResponse();
     }
 }

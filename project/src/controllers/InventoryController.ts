@@ -8,7 +8,7 @@ import { ProfileHelper } from "@spt/helpers/ProfileHelper";
 import { QuestHelper } from "@spt/helpers/QuestHelper";
 import { TraderHelper } from "@spt/helpers/TraderHelper";
 import { IPmcData } from "@spt/models/eft/common/IPmcData";
-import { Item } from "@spt/models/eft/common/tables/IItem";
+import { IItem } from "@spt/models/eft/common/tables/IItem";
 import { IAddItemsDirectRequest } from "@spt/models/eft/inventory/IAddItemsDirectRequest";
 import { IInventoryBindRequestData } from "@spt/models/eft/inventory/IInventoryBindRequestData";
 import { IInventoryCreateMarkerRequestData } from "@spt/models/eft/inventory/IInventoryCreateMarkerRequestData";
@@ -27,6 +27,7 @@ import { IInventoryTagRequestData } from "@spt/models/eft/inventory/IInventoryTa
 import { IInventoryToggleRequestData } from "@spt/models/eft/inventory/IInventoryToggleRequestData";
 import { IInventoryTransferRequestData } from "@spt/models/eft/inventory/IInventoryTransferRequestData";
 import { IOpenRandomLootContainerRequestData } from "@spt/models/eft/inventory/IOpenRandomLootContainerRequestData";
+import { IPinOrLockItemRequest } from "@spt/models/eft/inventory/IPinOrLockItemRequest";
 import { IRedeemProfileRequestData } from "@spt/models/eft/inventory/IRedeemProfileRequestData";
 import { ISetFavoriteItems } from "@spt/models/eft/inventory/ISetFavoriteItems";
 import { IItemEventRouterResponse } from "@spt/models/eft/itemEvent/IItemEventRouterResponse";
@@ -528,7 +529,7 @@ export class InventoryController {
         for (const index in pmcData.Inventory.fastPanel) {
             // Find item with existing item in it and remove existing binding, you cant have same item bound to more than 1 slot
             if (pmcData.Inventory.fastPanel[index] === bindRequest.item) {
-                pmcData.Inventory.fastPanel[index] = "";
+                delete pmcData.Inventory.fastPanel[index];
 
                 break;
             }
@@ -803,7 +804,7 @@ export class InventoryController {
         const isSealedWeaponBox = containerDetailsDb[1]._name.includes("event_container_airdrop");
 
         let foundInRaid = openedItem.upd?.SpawnedInSession;
-        const rewards: Item[][] = [];
+        const rewards: IItem[][] = [];
         const unlockedWeaponCrates = [
             "665829424de4820934746ce6",
             "665732e7ac60f009f270d1ef",
@@ -905,7 +906,7 @@ export class InventoryController {
                     this.logger.success(`Item ${mailEvent.entity} is now blacklisted`);
 
                     break;
-                case "HideoutAreaLevel":
+                case "HideoutAreaLevel": {
                     const areaName = mailEvent.entity;
                     const newValue = mailEvent.value;
                     const hideoutAreaCode = HideoutAreas[areaName.toUpperCase()];
@@ -917,6 +918,7 @@ export class InventoryController {
                     }
 
                     break;
+                }
                 default:
                     this.logger.warning(`Unhandled profile reward event: ${mailEvent.Type}`);
 
@@ -932,12 +934,44 @@ export class InventoryController {
 
         for (const itemId of request.items) {
             // If id already exists in array, we're removing it
-            const indexOfItemAlreadyFavorited = pmcData.Inventory.favoriteItems.findIndex((x) => x === itemId);
+            const indexOfItemAlreadyFavorited = pmcData.Inventory.favoriteItems.findIndex((x) => x._id === itemId);
             if (indexOfItemAlreadyFavorited > -1) {
                 pmcData.Inventory.favoriteItems.splice(indexOfItemAlreadyFavorited, 1);
             } else {
-                pmcData.Inventory.favoriteItems.push(itemId);
+                const item = pmcData.Inventory.items.find((i) => i._id === itemId);
+
+                if (item === undefined) {
+                    continue;
+                }
+
+                pmcData.Inventory.favoriteItems.push(item);
             }
         }
+    }
+
+    /**
+     * Handle /client/game/profile/items/moving - PinLock
+     * Requires no response to client, only server change
+     * @param pmcData Players profile
+     * @param request Pin/Lock request data
+     * @param sessionID Session id
+     * @param output data to send back to client
+     */
+    public pinOrLock(
+        pmcData: IPmcData,
+        request: IPinOrLockItemRequest,
+        sessionID: string,
+        output: IItemEventRouterResponse,
+    ): IItemEventRouterResponse {
+        const itemToAdjust = pmcData.Inventory.items.find((item) => item._id === request.Item);
+        if (!itemToAdjust) {
+            this.logger.error(`Unable find item: ${request.Item} to: ${request.State} on player ${sessionID} to: `);
+            return output;
+        }
+
+        itemToAdjust.upd ||= {};
+        itemToAdjust.upd.PinLockState = request.State;
+
+        return output;
     }
 }

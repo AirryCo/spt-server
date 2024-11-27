@@ -8,7 +8,7 @@ import { IPmcData } from "@spt/models/eft/common/IPmcData";
 import { ITemplateSide } from "@spt/models/eft/common/tables/IProfileTemplate";
 import { IItemEventRouterResponse } from "@spt/models/eft/itemEvent/IItemEventRouterResponse";
 import { IMiniProfile } from "@spt/models/eft/launcher/IMiniProfile";
-import { GetProfileStatusResponseData } from "@spt/models/eft/profile/GetProfileStatusResponseData";
+import { IGetProfileStatusResponseData } from "@spt/models/eft/profile/GetProfileStatusResponseData";
 import { IGetOtherProfileRequest } from "@spt/models/eft/profile/IGetOtherProfileRequest";
 import { IGetOtherProfileResponse } from "@spt/models/eft/profile/IGetOtherProfileResponse";
 import { IGetProfileSettingsRequest } from "@spt/models/eft/profile/IGetProfileSettingsRequest";
@@ -17,7 +17,7 @@ import { IProfileChangeVoiceRequestData } from "@spt/models/eft/profile/IProfile
 import { IProfileCreateRequestData } from "@spt/models/eft/profile/IProfileCreateRequestData";
 import { ISearchFriendRequestData } from "@spt/models/eft/profile/ISearchFriendRequestData";
 import { ISearchFriendResponse } from "@spt/models/eft/profile/ISearchFriendResponse";
-import { ISptProfile, Inraid, Vitality } from "@spt/models/eft/profile/ISptProfile";
+import { IInraid, ISptProfile, IVitality } from "@spt/models/eft/profile/ISptProfile";
 import { IValidateNicknameRequestData } from "@spt/models/eft/profile/IValidateNicknameRequestData";
 import { ItemTpl } from "@spt/models/enums/ItemTpl";
 import { MessageType } from "@spt/models/enums/MessageType";
@@ -168,7 +168,6 @@ export class ProfileController {
             undefined,
             pmcData.Inventory.fastPanel,
         );
-        pmcData.Inventory.hideoutAreaStashes = {};
 
         // Create profile
         const profileDetails: ISptProfile = {
@@ -178,15 +177,14 @@ export class ProfileController {
             userbuilds: profileTemplate.userbuilds,
             dialogues: profileTemplate.dialogues,
             spt: this.profileHelper.getDefaultSptDataObject(),
-            vitality: {} as Vitality,
-            inraid: {} as Inraid,
+            vitality: {} as IVitality,
+            inraid: {} as IInraid,
             insurance: [],
             traderPurchases: {},
             achievements: {},
         };
 
         this.profileFixerService.checkForAndFixPmcProfileIssues(profileDetails.characters.pmc);
-        this.profileFixerService.addMissingHideoutBonusesToProfile(profileDetails.characters.pmc);
 
         this.saveServer.addProfile(profileDetails);
 
@@ -220,11 +218,6 @@ export class ProfileController {
         // Completed account creation
         this.saveServer.getProfile(sessionID).info.wipe = false;
         this.saveServer.saveProfile(sessionID);
-
-        // Requires to enable seasonal changes after creating fresh profile
-        if (this.seasonalEventService.isAutomaticEventDetectionEnabled()) {
-            this.seasonalEventService.enableSeasonalEvents(sessionID);
-        }
 
         return pmcData._id;
     }
@@ -388,9 +381,9 @@ export class ProfileController {
     /**
      * Handle client/profile/status
      */
-    public getProfileStatus(sessionId: string): GetProfileStatusResponseData {
+    public getProfileStatus(sessionId: string): IGetProfileStatusResponseData {
         const account = this.saveServer.getProfile(sessionId).info;
-        const response: GetProfileStatusResponseData = {
+        const response: IGetProfileStatusResponseData = {
             maxPveCountExceeded: false,
             profiles: [
                 { profileid: account.scavId, profileToken: undefined, status: "Free", sid: "", ip: "", port: 0 },

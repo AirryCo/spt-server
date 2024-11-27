@@ -21,6 +21,7 @@ export class WeatherCallbacks {
         return this.httpResponse.getBody(this.weatherController.generate());
     }
 
+    /** Handle client/localGame/weather */
     public getLocalWeather(
         url: string,
         info: IEmptyRequestData,

@@ -6,7 +6,7 @@ import { IBaseConfig } from "@spt/models/spt/config/IBaseConfig";
 export interface IWeatherConfig extends IBaseConfig {
     kind: "spt-weather";
     acceleration: number;
-    weather: Weather;
+    weather: IWeatherValues;
     seasonDates: ISeasonDateTimes[];
     overrideSeason?: Season;
 }
@@ -20,7 +20,9 @@ export interface ISeasonDateTimes {
     endMonth: number;
 }
 
-export interface Weather {
+export interface IWeatherValues {
+    /** How many hours to generate weather data into the future */
+    generateWeatherAmountHours: number;
     clouds: WeatherSettings<string>;
     windSpeed: WeatherSettings<number>;
     windDirection: WeatherSettings<WindDirection>;
@@ -28,8 +30,15 @@ export interface Weather {
     rain: WeatherSettings<number>;
     rainIntensity: MinMax;
     fog: WeatherSettings<string>;
-    temp: MinMax;
+    temp: Record<Season, ITempDayNight>;
     pressure: MinMax;
+    /** Length of each weather period */
+    timePeriod: WeatherSettings<number>;
+}
+
+export interface ITempDayNight {
+    day: MinMax;
+    night: MinMax;
 }
 
 export interface WeatherSettings<T> {

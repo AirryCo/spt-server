@@ -1,4 +1,4 @@
-import { SellResult } from "@spt/models/eft/ragfair/IRagfairOffer";
+import { ISellResult } from "@spt/models/eft/ragfair/IRagfairOffer";
 import { ConfigTypes } from "@spt/models/enums/ConfigTypes";
 import { IRagfairConfig } from "@spt/models/spt/config/IRagfairConfig";
 import { ILogger } from "@spt/models/spt/utils/ILogger";
@@ -63,7 +63,7 @@ export class RagfairSellHelper {
      * @param sellInOneGo All items listed get sold at once
      * @returns Array of purchases of item(s) listed
      */
-    public rollForSale(sellChancePercent: number, itemSellCount: number, sellInOneGo = false): SellResult[] {
+    public rollForSale(sellChancePercent: number, itemSellCount: number, sellInOneGo = false): ISellResult[] {
         const startTime = this.timeUtil.getTimestamp();
 
         // Get a time in future to stop simulating sell chances at
@@ -73,7 +73,7 @@ export class RagfairSellHelper {
 
         let sellTime = startTime;
         let remainingCount = itemSellCount;
-        const result: SellResult[] = [];
+        const result: ISellResult[] = [];
 
         // Value can sometimes be NaN for whatever reason, default to base chance if that happens
         const effectiveSellChance = Number.isNaN(sellChancePercent)

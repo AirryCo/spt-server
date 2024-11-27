@@ -1,5 +1,5 @@
 import { ItemHelper } from "@spt/helpers/ItemHelper";
-import { Item } from "@spt/models/eft/common/tables/IItem";
+import { IItem } from "@spt/models/eft/common/tables/IItem";
 import { ITemplateItem } from "@spt/models/eft/common/tables/ITemplateItem";
 import { BaseClasses } from "@spt/models/enums/BaseClasses";
 import { ConfigTypes } from "@spt/models/enums/ConfigTypes";
@@ -77,7 +77,7 @@ export class BotWeaponModLimitService {
         modTemplate: ITemplateItem,
         modLimits: BotModLimits,
         modsParent: ITemplateItem,
-        weapon: Item[],
+        weapon: IItem[],
     ): boolean {
         // If mod or mods parent is the NcSTAR MPR45 Backup mount, allow it as it looks cool
         if (

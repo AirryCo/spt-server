@@ -18,6 +18,12 @@ export class MatchBotDetailsCacheService {
      * @param botToCache Bot details to cache
      */
     public cacheBot(botToCache: IBotBase): void {
+        if (!botToCache.Info.Nickname) {
+            this.logger.warning(
+                `Unable to cache: ${botToCache.Info.Settings.Role} bot with id: ${botToCache._id} as it lacks a nickname`,
+            );
+            return;
+        }
         this.botDetailsCache[`${botToCache.Info.Nickname.trim()}${botToCache.Info.Side}`] = botToCache;
     }
 

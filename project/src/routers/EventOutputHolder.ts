@@ -1,7 +1,12 @@
 import { ProfileHelper } from "@spt/helpers/ProfileHelper";
 import { IPmcData } from "@spt/models/eft/common/IPmcData";
-import { IHideoutImprovement, Productive, TraderInfo } from "@spt/models/eft/common/tables/IBotBase";
-import { ProfileChange, TraderData } from "@spt/models/eft/itemEvent/IItemEventRouterBase";
+import {
+    IHideoutImprovement,
+    IMoneyTransferLimits,
+    IProductive,
+    ITraderInfo,
+} from "@spt/models/eft/common/tables/IBotBase";
+import { IProfileChange, ITraderData } from "@spt/models/eft/itemEvent/IItemEventRouterBase";
 import { IItemEventRouterResponse } from "@spt/models/eft/itemEvent/IItemEventRouterResponse";
 import { TimeUtil } from "@spt/utils/TimeUtil";
 import { ICloner } from "@spt/utils/cloners/ICloner";
@@ -64,7 +69,7 @@ export class EventOutputHolder {
      */
     public updateOutputProperties(sessionId: string): void {
         const pmcData: IPmcData = this.profileHelper.getPmcProfile(sessionId);
-        const profileChanges: ProfileChange = this.outputStore[sessionId].profileChanges[sessionId];
+        const profileChanges: IProfileChange = this.outputStore[sessionId].profileChanges[sessionId];
 
         profileChanges.experience = pmcData.Info.Experience;
         profileChanges.health = this.cloner.clone(pmcData.Health);
@@ -79,8 +84,18 @@ export class EventOutputHolder {
         profileChanges.improvements = this.cloner.clone(this.getImprovementsFromProfileAndFlagComplete(pmcData));
         profileChanges.traderRelations = this.constructTraderRelations(pmcData.TradersInfo);
 
+        this.resetMoneyTransferLimit(pmcData.moneyTransferLimitData);
+        profileChanges.moneyTransferLimitData = pmcData.moneyTransferLimitData;
+
         // Fixes container craft from water collector not resetting after collection + removed completed normal crafts
         this.cleanUpCompleteCraftsInProfile(pmcData.Hideout.Production);
+    }
+
+    protected resetMoneyTransferLimit(limit: IMoneyTransferLimits) {
+        if (limit.nextResetTime < this.timeUtil.getTimestamp()) {
+            limit.nextResetTime += limit.resetInterval;
+            limit.remainingLimit = limit.totalLimit;
+        }
     }
 
     /**
@@ -88,8 +103,8 @@ export class EventOutputHolder {
      * @param traderData server data for traders
      * @returns dict of trader id + TraderData
      */
-    protected constructTraderRelations(traderData: Record<string, TraderInfo>): Record<string, TraderData> {
-        const result: Record<string, TraderData> = {};
+    protected constructTraderRelations(traderData: Record<string, ITraderInfo>): Record<string, ITraderData> {
+        const result: Record<string, ITraderData> = {};
 
         for (const traderId in traderData) {
             const baseData = traderData[traderId];
@@ -111,8 +126,8 @@ export class EventOutputHolder {
      * @returns dictionary of hideout improvements
      */
     protected getImprovementsFromProfileAndFlagComplete(pmcData: IPmcData): Record<string, IHideoutImprovement> {
-        for (const improvementKey in pmcData.Hideout.Improvement) {
-            const improvement = pmcData.Hideout.Improvement[improvementKey];
+        for (const improvementKey in pmcData.Hideout.Improvements) {
+            const improvement = pmcData.Hideout.Improvements[improvementKey];
 
             // Skip completed
             if (improvement.completed) {
@@ -124,7 +139,7 @@ export class EventOutputHolder {
             }
         }
 
-        return pmcData.Hideout.Improvement;
+        return pmcData.Hideout.Improvements;
     }
 
     /**
@@ -133,9 +148,9 @@ export class EventOutputHolder {
      * @returns dictionary of hideout productions
      */
     protected getProductionsFromProfileAndFlagComplete(
-        productions: Record<string, Productive>,
+        productions: Record<string, IProductive>,
         sessionId: string,
-    ): Record<string, Productive> | undefined {
+    ): Record<string, IProductive> | undefined {
         for (const productionKey in productions) {
             const production = productions[productionKey];
             if (!production) {
@@ -181,14 +196,14 @@ export class EventOutputHolder {
      * Required as continuous productions don't reset and stay at 100% completion but client thinks it hasn't started
      * @param productions Productions in a profile
      */
-    protected cleanUpCompleteCraftsInProfile(productions: Record<string, Productive>): void {
+    protected cleanUpCompleteCraftsInProfile(productions: Record<string, IProductive>): void {
         for (const productionKey in productions) {
             const production = productions[productionKey];
             if (production?.sptIsComplete && production?.sptIsContinuous) {
                 // Water collector / Bitcoin etc
                 production.sptIsComplete = false;
                 production.Progress = 0;
-                production.StartTimestamp = this.timeUtil.getTimestamp();
+                production.StartTimestamp = this.timeUtil.getTimestamp().toString();
             } else if (!production?.inProgress) {
                 // Normal completed craft, delete
                 delete productions[productionKey];

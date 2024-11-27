@@ -1,7 +1,7 @@
 import { PMCLootGenerator } from "@spt/generators/PMCLootGenerator";
 import { ItemHelper } from "@spt/helpers/ItemHelper";
 import { IBotType } from "@spt/models/eft/common/tables/IBotType";
-import { ITemplateItem, Props } from "@spt/models/eft/common/tables/ITemplateItem";
+import { IProps, ITemplateItem } from "@spt/models/eft/common/tables/ITemplateItem";
 import { BaseClasses } from "@spt/models/enums/BaseClasses";
 import { IBotLootCache, LootCacheType } from "@spt/models/spt/bots/IBotLootCache";
 import { ILogger } from "@spt/models/spt/utils/ILogger";
@@ -421,7 +421,7 @@ export class BotLootCacheService {
      * @param props
      * @returns
      */
-    protected isBulletOrGrenade(props: Props): boolean {
+    protected isBulletOrGrenade(props: IProps): boolean {
         return "ammoType" in props;
     }
 
@@ -430,7 +430,7 @@ export class BotLootCacheService {
      * @param props
      * @returns
      */
-    protected isMagazine(props: Props): boolean {
+    protected isMagazine(props: IProps): boolean {
         return "ReloadMagType" in props;
     }
 
@@ -439,7 +439,7 @@ export class BotLootCacheService {
      * @param props
      * @returns
      */
-    protected isMedicalItem(props: Props): boolean {
+    protected isMedicalItem(props: IProps): boolean {
         return "medUseTime" in props;
     }
 
@@ -448,7 +448,7 @@ export class BotLootCacheService {
      * @param props
      * @returns
      */
-    protected isGrenade(props: Props): boolean {
+    protected isGrenade(props: IProps): boolean {
         return "ThrowType" in props;
     }
 

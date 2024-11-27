@@ -3,11 +3,11 @@ export interface IHideoutImproveAreaRequestData {
     /** Hideout area id from areas.json */
     id: string;
     areaType: number;
-    items: HideoutItem[];
+    items: IHideoutItem[];
     timestamp: number;
 }
 
-export interface HideoutItem {
+export interface IHideoutItem {
     /** Hideout inventory id that was used by improvement action */
     id: string;
     count: number;

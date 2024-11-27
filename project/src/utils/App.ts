@@ -10,6 +10,7 @@ import { LocalisationService } from "@spt/services/LocalisationService";
 import { EncodingUtil } from "@spt/utils/EncodingUtil";
 import { TimeUtil } from "@spt/utils/TimeUtil";
 import { inject, injectAll, injectable } from "tsyringe";
+import { DatabaseService } from "@spt/services/DatabaseService";
 
 @injectable()
 export class App {
@@ -23,6 +24,7 @@ export class App {
         @inject("ConfigServer") protected configServer: ConfigServer,
         @inject("EncodingUtil") protected encodingUtil: EncodingUtil,
         @inject("HttpServer") protected httpServer: HttpServer,
+        @inject("DatabaseService") protected databaseService: DatabaseService,
         @injectAll("OnLoad") protected onLoadComponents: OnLoad[],
         @injectAll("OnUpdate") protected onUpdateComponents: OnUpdate[],
     ) {
@@ -58,7 +60,7 @@ export class App {
 
     protected async update(onUpdateComponents: OnUpdate[]): Promise<void> {
         // If the server has failed to start, skip any update calls
-        if (!this.httpServer.isStarted()) {
+        if (!this.httpServer.isStarted() || !this.databaseService.isDatabaseValid()) {
             return;
         }
 

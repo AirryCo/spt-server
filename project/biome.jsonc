@@ -18,6 +18,7 @@
             "tests/__coverage__/*",
             "types/*",
             "user/mods/*",
+            "user/profiles/*",
             "assets/database/*"
         ]
     },

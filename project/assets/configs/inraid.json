@@ -1,5 +1,4 @@
 {
-    "MIAOnRaidEnd": true,
     "raidMenuSettings": {
         "aiAmount": "AsOnline",
         "aiDifficulty": "AsOnline",
@@ -25,8 +24,9 @@
     ],
     "carExtractBaseStandingGain": 0.2,
     "coopExtractBaseStandingGain": 0.25,
-    "scavExtractGain": 0.01,
+    "scavExtractStandingGain": 0.01,
     "pmcKillProbabilityForScavGain": 0.2,
     "keepFiRSecureContainerOnDeath": false,
+    "alwaysKeepFoundInRaidonRaidEnd": false,
     "playerScavHostileChancePercent": 15
 }

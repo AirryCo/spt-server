@@ -5,7 +5,7 @@ import { IChangeRequestData } from "@spt/models/eft/launcher/IChangeRequestData"
 import { ILoginRequestData } from "@spt/models/eft/launcher/ILoginRequestData";
 import { IRegisterData } from "@spt/models/eft/launcher/IRegisterData";
 import { IConnectResponse } from "@spt/models/eft/profile/IConnectResponse";
-import { Info, ModDetails } from "@spt/models/eft/profile/ISptProfile";
+import { IModDetails, Info } from "@spt/models/eft/profile/ISptProfile";
 import { ConfigTypes } from "@spt/models/enums/ConfigTypes";
 import { ICoreConfig } from "@spt/models/spt/config/ICoreConfig";
 import { IPackageJsonData } from "@spt/models/spt/mod/IPackageJsonData";
@@ -189,7 +189,7 @@ export class LauncherController {
      * @param sessionId Player id
      * @returns Array of mod details
      */
-    public getServerModsProfileUsed(sessionId: string): ModDetails[] {
+    public getServerModsProfileUsed(sessionId: string): IModDetails[] {
         const profile = this.profileHelper.getFullProfile(sessionId);
 
         if (profile?.spt?.mods) {

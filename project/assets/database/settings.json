@@ -25,7 +25,7 @@
         "KeepAliveInterval": 140,
         "GroupStatusInterval": 60,
         "GroupStatusButtonInterval": 7,
-        "PingServersInterval": 5,
+        "PingServersInterval": 10,
         "PingServerResultSendInterval": -1,
         "WeaponOverlapDistanceCulling": 50,
         "FirstCycleDelaySeconds": 20,

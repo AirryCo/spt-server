@@ -1,4 +1,4 @@
-import { Dialogue, IUserDialogInfo, Message } from "@spt/models/eft/profile/ISptProfile";
+import { IDialogue, IMessage, IUserDialogInfo } from "@spt/models/eft/profile/ISptProfile";
 import { IWsChatMessageReceived } from "@spt/models/eft/ws/IWsChatMessageReceived";
 import { IWsNotificationEvent } from "@spt/models/eft/ws/IWsNotificationEvent";
 import { MemberCategory } from "@spt/models/enums/MemberCategory";
@@ -48,7 +48,7 @@ export class NotificationSendHelper {
         const dialog = this.getDialog(sessionId, messageType, senderDetails);
 
         dialog.new += 1;
-        const message: Message = {
+        const message: IMessage = {
             _id: this.hashUtil.generate(),
             uid: dialog._id,
             type: messageType,
@@ -76,15 +76,12 @@ export class NotificationSendHelper {
      * @param senderDetails Who is sending the message
      * @returns Dialogue
      */
-    protected getDialog(sessionId: string, messageType: MessageType, senderDetails: IUserDialogInfo): Dialogue {
+    protected getDialog(sessionId: string, messageType: MessageType, senderDetails: IUserDialogInfo): IDialogue {
         // Use trader id if sender is trader, otherwise use nickname
-        const key =
-            senderDetails.Info.MemberCategory === MemberCategory.TRADER
-                ? senderDetails._id
-                : senderDetails.Info.Nickname;
+        const key = senderDetails._id;
         const dialogueData = this.saveServer.getProfile(sessionId).dialogues;
         const isNewDialogue = !(key in dialogueData);
-        let dialogue: Dialogue = dialogueData[key];
+        let dialogue: IDialogue = dialogueData[key];
 
         // Existing dialog not found, make new one
         if (isNewDialogue) {

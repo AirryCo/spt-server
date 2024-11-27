@@ -39,6 +39,7 @@ export class InventoryItemEventRouter extends ItemEventRouterDefinition {
             new HandledRoute(ItemEventActions.REDEEM_PROFILE_REWARD, false),
             new HandledRoute(ItemEventActions.SET_FAVORITE_ITEMS, false),
             new HandledRoute(ItemEventActions.QUEST_FAIL, false),
+            new HandledRoute(ItemEventActions.PIN_LOCK, false),
         ];
     }
 
@@ -94,6 +95,8 @@ export class InventoryItemEventRouter extends ItemEventRouterDefinition {
                 return this.inventoryCallbacks.setFavoriteItem(pmcData, body, sessionID, output);
             case ItemEventActions.QUEST_FAIL:
                 return this.inventoryCallbacks.failQuest(pmcData, body, sessionID, output);
+            case ItemEventActions.PIN_LOCK:
+                return this.inventoryCallbacks.pinOrLock(pmcData, body, sessionID, output);
             default:
                 throw new Error(`Unhandled event ${url} request: ${JSON.stringify(body)}`);
         }

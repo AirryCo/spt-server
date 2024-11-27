@@ -19,21 +19,21 @@ export class RagfairOfferHolder {
 
     public getOfferById(id: string): IRagfairOffer | undefined {
         if (this.offersById.has(id)) {
-            return this.offersById.get(id)!;
+            return this.offersById.get(id);
         }
         return undefined;
     }
 
     public getOffersByTemplate(templateId: string): Array<IRagfairOffer> | undefined {
         if (this.offersByTemplate.has(templateId)) {
-            return [...this.offersByTemplate.get(templateId)!.values()];
+            return [...this.offersByTemplate.get(templateId).values()];
         }
         return undefined;
     }
 
     public getOffersByTrader(traderId: string): Array<IRagfairOffer> | undefined {
         if (this.offersByTrader.has(traderId)) {
-            return [...this.offersByTrader.get(traderId)!.values()];
+            return [...this.offersByTrader.get(traderId).values()];
         }
         return undefined;
     }
@@ -76,18 +76,18 @@ export class RagfairOfferHolder {
         if (this.offersById.has(offer._id)) {
             this.offersById.delete(offer._id);
             if (this.offersByTrader.has(offer.user.id)) {
-                this.offersByTrader.get(offer.user.id)!.delete(offer._id);
+                this.offersByTrader.get(offer.user.id).delete(offer._id);
                 // This was causing a memory leak, we need to make sure that we remove
                 // the user ID from the cached offers after they dont have anything else
                 // on the flea placed. We regenerate the ID for the NPC users, making it
                 // continously grow otherwise
-                if (this.offersByTrader.get(offer.user.id)!.size === 0) {
+                if (this.offersByTrader.get(offer.user.id).size === 0) {
                     this.offersByTrader.delete(offer.user.id);
                 }
             }
 
             if (this.offersByTemplate.has(offer.items[0]._tpl)) {
-                this.offersByTemplate.get(offer.items[0]._tpl)!.delete(offer._id);
+                this.offersByTemplate.get(offer.items[0]._tpl).delete(offer._id);
             }
         }
     }
@@ -100,7 +100,7 @@ export class RagfairOfferHolder {
 
     public removeAllOffersByTrader(traderId: string): void {
         if (this.offersByTrader.has(traderId)) {
-            this.removeOffers([...this.offersByTrader.get(traderId)!.values()]);
+            this.removeOffers([...this.offersByTrader.get(traderId).values()]);
         }
     }
 
@@ -114,7 +114,7 @@ export class RagfairOfferHolder {
 
     protected addOfferByTemplates(template: string, offer: IRagfairOffer): void {
         if (this.offersByTemplate.has(template)) {
-            this.offersByTemplate.get(template)!.set(offer._id, offer);
+            this.offersByTemplate.get(template).set(offer._id, offer);
         } else {
             const valueMapped = new Map<string, IRagfairOffer>();
             valueMapped.set(offer._id, offer);
@@ -124,7 +124,7 @@ export class RagfairOfferHolder {
 
     protected addOfferByTrader(trader: string, offer: IRagfairOffer): void {
         if (this.offersByTrader.has(trader)) {
-            this.offersByTrader.get(trader)!.set(offer._id, offer);
+            this.offersByTrader.get(trader).set(offer._id, offer);
         } else {
             const valueMapped = new Map<string, IRagfairOffer>();
             valueMapped.set(offer._id, offer);

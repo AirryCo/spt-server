@@ -4,9 +4,9 @@ import { ContainerHelper } from "@spt/helpers/ContainerHelper";
 import { DurabilityLimitsHelper } from "@spt/helpers/DurabilityLimitsHelper";
 import { InventoryHelper } from "@spt/helpers/InventoryHelper";
 import { ItemHelper } from "@spt/helpers/ItemHelper";
-import { Inventory } from "@spt/models/eft/common/tables/IBotBase";
-import { Item, Repairable, Upd } from "@spt/models/eft/common/tables/IItem";
-import { Grid, ITemplateItem } from "@spt/models/eft/common/tables/ITemplateItem";
+import { IInventory } from "@spt/models/eft/common/tables/IBotBase";
+import { IItem, IUpd, IUpdRepairable } from "@spt/models/eft/common/tables/IItem";
+import { IGrid, ITemplateItem } from "@spt/models/eft/common/tables/ITemplateItem";
 import { IGetRaidConfigurationRequestData } from "@spt/models/eft/match/IGetRaidConfigurationRequestData";
 import { BaseClasses } from "@spt/models/enums/BaseClasses";
 import { ConfigTypes } from "@spt/models/enums/ConfigTypes";
@@ -49,14 +49,14 @@ export class BotGeneratorHelper {
      * @param botRole Used by weapons to randomize the durability values. Null for non-equipped items
      * @returns Item Upd object with extra properties
      */
-    public generateExtraPropertiesForItem(itemTemplate: ITemplateItem, botRole?: string): { upd?: Upd } {
+    public generateExtraPropertiesForItem(itemTemplate: ITemplateItem, botRole?: string): { upd?: IUpd } {
         // Get raid settings, if no raid, default to day
         const raidSettings = this.applicationContext
             .getLatestValue(ContextVariableType.RAID_CONFIGURATION)
             ?.getValue<IGetRaidConfigurationRequestData>();
         const raidIsNight = raidSettings?.timeVariant === "PAST";
 
-        const itemProperties: Upd = {};
+        const itemProperties: IUpd = {};
 
         if (itemTemplate._props.MaxDurability) {
             if (itemTemplate._props.weapClass) {
@@ -88,7 +88,7 @@ export class BotGeneratorHelper {
             itemProperties.MedKit = {
                 HpResource: this.getRandomizedResourceValue(
                     itemTemplate._props.MaxHpResource,
-                    this.botConfig.lootItemResourceRandomization[botRole!]?.meds,
+                    this.botConfig.lootItemResourceRandomization[botRole]?.meds,
                 ),
             };
         }
@@ -97,7 +97,7 @@ export class BotGeneratorHelper {
             itemProperties.FoodDrink = {
                 HpPercent: this.getRandomizedResourceValue(
                     itemTemplate._props.MaxResource,
-                    this.botConfig.lootItemResourceRandomization[botRole!]?.food,
+                    this.botConfig.lootItemResourceRandomization[botRole]?.food,
                 ),
             };
         }
@@ -215,7 +215,7 @@ export class BotGeneratorHelper {
      * @param botRole type of bot being generated for
      * @returns Repairable object
      */
-    protected generateWeaponRepairableProperties(itemTemplate: ITemplateItem, botRole?: string): Repairable {
+    protected generateWeaponRepairableProperties(itemTemplate: ITemplateItem, botRole?: string): IUpdRepairable {
         const maxDurability = this.durabilityLimitsHelper.getRandomizedMaxWeaponDurability(itemTemplate, botRole);
         const currentDurability = this.durabilityLimitsHelper.getRandomizedWeaponDurability(
             itemTemplate,
@@ -232,12 +232,12 @@ export class BotGeneratorHelper {
      * @param botRole type of bot being generated for
      * @returns Repairable object
      */
-    protected generateArmorRepairableProperties(itemTemplate: ITemplateItem, botRole?: string): Repairable {
+    protected generateArmorRepairableProperties(itemTemplate: ITemplateItem, botRole?: string): IUpdRepairable {
         let maxDurability: number;
         let currentDurability: number;
         if (Number.parseInt(`${itemTemplate._props.armorClass}`) === 0) {
-            maxDurability = itemTemplate._props.MaxDurability!;
-            currentDurability = itemTemplate._props.MaxDurability!;
+            maxDurability = itemTemplate._props.MaxDurability;
+            currentDurability = itemTemplate._props.MaxDurability;
         } else {
             maxDurability = this.durabilityLimitsHelper.getRandomizedMaxArmorDurability(itemTemplate, botRole);
             currentDurability = this.durabilityLimitsHelper.getRandomizedArmorDurability(
@@ -250,64 +250,6 @@ export class BotGeneratorHelper {
         return { Durability: currentDurability, MaxDurability: maxDurability };
     }
 
-    public isWeaponModIncompatibleWithCurrentMods(
-        itemsEquipped: Item[],
-        tplToCheck: string,
-        modSlot: string,
-    ): IChooseRandomCompatibleModResult {
-        // TODO: Can probably be optimized to cache itemTemplates as items are added to inventory
-        const equippedItemsDb = itemsEquipped.map((item) => this.itemHelper.getItem(item._tpl)[1]);
-        const itemToEquipDb = this.itemHelper.getItem(tplToCheck);
-        const itemToEquip = itemToEquipDb[1];
-
-        if (!itemToEquipDb[0]) {
-            this.logger.warning(
-                this.localisationService.getText("bot-invalid_item_compatibility_check", {
-                    itemTpl: tplToCheck,
-                    slot: modSlot,
-                }),
-            );
-
-            return { incompatible: true, found: false, reason: `item: ${tplToCheck} does not exist in the database` };
-        }
-
-        // No props property
-        if (!itemToEquip._props) {
-            this.logger.warning(
-                this.localisationService.getText("bot-compatibility_check_missing_props", {
-                    id: itemToEquip._id,
-                    name: itemToEquip._name,
-                    slot: modSlot,
-                }),
-            );
-
-            return { incompatible: true, found: false, reason: `item: ${tplToCheck} does not have a _props field` };
-        }
-
-        // Check if any of the current weapon mod templates have the incoming item defined as incompatible
-        const blockingItem = equippedItemsDb.find((x) => x._props.ConflictingItems?.includes(tplToCheck));
-        if (blockingItem) {
-            return {
-                incompatible: true,
-                found: false,
-                reason: `Cannot add: ${tplToCheck} ${itemToEquip._name} to slot: ${modSlot}. Blocked by: ${blockingItem._id} ${blockingItem._name}`,
-                slotBlocked: true,
-            };
-        }
-
-        // Check inverse to above, if the incoming item has any existing mods in its conflicting items array
-        const blockingModItem = itemsEquipped.find((item) => itemToEquip._props.ConflictingItems?.includes(item._tpl));
-        if (blockingModItem) {
-            return {
-                incompatible: true,
-                found: false,
-                reason: ` Cannot add: ${tplToCheck} to slot: ${modSlot}. Would block existing item: ${blockingModItem._tpl} in slot: ${blockingModItem.slotId}`,
-            };
-        }
-
-        return { incompatible: false, reason: "" };
-    }
-
     /**
      * Can item be added to another item without conflict
      * @param itemsEquipped Items to check compatibilities with
@@ -316,7 +258,7 @@ export class BotGeneratorHelper {
      * @returns false if no incompatibilities, also has incompatibility reason
      */
     public isItemIncompatibleWithCurrentItems(
-        itemsEquipped: Item[],
+        itemsEquipped: IItem[],
         tplToCheck: string,
         equipmentSlot: string,
     ): IChooseRandomCompatibleModResult {
@@ -469,8 +411,8 @@ export class BotGeneratorHelper {
         equipmentSlots: string[],
         rootItemId: string,
         rootItemTplId: string,
-        itemWithChildren: Item[],
-        inventory: Inventory,
+        itemWithChildren: IItem[],
+        inventory: IInventory,
         containersIdFull?: Set<string>,
     ): ItemAddedResult {
         /** Track how many containers are unable to be found */
@@ -563,14 +505,14 @@ export class BotGeneratorHelper {
 
                 // Open slot found, add item to inventory
                 if (findSlotResult.success) {
-                    const parentItem = itemWithChildren.find((i) => i._id === rootItemId)!;
+                    const parentItem = itemWithChildren.find((i) => i._id === rootItemId);
 
                     // Set items parent to container id
                     parentItem.parentId = container._id;
                     parentItem.slotId = slotGrid._name;
                     parentItem.location = {
-                        x: findSlotResult.x!,
-                        y: findSlotResult.y!,
+                        x: findSlotResult.x,
+                        y: findSlotResult.y,
                         r: findSlotResult.rotation ? 1 : 0,
                     };
 
@@ -606,7 +548,7 @@ export class BotGeneratorHelper {
      * @param itemTpl Item tpl being placed
      * @returns True if allowed
      */
-    protected itemAllowedInContainer(slotGrid: Grid, itemTpl: string): boolean {
+    protected itemAllowedInContainer(slotGrid: IGrid, itemTpl: string): boolean {
         const propFilters = slotGrid._props.filters;
         const excludedFilter = propFilters[0]?.ExcludedFilter ?? [];
         const filter = propFilters[0]?.Filter ?? [];

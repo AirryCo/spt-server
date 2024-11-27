@@ -52,7 +52,7 @@ To prepare the project for development you will need to:
 The following commands are available after the initial setup. Run them with `npm run <command>`.
 
 | Command              | Description                                                               |
-| -------------------- | ------------------------------------------------------------------------- |
+|----------------------|---------------------------------------------------------------------------|
 | `check:circular`     | Check for circular dependencies in the project.                           |
 | `lint`               | Check the project for coding standards issues using Biome.                |
 | `lint:fix`           | Automatically fix coding standards issues using Biome.                    |
@@ -85,14 +85,14 @@ To debug a server mod in Visual Studio Code, you can copy the mod files into the
 
 We're really excited that you're interested in contributing! Before submitting your contribution, please consider the following:
 
-### Branchs
+### Branches
 
 - **master**  
   The default branch used for the latest stable release. This branch is protected and typically is only merges with release branches.
-- **3.9.4-DEV**  
+- **3.10.X-DEV**
+  Development for the next hotfix release. Hotfix releases include bug fixes and minor features that do not affect the coding structure of the project. Special care is taken to not break server mod stability. These always target the same version of EFT as the last minor release.
+- **3.11.0-DEV**
   Development for the next minor release of SPT. Minor releases target the latest version of EFT. Late in the minor release cycle the EFT version is frozen for stability to prepare for release. Larger changes to the project structure may be included in minor releases.
-- **3.10.0-DEV**  
-  Development for the next hotfix release of SPT. Hotfix releases include bug fixes and minor features that do not effect the coding structure of the project. Special care is taken to not break server mod stability. These always target the same version of EFT as the last minor release.
 
 ### Pull Request Guidelines
 

@@ -1,7 +1,7 @@
 import { ItemHelper } from "@spt/helpers/ItemHelper";
 import { ProfileHelper } from "@spt/helpers/ProfileHelper";
 import { RagfairServerHelper } from "@spt/helpers/RagfairServerHelper";
-import { Item } from "@spt/models/eft/common/tables/IItem";
+import { IItem } from "@spt/models/eft/common/tables/IItem";
 import { IRagfairOffer } from "@spt/models/eft/ragfair/IRagfairOffer";
 import { ConfigTypes } from "@spt/models/enums/ConfigTypes";
 import { IRagfairConfig } from "@spt/models/spt/config/IRagfairConfig";
@@ -11,6 +11,7 @@ import { ConfigServer } from "@spt/servers/ConfigServer";
 import { SaveServer } from "@spt/servers/SaveServer";
 import { DatabaseService } from "@spt/services/DatabaseService";
 import { LocalisationService } from "@spt/services/LocalisationService";
+import { HashUtil } from "@spt/utils/HashUtil";
 import { HttpResponseUtil } from "@spt/utils/HttpResponseUtil";
 import { RagfairOfferHolder } from "@spt/utils/RagfairOfferHolder";
 import { TimeUtil } from "@spt/utils/TimeUtil";
@@ -29,6 +30,7 @@ export class RagfairOfferService {
     constructor(
         @inject("PrimaryLogger") protected logger: ILogger,
         @inject("TimeUtil") protected timeUtil: TimeUtil,
+        @inject("HashUtil") protected hashUtil: HashUtil,
         @inject("DatabaseService") protected databaseService: DatabaseService,
         @inject("SaveServer") protected saveServer: SaveServer,
         @inject("RagfairServerHelper") protected ragfairServerHelper: RagfairServerHelper,
@@ -84,8 +86,8 @@ export class RagfairOfferService {
      * Get an array of arrays of expired offer items + children
      * @returns Expired offer assorts
      */
-    public getExpiredOfferAssorts(): Item[][] {
-        const expiredItems: Item[][] = [];
+    public getExpiredOfferAssorts(): IItem[][] {
+        const expiredItems: IItem[][] = [];
 
         for (const expiredOfferId in this.expiredOffers) {
             const expiredOffer = this.expiredOffers[expiredOfferId];
@@ -136,8 +138,8 @@ export class RagfairOfferService {
     public removeOfferStack(offerId: string, amount: number): void {
         const offer = this.ragfairOfferHandler.getOfferById(offerId);
         if (offer) {
-            offer.items[0].upd!.StackObjectsCount! -= amount;
-            if (offer.items[0].upd!.StackObjectsCount! <= 0) {
+            offer.items[0].upd.StackObjectsCount -= amount;
+            if (offer.items[0].upd.StackObjectsCount <= 0) {
                 this.processStaleOffer(offer);
             }
         }
@@ -245,15 +247,25 @@ export class RagfairOfferService {
         profile.RagfairInfo.isRatingGrowing = false;
 
         const firstOfferItem = playerOffer.items[0];
-        if (firstOfferItem.upd!.StackObjectsCount! > firstOfferItem.upd!.OriginalStackObjectsCount!) {
-            playerOffer.items[0].upd!.StackObjectsCount = firstOfferItem.upd!.OriginalStackObjectsCount;
+        if (firstOfferItem.upd.StackObjectsCount > firstOfferItem.upd.OriginalStackObjectsCount) {
+            playerOffer.items[0].upd.StackObjectsCount = firstOfferItem.upd.OriginalStackObjectsCount;
         }
-        delete playerOffer.items[0].upd!.OriginalStackObjectsCount;
+        delete playerOffer.items[0].upd.OriginalStackObjectsCount;
         // Remove player offer from flea
         this.ragfairOfferHandler.removeOffer(playerOffer);
 
         // Send failed offer items to player in mail
         const unstackedItems = this.unstackOfferItems(playerOffer.items);
+
+        // Need to regenerate Ids to ensure returned item(s) have correct parent values
+        const newParentId = this.hashUtil.generate();
+        for (const item of unstackedItems) {
+            // Refresh root items' parentIds
+            if (item.parentId === "hideout") {
+                item.parentId = newParentId;
+            }
+        }
+
         this.ragfairServerHelper.returnItems(profile.sessionId, unstackedItems);
         profile.RagfairInfo.offers.splice(offerinProfileIndex, 1);
     }
@@ -265,8 +277,8 @@ export class RagfairOfferService {
      * @param items Offer items to unstack
      * @returns Unstacked array of items
      */
-    protected unstackOfferItems(items: Item[]): Item[] {
-        const result: Item[] = [];
+    protected unstackOfferItems(items: IItem[]): IItem[] {
+        const result: IItem[] = [];
         const rootItem = items[0];
         const itemDetails = this.itemHelper.getItem(rootItem._tpl);
         const itemMaxStackSize = itemDetails[1]._props.StackMaxSize ?? 1;

@@ -1,5 +1,5 @@
 import { ItemHelper } from "@spt/helpers/ItemHelper";
-import { Mods } from "@spt/models/eft/common/tables/IBotType";
+import { IMods } from "@spt/models/eft/common/tables/IBotType";
 import { ITemplateItem } from "@spt/models/eft/common/tables/ITemplateItem";
 import { BaseClasses } from "@spt/models/enums/BaseClasses";
 import { ConfigTypes } from "@spt/models/enums/ConfigTypes";
@@ -15,8 +15,8 @@ import { inject, injectable } from "tsyringe";
 @injectable()
 export class BotEquipmentModPoolService {
     protected botConfig: IBotConfig;
-    protected weaponModPool: Mods = {};
-    protected gearModPool: Mods = {};
+    protected weaponModPool: IMods = {};
+    protected gearModPool: IMods = {};
     protected weaponPoolGenerated = false;
     protected armorPoolGenerated = false;
 

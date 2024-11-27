@@ -1,8 +1,8 @@
 export interface IMatch {
-    metrics: Metrics;
+    metrics: IMetrics;
 }
 
-export interface Metrics {
+export interface IMetrics {
     Keys: number[];
     NetProcessingBins: number[];
     RenderBins: number[];

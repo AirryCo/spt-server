@@ -1,7 +1,7 @@
 import { ItemHelper } from "@spt/helpers/ItemHelper";
 import { PresetHelper } from "@spt/helpers/PresetHelper";
 import { IPreset } from "@spt/models/eft/common/IGlobals";
-import { Item } from "@spt/models/eft/common/tables/IItem";
+import { IItem } from "@spt/models/eft/common/tables/IItem";
 import { BaseClasses } from "@spt/models/enums/BaseClasses";
 import { ConfigTypes } from "@spt/models/enums/ConfigTypes";
 import { IRagfairConfig } from "@spt/models/spt/config/IRagfairConfig";
@@ -13,7 +13,7 @@ import { inject, injectable } from "tsyringe";
 
 @injectable()
 export class RagfairAssortGenerator {
-    protected generatedAssortItems: Item[][] = [];
+    protected generatedAssortItems: IItem[][] = [];
     protected ragfairConfig: IRagfairConfig;
 
     protected ragfairItemInvalidBaseTypes: string[] = [
@@ -42,7 +42,7 @@ export class RagfairAssortGenerator {
      * Each sub array contains item + children (if any)
      * @returns array of arrays
      */
-    public getAssortItems(): Item[][] {
+    public getAssortItems(): IItem[][] {
         if (!this.assortsAreGenerated()) {
             this.generatedAssortItems = this.generateRagfairAssortItems();
         }
@@ -62,8 +62,8 @@ export class RagfairAssortGenerator {
      * Generate an array of arrays (item + children) the flea can sell
      * @returns array of arrays (item + children)
      */
-    protected generateRagfairAssortItems(): Item[][] {
-        const results: Item[][] = [];
+    protected generateRagfairAssortItems(): IItem[][] {
+        const results: IItem[][] = [];
 
         /** Get cloned items from db */
         const dbItemsClone = this.itemHelper.getItems().filter((item) => item._type !== "Node");
@@ -76,7 +76,7 @@ export class RagfairAssortGenerator {
         const presets = this.getPresetsToAdd();
         for (const preset of presets) {
             // Update Ids and clone
-            const presetAndMods: Item[] = this.itemHelper.replaceIDs(preset._items);
+            const presetAndMods: IItem[] = this.itemHelper.replaceIDs(preset._items);
             this.itemHelper.remapRootItemId(presetAndMods);
 
             // Add presets base item tpl to the processed list so its skipped later on when processing items
@@ -133,7 +133,7 @@ export class RagfairAssortGenerator {
      * @param id id to add to item
      * @returns Hydrated Item object
      */
-    protected createRagfairAssortRootItem(tplId: string, id = this.hashUtil.generate()): Item {
+    protected createRagfairAssortRootItem(tplId: string, id = this.hashUtil.generate()): IItem {
         return {
             _id: id,
             _tpl: tplId,

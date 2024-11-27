@@ -1,4 +1,5 @@
 import { ILocationsGenerateAllResponse } from "@spt/models/eft/common/ILocationsSourceDestinationBase";
+import { IGetAirdropLootRequest } from "@spt/models/eft/location/IGetAirdropLootRequest";
 import { IGetAirdropLootResponse } from "@spt/models/eft/location/IGetAirdropLootResponse";
 import { ConfigTypes } from "@spt/models/enums/ConfigTypes";
 import { ILocationConfig } from "@spt/models/spt/config/ILocationConfig";
@@ -50,7 +51,11 @@ export class LocationController {
     }
 
     /** Handle client/airdrop/loot */
-    public getAirdropLoot(): IGetAirdropLootResponse {
+    public getAirdropLoot(request: IGetAirdropLootRequest): IGetAirdropLootResponse {
+        if (request.containerId) {
+            return this.airdropService.generateCustomAirdropLoot(request);
+        }
+
         return this.airdropService.generateAirdropLoot();
     }
 }

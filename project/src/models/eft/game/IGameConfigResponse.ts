@@ -5,7 +5,7 @@ export interface IGameConfigResponse {
     ndaFree: boolean;
     taxonomy: number;
     activeProfileId: string;
-    backend: Backend;
+    backend: IBackend;
     useProtobuf: boolean;
     utc_time: number;
     /** Total in game time */
@@ -14,7 +14,7 @@ export interface IGameConfigResponse {
     twitchEventMember: boolean;
 }
 
-export interface Backend {
+export interface IBackend {
     Lobby: string;
     Trading: string;
     Messaging: string;

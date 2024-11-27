@@ -3,7 +3,7 @@ import os from "node:os";
 import path from "node:path";
 import { ModLoadOrder } from "@spt/loaders/ModLoadOrder";
 import { ModTypeCheck } from "@spt/loaders/ModTypeCheck";
-import { ModDetails } from "@spt/models/eft/profile/ISptProfile";
+import { IModDetails } from "@spt/models/eft/profile/ISptProfile";
 import { ConfigTypes } from "@spt/models/enums/ConfigTypes";
 import { IPreSptLoadMod } from "@spt/models/external/IPreSptLoadMod";
 import { IPreSptLoadModAsync } from "@spt/models/external/IPreSptLoadModAsync";
@@ -68,9 +68,9 @@ export class PreSptModLoader implements IModLoader {
         return this.imported;
     }
 
-    public getProfileModsGroupedByModName(profileMods: ModDetails[]): ModDetails[] {
+    public getProfileModsGroupedByModName(profileMods: IModDetails[]): IModDetails[] {
         // Group all mods used by profile by name
-        const modsGroupedByName: Record<string, ModDetails[]> = {};
+        const modsGroupedByName: Record<string, IModDetails[]> = {};
         for (const mod of profileMods) {
             if (!modsGroupedByName[mod.name]) {
                 modsGroupedByName[mod.name] = [];
@@ -304,7 +304,7 @@ export class PreSptModLoader implements IModLoader {
 
         // Warning and allow loading if semver is not satisfied
         if (!satisfies(sptVersion, mod.sptVersion)) {
-            this.logger.warning(
+            this.logger.error(
                 this.localisationService.getText("modloader-outdated_sptversion_field", {
                     modName: modName,
                     modVersion: mod.version,
@@ -312,7 +312,7 @@ export class PreSptModLoader implements IModLoader {
                 }),
             );
 
-            return true;
+            return false;
         }
 
         return true;

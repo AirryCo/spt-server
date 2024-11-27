@@ -410,9 +410,9 @@
         "COVER_SELF_ALWAYS_IF_DAMAGED": false,
         "DAMAGE_REDUCTION_TIME_SEC": 20,
         "DANGER_POINT_CHOOSE_COEF": 1,
-        "DEFAULT_BEAR_BEHAVIOUR": "Attack",
+        "DEFAULT_BEAR_BEHAVIOUR": "AlwaysEnemies",
         "DEFAULT_SAVAGE_BEHAVIOUR": "Warn",
-        "DEFAULT_USEC_BEHAVIOUR": "Attack",
+        "DEFAULT_USEC_BEHAVIOUR": "AlwaysEnemies",
         "DIST_TO_ENEMY_YO_CAN_HEAL": 30,
         "DIST_TO_FOUND_SQRT": 400,
         "DIST_TO_STOP_RUN_ENEMY": 15,
@@ -894,9 +894,9 @@
         "COVER_SELF_ALWAYS_IF_DAMAGED": false,
         "DAMAGE_REDUCTION_TIME_SEC": 20,
         "DANGER_POINT_CHOOSE_COEF": 1,
-        "DEFAULT_BEAR_BEHAVIOUR": "Attack",
+        "DEFAULT_BEAR_BEHAVIOUR": "AlwaysEnemies",
         "DEFAULT_SAVAGE_BEHAVIOUR": "Warn",
-        "DEFAULT_USEC_BEHAVIOUR": "Attack",
+        "DEFAULT_USEC_BEHAVIOUR": "AlwaysEnemies",
         "DIST_TO_ENEMY_YO_CAN_HEAL": 30,
         "DIST_TO_FOUND_SQRT": 400,
         "DIST_TO_STOP_RUN_ENEMY": 15,
@@ -1378,9 +1378,9 @@
         "COVER_SELF_ALWAYS_IF_DAMAGED": false,
         "DAMAGE_REDUCTION_TIME_SEC": 20,
         "DANGER_POINT_CHOOSE_COEF": 1,
-        "DEFAULT_BEAR_BEHAVIOUR": "Attack",
+        "DEFAULT_BEAR_BEHAVIOUR": "AlwaysEnemies",
         "DEFAULT_SAVAGE_BEHAVIOUR": "Warn",
-        "DEFAULT_USEC_BEHAVIOUR": "Attack",
+        "DEFAULT_USEC_BEHAVIOUR": "AlwaysEnemies",
         "DIST_TO_ENEMY_YO_CAN_HEAL": 30,
         "DIST_TO_FOUND_SQRT": 400,
         "DIST_TO_STOP_RUN_ENEMY": 15,
@@ -1862,9 +1862,9 @@
         "COVER_SELF_ALWAYS_IF_DAMAGED": false,
         "DAMAGE_REDUCTION_TIME_SEC": 20,
         "DANGER_POINT_CHOOSE_COEF": 1,
-        "DEFAULT_BEAR_BEHAVIOUR": "Attack",
+        "DEFAULT_BEAR_BEHAVIOUR": "AlwaysEnemies",
         "DEFAULT_SAVAGE_BEHAVIOUR": "Warn",
-        "DEFAULT_USEC_BEHAVIOUR": "Attack",
+        "DEFAULT_USEC_BEHAVIOUR": "AlwaysEnemies",
         "DIST_TO_ENEMY_YO_CAN_HEAL": 30,
         "DIST_TO_FOUND_SQRT": 400,
         "DIST_TO_STOP_RUN_ENEMY": 15,
@@ -2036,16 +2036,35 @@
     }
   },
   "experience": {
-    "aggressorBonus": 0,
+    "aggressorBonus": {
+      "easy": 0.01,
+      "hard": 0.02,
+      "normal": 0.02
+    },
     "level": {
       "max": 1,
       "min": 0
     },
     "reward": {
+      "easy": {
       "max": 350,
       "min": 350
+      },
+      "hard": {
+        "max": 350,
+        "min": 350
+      },
+      "normal": {
+        "max": 350,
+        "min": 350
+      }
     },
-    "standingForKill": 0
+    "standingForKill": {
+      "easy": 0,
+      "hard": 0,
+      "normal": 0
+    },
+    "useSimpleAnimator": false
   },
   "firstName": [
     "Андрюша",
@@ -2103,6 +2122,22 @@
         },
         "whitelist": []
       },
+      "currency": {
+        "weights": {
+          "0": 10,
+          "1": 5,
+          "2": 1
+        },
+        "whitelist": []
+      },
+      "drink": {
+        "weights": {
+          "0": 10,
+          "1": 5,
+          "2": 2
+        },
+        "whitelist": []
+      },
       "drugs": {
         "weights": {
           "0": 1,
@@ -2111,27 +2146,11 @@
         },
         "whitelist": []
       },
-	  "drink": {
+      "food": {
         "weights": {
           "0": 10,
           "1": 5,
           "2": 2
-        },
-        "whitelist": []
-      },
-	  "food": {
-        "weights": {
-          "0": 10,
-          "1": 5,
-          "2": 2
-        },
-        "whitelist": []
-      },
-	  "currency": {
-        "weights": {
-          "0": 10,
-          "1": 5,
-          "2": 1
         },
         "whitelist": []
       },
@@ -2914,6 +2933,10 @@
       "57c44b372459772d2b39b8ce": {
         "mod_charge": [
           "5648ac824bdc2ded0b8b457d"
+        ],
+        "mod_handguard": [
+          "651178336cad06c37c049eb4",
+          "6565bb7eb4b12a56eb04b084"
         ],
         "mod_magazine": [
           "5a9e81fba2750c00164f6b11"

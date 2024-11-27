@@ -49,7 +49,7 @@ export class ClientLogCallbacks {
 
         data.isBeta = globalThis.G_WATERMARK_ENABLED;
         data.isModdable = globalThis.G_MODS_ENABLED;
-        data.isModded = this.modLoadOrder.getLoadOrder().length > 0 ? true : false;
+        data.isModded = this.modLoadOrder.getLoadOrder().length > 0;
 
         return this.httpResponse.noBody(data);
     }

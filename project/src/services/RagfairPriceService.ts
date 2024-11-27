@@ -5,8 +5,8 @@ import { PresetHelper } from "@spt/helpers/PresetHelper";
 import { TraderHelper } from "@spt/helpers/TraderHelper";
 import { MinMax } from "@spt/models/common/MinMax";
 import { IPreset } from "@spt/models/eft/common/IGlobals";
-import { HandbookItem } from "@spt/models/eft/common/tables/IHandbookBase";
-import { Item } from "@spt/models/eft/common/tables/IItem";
+import { IHandbookItem } from "@spt/models/eft/common/tables/IHandbookBase";
+import { IItem } from "@spt/models/eft/common/tables/IItem";
 import { IBarterScheme } from "@spt/models/eft/common/tables/ITrader";
 import { BaseClasses } from "@spt/models/enums/BaseClasses";
 import { ConfigTypes } from "@spt/models/enums/ConfigTypes";
@@ -103,7 +103,7 @@ export class RagfairPriceService implements OnLoad {
      * @param offerItems offer item + children to process
      * @returns Rouble price
      */
-    public getFleaPriceForOfferItems(offerItems: Item[]): number {
+    public getFleaPriceForOfferItems(offerItems: IItem[]): number {
         // Preset weapons take the direct prices.json value, otherwise they're massivly inflated
         if (this.itemHelper.isOfBaseclass(offerItems[0]._tpl, BaseClasses.WEAPON)) {
             return this.getFleaPriceForItem(offerItems[0]._tpl);
@@ -203,7 +203,7 @@ export class RagfairPriceService implements OnLoad {
      * @param isPackOffer Price is for a pack type offer
      * @returns cost of item in desired currency
      */
-    public getDynamicOfferPriceForOffer(offerItems: Item[], desiredCurrency: string, isPackOffer: boolean): number {
+    public getDynamicOfferPriceForOffer(offerItems: IItem[], desiredCurrency: string, isPackOffer: boolean): number {
         // Price to return.
         let price = 0;
 
@@ -242,8 +242,8 @@ export class RagfairPriceService implements OnLoad {
     public getDynamicItemPrice(
         itemTemplateId: string,
         desiredCurrency: string,
-        item?: Item,
-        offerItems?: Item[],
+        item?: IItem,
+        offerItems?: IItem[],
         isPackOffer?: boolean,
     ): number {
         let isPreset = false;
@@ -278,8 +278,8 @@ export class RagfairPriceService implements OnLoad {
             price *= multiplier;
         }
 
-        // The quality of the item affects the price.
-        if (item) {
+        // The quality of the item affects the price + not on the ignore list
+        if (item && !this.ragfairConfig.dynamic.ignoreQualityPriceVarianceBlacklist.includes(itemTemplateId)) {
             const qualityModifier = this.itemHelper.getItemQualityModifier(item);
             price *= qualityModifier;
         }
@@ -327,7 +327,7 @@ export class RagfairPriceService implements OnLoad {
      * @returns Adjusted price of item
      */
     protected adjustUnreasonablePrice(
-        handbookPrices: HandbookItem[],
+        handbookPrices: IHandbookItem[],
         unreasonableItemChange: IUnreasonableModPrices,
         itemTpl: string,
         price: number,
@@ -416,7 +416,7 @@ export class RagfairPriceService implements OnLoad {
      * @param existingPrice price of existing base weapon
      * @returns price of weapon in roubles
      */
-    protected getWeaponPresetPrice(weaponRootItem: Item, weaponWithChildren: Item[], existingPrice: number): number {
+    protected getWeaponPresetPrice(weaponRootItem: IItem, weaponWithChildren: IItem[], existingPrice: number): number {
         // Get the default preset for this weapon
         const presetResult = this.getWeaponPreset(weaponRootItem);
         if (presetResult.isDefault) {
@@ -477,7 +477,7 @@ export class RagfairPriceService implements OnLoad {
      * @param presets weapon presets to choose from
      * @returns Default preset object
      */
-    protected getWeaponPreset(weapon: Item): { isDefault: boolean; preset: IPreset } {
+    protected getWeaponPreset(weapon: IItem): { isDefault: boolean; preset: IPreset } {
         const defaultPreset = this.presetHelper.getDefaultPreset(weapon._tpl);
         if (defaultPreset) {
             return { isDefault: true, preset: defaultPreset };

@@ -14,7 +14,7 @@ import { ISendMessageRequest } from "@spt/models/eft/dialog/ISendMessageRequest"
 import { ISetDialogReadRequestData } from "@spt/models/eft/dialog/ISetDialogReadRequestData";
 import { IGetBodyResponseData } from "@spt/models/eft/httpResponse/IGetBodyResponseData";
 import { INullResponseData } from "@spt/models/eft/httpResponse/INullResponseData";
-import { DialogueInfo } from "@spt/models/eft/profile/ISptProfile";
+import { IDialogueInfo } from "@spt/models/eft/profile/ISptProfile";
 
 export interface IDialogueCallbacks {
     getFriendList(
@@ -27,7 +27,7 @@ export interface IDialogueCallbacks {
         url: string,
         info: IGetMailDialogListRequestData,
         sessionID: string,
-    ): IGetBodyResponseData<DialogueInfo[]>;
+    ): IGetBodyResponseData<IDialogueInfo[]>;
     getMailDialogView(
         url: string,
         info: IGetMailDialogViewRequestData,

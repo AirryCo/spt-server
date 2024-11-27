@@ -1,9 +1,9 @@
-import { Daum } from "@spt/models/eft/itemEvent/IItemEventRouterRequest";
+import { IDaum } from "@spt/models/eft/itemEvent/IItemEventRouterRequest";
 import { LogBackgroundColor } from "@spt/models/spt/logging/LogBackgroundColor";
 import { LogTextColor } from "@spt/models/spt/logging/LogTextColor";
 
 export interface ILogger {
-    writeToLogFile(data: string | Daum): void;
+    writeToLogFile(data: string | IDaum): void;
     log(data: string | Record<string, unknown> | Error, color: string, backgroundColor?: string): void;
     logWithColor(
         data: string | Record<string, unknown>,

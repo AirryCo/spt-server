@@ -1,6 +1,7 @@
 import { BotHelper } from "@spt/helpers/BotHelper";
-import { Difficulty } from "@spt/models/eft/common/tables/IBotType";
+import { IDifficultyCategories } from "@spt/models/eft/common/tables/IBotType";
 import { ConfigTypes } from "@spt/models/enums/ConfigTypes";
+import { IBots } from "@spt/models/spt/bots/IBots";
 import { IPmcConfig } from "@spt/models/spt/config/IPmcConfig";
 import { ILogger } from "@spt/models/spt/utils/ILogger";
 import { ConfigServer } from "@spt/servers/ConfigServer";
@@ -27,89 +28,13 @@ export class BotDifficultyHelper {
     }
 
     /**
-     * Get a difficulty object modified to handle fighting other PMCs
-     * @param pmcType 'bear or 'usec'
-     * @param difficulty easy / normal / hard / impossible
-     * @param usecType pmcUSEC
-     * @param bearType pmcBEAR
-     * @returns Difficulty object
-     */
-    public getPmcDifficultySettings(
-        pmcType: "bear" | "usec",
-        difficulty: string,
-        usecType: string,
-        bearType: string,
-    ): Difficulty {
-        const difficultySettings = this.getDifficultySettings(pmcType, difficulty);
-
-        const friendlyType = pmcType === "bear" ? bearType : usecType;
-        const enemyType = pmcType === "bear" ? usecType : bearType;
-
-        // Is PMC hostile to other PMC side
-        const hostileToSameSide = this.randomUtil.getChance100(this.pmcConfig.chanceSameSideIsHostilePercent);
-
-        // Add all non-PMC types to PMCs enemy list
-        this.addBotToEnemyList(difficultySettings, this.pmcConfig.enemyTypes, friendlyType);
-
-        // Add same/opposite side to enemy list
-        const hostilePMCTypes = hostileToSameSide ? [enemyType, friendlyType] : [enemyType];
-        this.addBotToEnemyList(difficultySettings, hostilePMCTypes);
-
-        if (hostileToSameSide) {
-            this.setDifficultyToHostileToBearAndUsec(difficultySettings);
-        }
-
-        return difficultySettings;
-    }
-
-    /**
-     * Add bot types to ENEMY_BOT_TYPES array
-     * @param difficultySettings Bot settings to alter
-     * @param typesToAdd Bot types to add to enemy list
-     * @param typeBeingEdited Bot type to ignore and not add to enemy list
-     */
-    protected addBotToEnemyList(difficultySettings: Difficulty, typesToAdd: string[], typeBeingEdited?: string): void {
-        const enemyBotTypesKey = "ENEMY_BOT_TYPES";
-
-        // Null guard
-        if (!difficultySettings.Mind[enemyBotTypesKey]) {
-            difficultySettings.Mind[enemyBotTypesKey] = [];
-        }
-
-        const enemyArray = <string[]>difficultySettings.Mind[enemyBotTypesKey];
-        for (const botTypeToAdd of typesToAdd) {
-            if (typeBeingEdited?.toLowerCase() === botTypeToAdd.toLowerCase()) {
-                this.logger.debug(`unable to add enemy ${botTypeToAdd} to its own enemy list, skipping`);
-                continue;
-            }
-
-            if (!enemyArray.includes(botTypeToAdd)) {
-                enemyArray.push(botTypeToAdd);
-            }
-        }
-    }
-
-    /**
-     * Configure difficulty settings to be hostile to USEC and BEAR
-     * Look up value in bot.json/chanceSameSideIsHostilePercent
-     * @param difficultySettings pmc difficulty settings
-     */
-    protected setDifficultyToHostileToBearAndUsec(difficultySettings: Difficulty): void {
-        difficultySettings.Mind.CAN_RECEIVE_PLAYER_REQUESTS_BEAR = false;
-        difficultySettings.Mind.CAN_RECEIVE_PLAYER_REQUESTS_USEC = false;
-        difficultySettings.Mind.DEFAULT_USEC_BEHAVIOUR = "Attack";
-        difficultySettings.Mind.DEFAULT_BEAR_BEHAVIOUR = "Attack";
-    }
-
-    /**
      * Get difficulty settings for desired bot type, if not found use assault bot types
      * @param type bot type to retrieve difficulty of
      * @param difficulty difficulty to get settings for (easy/normal etc)
+     * @param botDb bots from database
      * @returns Difficulty object
      */
-    public getBotDifficultySettings(type: string, difficulty: string): Difficulty {
-        const botDb = this.databaseService.getBots();
-
+    public getBotDifficultySettings(type: string, difficulty: string, botDb: IBots): IDifficultyCategories {
         const desiredType = type.toLowerCase();
         const bot = botDb.types[desiredType];
         if (!bot) {
@@ -142,7 +67,7 @@ export class BotDifficultyHelper {
      * @param difficulty what difficulty to retrieve
      * @returns Difficulty object
      */
-    protected getDifficultySettings(type: string, difficulty: string): Difficulty {
+    protected getDifficultySettings(type: string, difficulty: string): IDifficultyCategories {
         let difficultySetting =
             this.pmcConfig.difficulty.toLowerCase() === "asonline"
                 ? difficulty

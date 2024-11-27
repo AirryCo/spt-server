@@ -1,5 +1,5 @@
 import { HttpServerHelper } from "@spt/helpers/HttpServerHelper";
-import { Message, MessageContentRagfair } from "@spt/models/eft/profile/ISptProfile";
+import { IMessage, IMessageContentRagfair } from "@spt/models/eft/profile/ISptProfile";
 import { IWsChatMessageReceived } from "@spt/models/eft/ws/IWsChatMessageReceived";
 import { IWsNotificationEvent } from "@spt/models/eft/ws/IWsNotificationEvent";
 import { IWsRagfairOfferSold } from "@spt/models/eft/ws/IWsRagfairOfferSold";
@@ -26,8 +26,8 @@ export class NotifierHelper {
      * @returns
      */
     public createRagfairOfferSoldNotification(
-        dialogueMessage: Message,
-        ragfairData: MessageContentRagfair,
+        dialogueMessage: IMessage,
+        ragfairData: IMessageContentRagfair,
     ): IWsRagfairOfferSold {
         return {
             type: NotificationEventType.RAGFAIR_OFFER_SOLD,
@@ -41,7 +41,7 @@ export class NotifierHelper {
      * @param dialogueMessage
      * @returns
      */
-    public createNewMessageNotification(dialogueMessage: Message): IWsChatMessageReceived {
+    public createNewMessageNotification(dialogueMessage: IMessage): IWsChatMessageReceived {
         return {
             type: NotificationEventType.CHAT_MESSAGE_RECEIVED,
             eventId: dialogueMessage._id,

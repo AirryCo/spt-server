@@ -3,7 +3,9 @@ import { OnUpdate } from "@spt/di/OnUpdate";
 import { IPmcData } from "@spt/models/eft/common/IPmcData";
 import { IHandleQTEEventRequestData } from "@spt/models/eft/hideout/IHandleQTEEventRequestData";
 import { IHideoutCancelProductionRequestData } from "@spt/models/eft/hideout/IHideoutCancelProductionRequestData";
+import { IHideoutCircleOfCultistProductionStartRequestData } from "@spt/models/eft/hideout/IHideoutCircleOfCultistProductionStartRequestData";
 import { IHideoutContinuousProductionStartRequestData } from "@spt/models/eft/hideout/IHideoutContinuousProductionStartRequestData";
+import { IHideoutDeleteProductionRequestData } from "@spt/models/eft/hideout/IHideoutDeleteProductionRequestData";
 import { IHideoutImproveAreaRequestData } from "@spt/models/eft/hideout/IHideoutImproveAreaRequestData";
 import { IHideoutPutItemInRequestData } from "@spt/models/eft/hideout/IHideoutPutItemInRequestData";
 import { IHideoutScavCaseStartRequestData } from "@spt/models/eft/hideout/IHideoutScavCaseStartRequestData";
@@ -184,6 +186,28 @@ export class HideoutCallbacks implements OnUpdate {
         sessionId: string,
     ): IItemEventRouterResponse {
         return this.hideoutController.cancelProduction(sessionId, pmcData, request);
+    }
+
+    /**
+     * Handle client/game/profile/items/moving - HideoutCircleOfCultistProductionStart
+     */
+    public circleOfCultistProductionStart(
+        pmcData: IPmcData,
+        request: IHideoutCircleOfCultistProductionStartRequestData,
+        sessionId: string,
+    ): IItemEventRouterResponse {
+        return this.hideoutController.circleOfCultistProductionStart(sessionId, pmcData, request);
+    }
+
+    /**
+     * Handle client/game/profile/items/moving - HideoutDeleteProductionCommand
+     */
+    hideoutDeleteProductionCommand(
+        pmcData: IPmcData,
+        request: IHideoutDeleteProductionRequestData,
+        sessionId: string,
+    ): IItemEventRouterResponse {
+        return this.hideoutController.hideoutDeleteProductionCommand(sessionId, pmcData, request);
     }
 
     public async onUpdate(timeSinceLastRun: number): Promise<boolean> {

@@ -3,7 +3,6 @@ import { container } from "tsyringe";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 describe("LocaleService", () => {
-    // biome-ignore lint/suspicious/noExplicitAny: <explanation>
     let localeService: any; // Using "any" to access private/protected methods without type errors.
 
     beforeEach(() => {

@@ -2,10 +2,10 @@ import { HealthHelper } from "@spt/helpers/HealthHelper";
 import { InventoryHelper } from "@spt/helpers/InventoryHelper";
 import { ItemHelper } from "@spt/helpers/ItemHelper";
 import { IPmcData } from "@spt/models/eft/common/IPmcData";
-import { BodyPart, IHealthTreatmentRequestData } from "@spt/models/eft/health/IHealthTreatmentRequestData";
+import { IBodyPartHealth, ICurrentMax } from "@spt/models/eft/common/tables/IBotBase";
+import { IBodyPart, IHealthTreatmentRequestData } from "@spt/models/eft/health/IHealthTreatmentRequestData";
 import { IOffraidEatRequestData } from "@spt/models/eft/health/IOffraidEatRequestData";
 import { IOffraidHealRequestData } from "@spt/models/eft/health/IOffraidHealRequestData";
-import { ISyncHealthRequestData } from "@spt/models/eft/health/ISyncHealthRequestData";
 import { IWorkoutData } from "@spt/models/eft/health/IWorkoutData";
 import { IItemEventRouterResponse } from "@spt/models/eft/itemEvent/IItemEventRouterResponse";
 import { IProcessBuyTradeRequestData } from "@spt/models/eft/trade/IProcessBuyTradeRequestData";
@@ -31,24 +31,6 @@ export class HealthController {
         @inject("HealthHelper") protected healthHelper: HealthHelper,
         @inject("PrimaryCloner") protected cloner: ICloner,
     ) {}
-
-    /**
-     * stores in-raid player health
-     * @param pmcData Player profile
-     * @param info Request data
-     * @param sessionID Player id
-     * @param addEffects Should effects found be added or removed from profile
-     * @param deleteExistingEffects Should all prior effects be removed before apply new ones
-     */
-    public saveVitality(
-        pmcData: IPmcData,
-        info: ISyncHealthRequestData,
-        sessionID: string,
-        addEffects = true,
-        deleteExistingEffects = true,
-    ): void {
-        this.healthHelper.saveVitality(pmcData, info, sessionID, addEffects, deleteExistingEffects);
-    }
 
     /**
      * When healing in menu
@@ -85,11 +67,53 @@ export class HealthController {
             // Get max healing from db
             const maxhp = this.itemHelper.getItem(healingItemToUse._tpl)[1]._props.MaxHpResource;
             healingItemToUse.upd.MedKit = { HpResource: maxhp - request.count }; // Subtract amout used from max
+            // request.count appears to take into account healing effects removed, e.g. bleeds
+            // Salewa heals limb for 20 and fixes light bleed = (20+45 = 65)
         }
 
         // Resource in medkit is spent, delete it
         if (healingItemToUse.upd.MedKit.HpResource <= 0) {
             this.inventoryHelper.removeItem(pmcData, request.item, sessionID, output);
+        }
+
+        const healingItemDbDetails = this.itemHelper.getItem(healingItemToUse._tpl);
+
+        const healItemEffectDetails = healingItemDbDetails[1]._props.effects_damage;
+        const bodyPartToHeal: IBodyPartHealth = pmcData.Health.BodyParts[request.part];
+        if (!bodyPartToHeal) {
+            this.logger.warning(`Player: ${sessionID} Tried to heal a non-existent body part: ${request.part}`);
+
+            return output;
+        }
+
+        // Get inital heal amount
+        let amountToHealLimb = request.count;
+
+        // Check if healing item removes negative effects
+        const itemRemovesEffects = Object.keys(healingItemDbDetails[1]._props.effects_damage).length > 0;
+        if (itemRemovesEffects && bodyPartToHeal.Effects) {
+            // Can remove effects and limb has effects to remove
+            const effectsOnBodyPart = Object.keys(bodyPartToHeal.Effects);
+            for (const effectKey of effectsOnBodyPart) {
+                // Check if healing item removes the effect on limb
+                const matchingEffectFromHealingItem = healItemEffectDetails[effectKey];
+                if (!matchingEffectFromHealingItem) {
+                    // Healing item doesnt have matching effect, it doesnt remove the effect
+                    continue;
+                }
+
+                // Adjust limb heal amount based on if its fixing an effect (request.count is TOTAL cost of hp resource on heal item, NOT amount to heal limb)
+                amountToHealLimb -= matchingEffectFromHealingItem.cost ?? 0;
+                delete bodyPartToHeal.Effects[effectKey];
+            }
+        }
+
+        // Adjust body part hp value
+        bodyPartToHeal.Health.Current += amountToHealLimb;
+
+        // Ensure we've not healed beyond the limbs max hp
+        if (bodyPartToHeal.Health.Current > bodyPartToHeal.Health.Maximum) {
+            bodyPartToHeal.Health.Current = bodyPartToHeal.Health.Maximum;
         }
 
         return output;
@@ -135,7 +159,49 @@ export class HealthController {
             this.inventoryHelper.removeItem(pmcData, request.item, sessionID, output);
         }
 
+        // Check what effect eating item has and handle
+        const foodItemDbDetails = this.itemHelper.getItem(itemToConsume._tpl);
+        const foodItemEffectDetails = foodItemDbDetails[1]._props.effects_health;
+        const foodIsSingleUse = foodItemDbDetails[1]._props.MaxResource === 1;
+
+        for (const effectKey of Object.keys(foodItemEffectDetails)) {
+            const consumptionDetails = foodItemEffectDetails[effectKey];
+            switch (effectKey) {
+                case "Hydration":
+                    applyEdibleEffect(pmcData.Health.Hydration, consumptionDetails);
+                    break;
+                case "Energy":
+                    applyEdibleEffect(pmcData.Health.Energy, consumptionDetails);
+                    break;
+
+                default:
+                    this.logger.warning(`Unhandled effect after consuming: ${itemToConsume._tpl}, ${effectKey}`);
+                    break;
+            }
+        }
+
         return output;
+
+        function applyEdibleEffect(bodyValue: ICurrentMax, consumptionDetails: Record<string, number>) {
+            if (foodIsSingleUse) {
+                // Apply whole value from passed in parameter
+                bodyValue.Current += consumptionDetails.value;
+            } else {
+                bodyValue.Current += request.count;
+            }
+
+            // Ensure current never goes over max
+            if (bodyValue.Current > bodyValue.Maximum) {
+                bodyValue.Current = bodyValue.Maximum;
+
+                return;
+            }
+
+            // Same as above but for the lower bound
+            if (bodyValue.Current < 0) {
+                bodyValue.Current = 0;
+            }
+        }
     }
 
     /**
@@ -169,7 +235,7 @@ export class HealthController {
 
         for (const bodyPartKey in healthTreatmentRequest.difference.BodyParts) {
             // Get body part from request + from pmc profile
-            const partRequest: BodyPart = healthTreatmentRequest.difference.BodyParts[bodyPartKey];
+            const partRequest: IBodyPart = healthTreatmentRequest.difference.BodyParts[bodyPartKey];
             const profilePart = pmcData.Health.BodyParts[bodyPartKey];
 
             // Bodypart healing is chosen when part request hp is above 0

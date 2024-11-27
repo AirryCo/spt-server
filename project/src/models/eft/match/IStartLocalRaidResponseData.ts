@@ -7,8 +7,16 @@ export interface IStartLocalRaidResponseData {
     serverSettings: ILocationServices;
     profile: IProfileInsuredItems;
     locationLoot: ILocationBase;
+    transition: ITransition;
 }
 
 export interface IProfileInsuredItems {
     insuredItems: IInsuredItem[];
+}
+
+export interface ITransition {
+    isLocationTransition: boolean;
+    transitionRaidId: string;
+    transitionCount: number;
+    visitedLocations: string[];
 }

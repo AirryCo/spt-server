@@ -1,5 +1,5 @@
 import { ItemHelper } from "@spt/helpers/ItemHelper";
-import { ITemplateItem, Props } from "@spt/models/eft/common/tables/ITemplateItem";
+import { IProps, ITemplateItem } from "@spt/models/eft/common/tables/ITemplateItem";
 import { BaseClasses } from "@spt/models/enums/BaseClasses";
 import { ItemTpl } from "@spt/models/enums/ItemTpl";
 import {
@@ -137,7 +137,7 @@ export class CustomItemService {
      * @param overrideProperties new properties to apply
      * @param itemClone item to update
      */
-    protected updateBaseItemPropertiesWithOverrides(overrideProperties: Props, itemClone: ITemplateItem): void {
+    protected updateBaseItemPropertiesWithOverrides(overrideProperties: IProps, itemClone: ITemplateItem): void {
         for (const propKey in overrideProperties) {
             itemClone._props[propKey] = overrideProperties[propKey];
         }

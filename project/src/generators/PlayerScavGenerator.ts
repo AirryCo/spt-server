@@ -4,16 +4,16 @@ import { BotHelper } from "@spt/helpers/BotHelper";
 import { ItemHelper } from "@spt/helpers/ItemHelper";
 import { ProfileHelper } from "@spt/helpers/ProfileHelper";
 import { IPmcData } from "@spt/models/eft/common/IPmcData";
-import { IBotBase, Settings, Skills, Stats } from "@spt/models/eft/common/tables/IBotBase";
+import { IBotBase, IBotInfoSettings, ISkills, IStats } from "@spt/models/eft/common/tables/IBotBase";
 import { IBotType } from "@spt/models/eft/common/tables/IBotType";
-import { Item } from "@spt/models/eft/common/tables/IItem";
+import { IItem } from "@spt/models/eft/common/tables/IItem";
 import { AccountTypes } from "@spt/models/enums/AccountTypes";
 import { BonusType } from "@spt/models/enums/BonusType";
 import { ConfigTypes } from "@spt/models/enums/ConfigTypes";
 import { ItemAddedResult } from "@spt/models/enums/ItemAddedResult";
 import { MemberCategory } from "@spt/models/enums/MemberCategory";
 import { Traders } from "@spt/models/enums/Traders";
-import { IPlayerScavConfig, KarmaLevel } from "@spt/models/spt/config/IPlayerScavConfig";
+import { IKarmaLevel, IPlayerScavConfig } from "@spt/models/spt/config/IPlayerScavConfig";
 import { ILogger } from "@spt/models/spt/utils/ILogger";
 import { ConfigServer } from "@spt/servers/ConfigServer";
 import { SaveServer } from "@spt/servers/SaveServer";
@@ -89,7 +89,7 @@ export class PlayerScavGenerator {
         scavData.savage = undefined;
         scavData.aid = pmcDataClone.aid;
         scavData.TradersInfo = pmcDataClone.TradersInfo;
-        scavData.Info.Settings = {} as Settings;
+        scavData.Info.Settings = {} as IBotInfoSettings;
         scavData.Info.Bans = [];
         scavData.Info.RegistrationDate = pmcDataClone.Info.RegistrationDate;
         scavData.Info.GameVersion = pmcDataClone.Info.GameVersion;
@@ -155,7 +155,7 @@ export class PlayerScavGenerator {
             }
 
             const itemTemplate = itemResult[1];
-            const itemsToAdd: Item[] = [
+            const itemsToAdd: IItem[] = [
                 {
                     _id: this.hashUtil.generate(),
                     _tpl: itemTemplate._id,
@@ -229,7 +229,7 @@ export class PlayerScavGenerator {
      * @param karmaSettings Values to modify the bot template with
      * @param baseBotNode bot template to modify according to karama level settings
      */
-    protected adjustBotTemplateWithKarmaSpecificSettings(karmaSettings: KarmaLevel, baseBotNode: IBotType): void {
+    protected adjustBotTemplateWithKarmaSpecificSettings(karmaSettings: IKarmaLevel, baseBotNode: IBotType): void {
         // Adjust equipment chance values
         for (const equipmentKey in karmaSettings.modifiers.equipment) {
             if (karmaSettings.modifiers.equipment[equipmentKey] === 0) {
@@ -262,7 +262,7 @@ export class PlayerScavGenerator {
         }
     }
 
-    protected getScavSkills(scavProfile: IPmcData): Skills {
+    protected getScavSkills(scavProfile: IPmcData): ISkills {
         if (scavProfile.Skills) {
             return scavProfile.Skills;
         }
@@ -270,11 +270,11 @@ export class PlayerScavGenerator {
         return this.getDefaultScavSkills();
     }
 
-    protected getDefaultScavSkills(): Skills {
+    protected getDefaultScavSkills(): ISkills {
         return { Common: [], Mastering: [], Points: 0 };
     }
 
-    protected getScavStats(scavProfile: IPmcData): Stats {
+    protected getScavStats(scavProfile: IPmcData): IStats {
         if (scavProfile.Stats) {
             return scavProfile.Stats;
         }

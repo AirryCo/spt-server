@@ -6,20 +6,28 @@ import { PlayerScavGenerator } from "@spt/generators/PlayerScavGenerator";
 import { HealthHelper } from "@spt/helpers/HealthHelper";
 import { InRaidHelper } from "@spt/helpers/InRaidHelper";
 import { ProfileHelper } from "@spt/helpers/ProfileHelper";
+import { QuestHelper } from "@spt/helpers/QuestHelper";
 import { TraderHelper } from "@spt/helpers/TraderHelper";
 import { ILocationBase } from "@spt/models/eft/common/ILocationBase";
 import { IPmcData } from "@spt/models/eft/common/IPmcData";
-import { Common, TraderInfo } from "@spt/models/eft/common/tables/IBotBase";
-import { Item } from "@spt/models/eft/common/tables/IItem";
-import { IEndLocalRaidRequestData, IEndRaidResult } from "@spt/models/eft/match/IEndLocalRaidRequestData";
+import { Common, IQuestStatus, ITraderInfo } from "@spt/models/eft/common/tables/IBotBase";
+import { IItem } from "@spt/models/eft/common/tables/IItem";
+import {
+    IEndLocalRaidRequestData,
+    IEndRaidResult,
+    ILocationTransit,
+} from "@spt/models/eft/match/IEndLocalRaidRequestData";
 import { IStartLocalRaidRequestData } from "@spt/models/eft/match/IStartLocalRaidRequestData";
 import { IStartLocalRaidResponseData } from "@spt/models/eft/match/IStartLocalRaidResponseData";
 import { ConfigTypes } from "@spt/models/enums/ConfigTypes";
+import { ExitStatus } from "@spt/models/enums/ExitStatis";
 import { MessageType } from "@spt/models/enums/MessageType";
+import { QuestStatus } from "@spt/models/enums/QuestStatus";
 import { Traders } from "@spt/models/enums/Traders";
 import { IHideoutConfig } from "@spt/models/spt/config/IHideoutConfig";
 import { IInRaidConfig } from "@spt/models/spt/config/IInRaidConfig";
 import { ILocationConfig } from "@spt/models/spt/config/ILocationConfig";
+import { IPmcConfig } from "@spt/models/spt/config/IPmcConfig";
 import { IRagfairConfig } from "@spt/models/spt/config/IRagfairConfig";
 import { ITraderConfig } from "@spt/models/spt/config/ITraderConfig";
 import { IRaidChanges } from "@spt/models/spt/location/IRaidChanges";
@@ -28,6 +36,7 @@ import { ConfigServer } from "@spt/servers/ConfigServer";
 import { SaveServer } from "@spt/servers/SaveServer";
 import { BotGenerationCacheService } from "@spt/services/BotGenerationCacheService";
 import { BotLootCacheService } from "@spt/services/BotLootCacheService";
+import { BotNameService } from "@spt/services/BotNameService";
 import { DatabaseService } from "@spt/services/DatabaseService";
 import { InsuranceService } from "@spt/services/InsuranceService";
 import { LocalisationService } from "@spt/services/LocalisationService";
@@ -48,6 +57,7 @@ export class LocationLifecycleService {
     protected ragfairConfig: IRagfairConfig;
     protected hideoutConfig: IHideoutConfig;
     protected locationConfig: ILocationConfig;
+    protected pmcConfig: IPmcConfig;
 
     constructor(
         @inject("PrimaryLogger") protected logger: ILogger,
@@ -59,6 +69,7 @@ export class LocationLifecycleService {
         @inject("DatabaseService") protected databaseService: DatabaseService,
         @inject("InRaidHelper") protected inRaidHelper: InRaidHelper,
         @inject("HealthHelper") protected healthHelper: HealthHelper,
+        @inject("QuestHelper") protected questHelper: QuestHelper,
         @inject("MatchBotDetailsCacheService") protected matchBotDetailsCacheService: MatchBotDetailsCacheService,
         @inject("PmcChatResponseService") protected pmcChatResponseService: PmcChatResponseService,
         @inject("PlayerScavGenerator") protected playerScavGenerator: PlayerScavGenerator,
@@ -70,6 +81,7 @@ export class LocationLifecycleService {
         @inject("BotGenerationCacheService") protected botGenerationCacheService: BotGenerationCacheService,
         @inject("MailSendService") protected mailSendService: MailSendService,
         @inject("RaidTimeAdjustmentService") protected raidTimeAdjustmentService: RaidTimeAdjustmentService,
+        @inject("BotNameService") protected botNameService: BotNameService,
         @inject("LootGenerator") protected lootGenerator: LootGenerator,
         @inject("ApplicationContext") protected applicationContext: ApplicationContext,
         @inject("LocationLootGenerator") protected locationLootGenerator: LocationLootGenerator,
@@ -80,30 +92,174 @@ export class LocationLifecycleService {
         this.ragfairConfig = this.configServer.getConfig(ConfigTypes.RAGFAIR);
         this.hideoutConfig = this.configServer.getConfig(ConfigTypes.HIDEOUT);
         this.locationConfig = this.configServer.getConfig(ConfigTypes.LOCATION);
+        this.pmcConfig = this.configServer.getConfig(ConfigTypes.PMC);
     }
 
+    /** Handle client/match/local/start */
     public startLocalRaid(sessionId: string, request: IStartLocalRaidRequestData): IStartLocalRaidResponseData {
+        this.logger.debug(`Starting: ${request.location}`);
+
         const playerProfile = this.profileHelper.getPmcProfile(sessionId);
 
         const result: IStartLocalRaidResponseData = {
             serverId: `${request.location}.${request.playerSide}.${this.timeUtil.getTimestamp()}`, // TODO - does this need to be more verbose - investigate client?
             serverSettings: this.databaseService.getLocationServices(), // TODO - is this per map or global?
             profile: { insuredItems: playerProfile.InsuredItems },
-            locationLoot: this.generateLocationAndLoot(request.location),
+            locationLoot: this.generateLocationAndLoot(request.location, !request.sptSkipLootGeneration),
+            transition: {
+                isLocationTransition: false,
+                transitionRaidId: this.hashUtil.generate(),
+                transitionCount: 0,
+                visitedLocations: [],
+            },
         };
+
+        // Only has value when transitioning into map from previous one
+        if (request.transition) {
+            // TODO - why doesnt the raid after transit have any transit data?
+            result.transition = request.transition;
+        }
+
+        // Get data stored at end of previous raid (if any)
+        const transitionData = this.applicationContext
+            .getLatestValue(ContextVariableType.TRANSIT_INFO)
+            ?.getValue<ILocationTransit>();
+        if (transitionData) {
+            this.logger.success(`Player: ${sessionId} is in transit to ${request.location}`);
+            result.transition.isLocationTransition = true;
+            result.transition.transitionRaidId = transitionData.transitionRaidId;
+            result.transition.transitionCount += 1;
+
+            // Used by client to determine infil location) - client adds the map player is transiting to later
+            result.transition.visitedLocations.push(transitionData.sptLastVisitedLocation);
+
+            // Complete, clean up as no longer needed
+            this.applicationContext.clearValues(ContextVariableType.TRANSIT_INFO);
+        }
+
+        // Apply changes from pmcConfig to bot hostility values
+        this.adjustBotHostilitySettings(result.locationLoot);
+
+        this.adjustExtracts(request.playerSide, request.location, result.locationLoot);
 
         // Clear bot cache ready for a fresh raid
         this.botGenerationCacheService.clearStoredBots();
+        this.botNameService.clearNameCache();
 
         return result;
     }
 
     /**
-     * Generate a maps base location and loot
+     * Replace map exits with scav exits when player is scavving
+     * @param playerSide Playders side (savage/usec/bear)
+     * @param location id of map being loaded
+     * @param locationData Maps locationbase data
+     */
+    protected adjustExtracts(playerSide: string, location: string, locationData: ILocationBase): void {
+        const playerIsScav = playerSide.toLowerCase() === "savage";
+        if (playerIsScav) {
+            // Get relevant extract data for map
+            const mapExtracts = this.databaseService.getLocation(location)?.allExtracts;
+            if (!mapExtracts) {
+                this.logger.warning(`Unable to find map: ${location} extract data, no adjustments made`);
+
+                return;
+            }
+
+            // Find only scav extracts and overwrite existing exits with them
+            const scavExtracts = mapExtracts.filter((extract) => ["scav"].includes(extract.Side.toLowerCase()));
+            if (scavExtracts.length > 0) {
+                // Scav extracts found, use them
+                locationData.exits.push(...scavExtracts);
+            }
+        }
+    }
+
+    /**
+     * Adjust the bot hostility values prior to entering a raid
+     * @param location map to adjust values of
+     */
+    protected adjustBotHostilitySettings(location: ILocationBase): void {
+        for (const botId in this.pmcConfig.hostilitySettings) {
+            const configHostilityChanges = this.pmcConfig.hostilitySettings[botId];
+            const locationBotHostilityDetails = location.BotLocationModifier.AdditionalHostilitySettings.find(
+                (botSettings) => botSettings.BotRole.toLowerCase() === botId,
+            );
+
+            // No matching bot in config, skip
+            if (!locationBotHostilityDetails) {
+                this.logger.warning(
+                    `No bot: ${botId} hostility values found on: ${location.Id}, can only edit existing. Skipping`,
+                );
+
+                continue;
+            }
+
+            // Add new permanent enemies if they don't already exist
+            if (configHostilityChanges.additionalEnemyTypes) {
+                for (const enemyTypeToAdd of configHostilityChanges.additionalEnemyTypes) {
+                    if (!locationBotHostilityDetails.AlwaysEnemies.includes(enemyTypeToAdd)) {
+                        locationBotHostilityDetails.AlwaysEnemies.push(enemyTypeToAdd);
+                    }
+                }
+            }
+
+            // Add/edit chance settings
+            if (configHostilityChanges.chancedEnemies) {
+                locationBotHostilityDetails.ChancedEnemies ||= [];
+                for (const chanceDetailsToApply of configHostilityChanges.chancedEnemies) {
+                    const locationBotDetails = locationBotHostilityDetails.ChancedEnemies.find(
+                        (botChance) => botChance.Role === chanceDetailsToApply.Role,
+                    );
+                    if (locationBotDetails) {
+                        // Existing
+                        locationBotDetails.EnemyChance = chanceDetailsToApply.EnemyChance;
+                    } else {
+                        // Add new
+                        locationBotHostilityDetails.ChancedEnemies.push(chanceDetailsToApply);
+                    }
+                }
+            }
+
+            // Add new permanent friends if they don't already exist
+            if (configHostilityChanges.additionalFriendlyTypes) {
+                locationBotHostilityDetails.AlwaysFriends ||= [];
+                for (const friendlyTypeToAdd of configHostilityChanges.additionalFriendlyTypes) {
+                    if (!locationBotHostilityDetails.AlwaysFriends.includes(friendlyTypeToAdd)) {
+                        locationBotHostilityDetails.AlwaysFriends.push(friendlyTypeToAdd);
+                    }
+                }
+            }
+
+            // Adjust vs bear hostility chance
+            if (typeof configHostilityChanges.bearEnemyChance !== "undefined") {
+                locationBotHostilityDetails.BearEnemyChance = configHostilityChanges.bearEnemyChance;
+            }
+
+            // Adjust vs usec hostility chance
+            if (typeof configHostilityChanges.usecEnemyChance !== "undefined") {
+                locationBotHostilityDetails.UsecEnemyChance = configHostilityChanges.usecEnemyChance;
+            }
+
+            // Adjust vs savage hostility chance
+            if (typeof configHostilityChanges.savageEnemyChance !== "undefined") {
+                locationBotHostilityDetails.SavageEnemyChance = configHostilityChanges.savageEnemyChance;
+            }
+
+            // Adjust vs scav hostility behaviour
+            if (typeof configHostilityChanges.savagePlayerBehaviour !== "undefined") {
+                locationBotHostilityDetails.SavagePlayerBehaviour = configHostilityChanges.savagePlayerBehaviour;
+            }
+        }
+    }
+
+    /**
+     * Generate a maps base location (cloned) and loot
      * @param name Map name
+     * @param generateLoot OPTIONAL - Should loot be generated for the map before being returned
      * @returns ILocationBase
      */
-    protected generateLocationAndLoot(name: string): ILocationBase {
+    protected generateLocationAndLoot(name: string, generateLoot = true): ILocationBase {
         const location = this.databaseService.getLocation(name);
         const locationBaseClone = this.cloner.clone(location.base);
 
@@ -112,6 +268,16 @@ export class LocationLifecycleService {
 
         // Don't generate loot for hideout
         if (name === "hideout") {
+            return locationBaseClone;
+        }
+
+        // If new spawn system is enabled, clear the spawn waves
+        if (locationBaseClone.NewSpawn) {
+            locationBaseClone.waves = [];
+        }
+
+        // We only need the base data
+        if (!generateLoot) {
             return locationBaseClone;
         }
 
@@ -136,7 +302,7 @@ export class LocationLifecycleService {
         const dynamicSpawnPoints = this.locationLootGenerator.generateDynamicLoot(
             dynamicLootDistClone,
             staticAmmoDist,
-            name,
+            name.toLowerCase(),
         );
 
         for (const spawnPoint of dynamicSpawnPoints) {
@@ -161,6 +327,7 @@ export class LocationLifecycleService {
         return locationBaseClone;
     }
 
+    /** Handle client/match/local/end */
     public endLocalRaid(sessionId: string, request: IEndLocalRaidRequestData): void {
         // Clear bot loot cache
         this.botLootCacheService.clearCache();
@@ -168,16 +335,14 @@ export class LocationLifecycleService {
         const fullProfile = this.profileHelper.getFullProfile(sessionId);
         const pmcProfile = fullProfile.characters.pmc;
         const scavProfile = fullProfile.characters.scav;
-        const postRaidProfile = request.results.profile!;
 
         // TODO:
-        // Rep gain/loss?
         // Quest status?
         // stats/eft/aggressor - weird values (EFT.IProfileDataContainer.Nickname)
 
-        this.logger.debug(`Raid outcome: ${request.results.result}`);
+        this.logger.debug(`Raid: ${request.serverId} outcome: ${request.results.result}`);
 
-        // Set flea interval time to out-of-raid value
+        // Reset flea interval time to out-of-raid value
         this.ragfairConfig.runIntervalSeconds = this.ragfairConfig.runIntervalValues.outOfRaid;
         this.hideoutConfig.runIntervalSeconds = this.hideoutConfig.runIntervalValues.outOfRaid;
 
@@ -188,14 +353,37 @@ export class LocationLifecycleService {
         const isPmc = serverDetails[1].toLowerCase() === "pmc";
         const mapBase = this.databaseService.getLocation(locationName).base;
         const isDead = this.isPlayerDead(request.results);
+        const isTransfer = this.isMapToMapTransfer(request.results);
+        const isSurvived = this.isPlayerSurvived(request.results);
+
+        // Handle items transferred via BTR or transit to player mailbox
+        this.handleItemTransferEvent(sessionId, request);
+
+        // Player is moving between maps
+        if (isTransfer && request.locationTransit) {
+            // Manually store the map player just left
+            request.locationTransit.sptLastVisitedLocation = locationName;
+            // TODO - Persist each players last visited location history over multiple transits, e.g using InMemoryCacheService, need to take care to not let data get stored forever
+            // Store transfer data for later use in `startLocalRaid()` when next raid starts
+            this.applicationContext.addValue(ContextVariableType.TRANSIT_INFO, request.locationTransit);
+        }
 
         if (!isPmc) {
-            this.handlePostRaidPlayerScav(sessionId, pmcProfile, scavProfile, isDead, request);
+            this.handlePostRaidPlayerScav(sessionId, pmcProfile, scavProfile, isDead, isTransfer, request);
 
             return;
         }
 
-        this.handlePostRaidPmc(sessionId, pmcProfile, scavProfile, postRaidProfile, isDead, request, locationName);
+        this.handlePostRaidPmc(
+            sessionId,
+            pmcProfile,
+            scavProfile,
+            isDead,
+            isSurvived,
+            isTransfer,
+            request,
+            locationName,
+        );
 
         // Handle car extracts
         if (this.extractWasViaCar(request.results.exitName)) {
@@ -331,7 +519,7 @@ export class LocationLifecycleService {
     protected sendCoopTakenFenceMessage(sessionId: string): void {
         // Generate reward for taking coop extract
         const loot = this.lootGenerator.createRandomLoot(this.traderConfig.fence.coopExtractGift);
-        const mailableLoot: Item[] = [];
+        const mailableLoot: IItem[] = [];
 
         const parentId = this.hashUtil.generate();
         for (const item of loot) {
@@ -369,19 +557,23 @@ export class LocationLifecycleService {
         pmcProfile: IPmcData,
         scavProfile: IPmcData,
         isDead: boolean,
+        isTransfer: boolean,
         request: IEndLocalRaidRequestData,
     ): void {
-        // Scav died, regen scav loadout and reset timer
-        if (isDead) {
-            this.playerScavGenerator.generate(sessionId);
+        const postRaidProfile = request.results.profile;
+
+        if (isTransfer) {
+            // We want scav inventory to persist into next raid when pscav is moving between maps
+            this.inRaidHelper.setInventory(sessionId, scavProfile, postRaidProfile, true, isTransfer);
         }
 
         scavProfile.Info.Level = request.results.profile.Info.Level;
         scavProfile.Skills = request.results.profile.Skills;
-        scavProfile.Stats.Eft = request.results.profile.Stats.Eft;
+        scavProfile.Stats = request.results.profile.Stats;
         scavProfile.Encyclopedia = request.results.profile.Encyclopedia;
         scavProfile.TaskConditionCounters = request.results.profile.TaskConditionCounters;
         scavProfile.SurvivorClass = request.results.profile.SurvivorClass;
+
         // Scavs dont have achievements, but copy anyway
         scavProfile.Achievements = request.results.profile.Achievements;
 
@@ -392,20 +584,30 @@ export class LocationLifecycleService {
 
         this.applyTraderStandingAdjustments(scavProfile.TradersInfo, request.results.profile.TradersInfo);
 
-        const fenceId = Traders.FENCE;
+        // Clamp fence standing within -7 to 15 range
+        const fenceMax = this.traderConfig.fence.playerRepMax; // 15
+        const fenceMin = this.traderConfig.fence.playerRepMin; //-7
+        const currentFenceStanding = request.results.profile.TradersInfo[Traders.FENCE].standing;
+        scavProfile.TradersInfo[Traders.FENCE].standing = Math.min(Math.max(currentFenceStanding, fenceMin), fenceMax);
 
-        // Clamp fence standing
-        const currentFenceStanding = request.results.profile.TradersInfo[fenceId].standing;
-        pmcProfile.TradersInfo[fenceId].standing = Math.min(Math.max(currentFenceStanding, -7), 15); // Ensure it stays between -7 and 15
+        // Successful extract as scav, give some rep
+        if (this.isPlayerSurvived(request.results) && scavProfile.TradersInfo[Traders.FENCE].standing < fenceMax) {
+            scavProfile.TradersInfo[Traders.FENCE].standing += this.inRaidConfig.scavExtractStandingGain;
+        }
 
-        // Copy fence values to PMC
-        pmcProfile.TradersInfo[fenceId] = scavProfile.TradersInfo[fenceId];
+        // Copy scav fence values to PMC profile
+        pmcProfile.TradersInfo[Traders.FENCE] = scavProfile.TradersInfo[Traders.FENCE];
 
         // Must occur after encyclopedia updated
         this.mergePmcAndScavEncyclopedias(scavProfile, pmcProfile);
 
         // Remove skill fatigue values
         this.resetSkillPointsEarnedDuringRaid(scavProfile.Skills.Common);
+
+        // Scav died, regen scav loadout and reset timer
+        if (isDead) {
+            this.playerScavGenerator.generate(sessionId);
+        }
 
         // Update last played property
         pmcProfile.Info.LastTimePlayedAsSavage = this.timeUtil.getTimestamp();
@@ -414,17 +616,35 @@ export class LocationLifecycleService {
         this.saveServer.saveProfile(sessionId);
     }
 
+    /**
+     *
+     * @param sessionId Player id
+     * @param pmcProfile Pmc profile
+     * @param scavProfile Scav profile
+     * @param isDead Player died/got left behind in raid
+     * @param isSurvived Not same as opposite of `isDead`, specific status
+     * @param request
+     * @param locationName
+     */
     protected handlePostRaidPmc(
         sessionId: string,
         pmcProfile: IPmcData,
         scavProfile: IPmcData,
-        postRaidProfile: IPmcData,
         isDead: boolean,
+        isSurvived: boolean,
+        isTransfer: boolean,
         request: IEndLocalRaidRequestData,
         locationName: string,
     ): void {
+        const postRaidProfile = request.results.profile;
+        const preRaidProfileQuestDataClone = this.cloner.clone(pmcProfile.Quests);
+
+        // MUST occur BEFORE inventory actions (setInventory()) occur
+        // Player died, get quest items they lost for use later
+        const lostQuestItems = this.profileHelper.getQuestItemsInProfile(postRaidProfile);
+
         // Update inventory
-        this.inRaidHelper.setInventory(sessionId, pmcProfile, postRaidProfile);
+        this.inRaidHelper.setInventory(sessionId, pmcProfile, postRaidProfile, isSurvived, isTransfer);
 
         pmcProfile.Info.Level = postRaidProfile.Info.Level;
         pmcProfile.Skills = postRaidProfile.Skills;
@@ -433,13 +653,18 @@ export class LocationLifecycleService {
         pmcProfile.TaskConditionCounters = postRaidProfile.TaskConditionCounters;
         pmcProfile.SurvivorClass = postRaidProfile.SurvivorClass;
         pmcProfile.Achievements = postRaidProfile.Achievements;
-        pmcProfile.Quests = postRaidProfile.Quests;
+        pmcProfile.Quests = this.processPostRaidQuests(postRaidProfile.Quests);
+
+        // Handle edge case - must occur AFTER processPostRaidQuests()
+        this.lightkeeperQuestWorkaround(sessionId, postRaidProfile.Quests, preRaidProfileQuestDataClone, pmcProfile);
+
+        pmcProfile.WishList = postRaidProfile.WishList;
 
         pmcProfile.Info.Experience = postRaidProfile.Info.Experience;
 
         this.applyTraderStandingAdjustments(pmcProfile.TradersInfo, postRaidProfile.TradersInfo);
 
-        // Must occur after experience is set and stats copied over
+        // Must occur AFTER experience is set and stats copied over
         pmcProfile.Stats.Eft.TotalSessionExperience = 0;
 
         const fenceId = Traders.FENCE;
@@ -451,7 +676,7 @@ export class LocationLifecycleService {
         // Copy fence values to Scav
         scavProfile.TradersInfo[fenceId] = pmcProfile.TradersInfo[fenceId];
 
-        // Must occur after encyclopedia updated
+        // MUST occur AFTER encyclopedia updated
         this.mergePmcAndScavEncyclopedias(pmcProfile, scavProfile);
 
         // Remove skill fatigue values
@@ -461,36 +686,170 @@ export class LocationLifecycleService {
         this.healthHelper.updateProfileHealthPostRaid(pmcProfile, postRaidProfile.Health, sessionId, isDead);
 
         if (isDead) {
+            if (lostQuestItems.length > 0) {
+                // MUST occur AFTER quests have post raid quest data has been merged "processPostRaidQuests()"
+                // Player is dead + had quest items, check and fix any broken find item quests
+                this.checkForAndFixPickupQuestsAfterDeath(sessionId, lostQuestItems, pmcProfile.Quests);
+            }
+
             this.pmcChatResponseService.sendKillerResponse(sessionId, pmcProfile, postRaidProfile.Stats.Eft.Aggressor);
 
             this.inRaidHelper.deleteInventory(pmcProfile, sessionId);
+
+            this.inRaidHelper.removeFiRStatusFromItemsInContainer(sessionId, pmcProfile, "SecuredContainer");
         }
 
         // Must occur AFTER killer messages have been sent
         this.matchBotDetailsCacheService.clearCache();
 
-        const victims = postRaidProfile.Stats.Eft.Victims.filter((victim) =>
-            ["pmcbear", "pmcusec"].includes(victim.Role.toLowerCase()),
+        const victims = postRaidProfile.Stats.Eft.Victims.filter(
+            (victim) => ["pmcbear", "pmcusec"].includes(victim.Role.toLowerCase()), // TODO replace with enum
         );
         if (victims?.length > 0) {
-            // Player killed PMCs, send some responses to them
+            // Player killed PMCs, send some mail responses to them
             this.pmcChatResponseService.sendVictimResponse(sessionId, victims, pmcProfile);
         }
 
-        // Handle items transferred via BTR to player
-        this.handleBTRItemTransferEvent(sessionId, request);
+        this.handleInsuredItemLostEvent(sessionId, pmcProfile, request, locationName);
+    }
 
-        if (request.lostInsuredItems?.length > 0) {
-            const mappedItems = this.insuranceService.mapInsuredItemsToTrader(
-                sessionId,
-                request.lostInsuredItems,
-                request.results.profile,
+    /**
+     * On death Quest items are lost, the client does not clean up completed conditions for picking up those quest items,
+     * If the completed conditions remain in the profile the player is unable to pick the item up again
+     * @param sessionId Session id
+     * @param lostQuestItems Quest items lost on player death
+     * @param profileQuests Quest status data from player profile
+     */
+    protected checkForAndFixPickupQuestsAfterDeath(
+        sessionId: string,
+        lostQuestItems: IItem[],
+        profileQuests: IQuestStatus[],
+    ) {
+        // Exclude completed quests
+        const activeQuestIdsInProfile = profileQuests
+            .filter((quest) => ![QuestStatus.Success, QuestStatus.AvailableForStart].includes(quest.status))
+            .map((status) => status.qid);
+
+        // Get db details of quests we found above
+        const questDb = Object.values(this.databaseService.getQuests()).filter((quest) =>
+            activeQuestIdsInProfile.includes(quest._id),
+        );
+
+        for (const lostItem of lostQuestItems) {
+            let matchingConditionId: string;
+            // Find a quest that has a FindItem condition that has the list items tpl as a target
+            const matchingQuests = questDb.filter((quest) => {
+                const matchingCondition = quest.conditions.AvailableForFinish.find(
+                    (questCondition) =>
+                        questCondition.conditionType === "FindItem" && questCondition.target.includes(lostItem._tpl),
+                );
+                if (!matchingCondition) {
+                    // Quest doesnt have a matching condition
+                    return false;
+                }
+
+                // We found a condition, save id for later
+                matchingConditionId = matchingCondition.id;
+                return true;
+            });
+
+            // Fail if multiple were found
+            if (matchingQuests.length !== 1) {
+                this.logger.error(
+                    `Unable to fix quest item: ${lostItem}, ${matchingQuests.length} matching quests found, expected 1`,
+                );
+
+                continue;
+            }
+
+            const matchingQuest = matchingQuests[0];
+            // We have a match, remove the condition id from profile to reset progress and let player pick item up again
+            const profileQuestToUpdate = profileQuests.find((questStatus) => questStatus.qid === matchingQuest._id);
+            if (!profileQuestToUpdate) {
+                // Profile doesnt have a matching quest
+                continue;
+            }
+
+            // Filter out the matching condition we found
+            profileQuestToUpdate.completedConditions = profileQuestToUpdate.completedConditions.filter(
+                (conditionId) => conditionId !== matchingConditionId,
             );
-
-            this.insuranceService.storeGearLostInRaidToSendLater(sessionId, mappedItems);
-
-            this.insuranceService.sendInsuredItems(pmcProfile, sessionId, locationName);
         }
+    }
+
+    /**
+     * In 0.15 Lightkeeper quests do not give rewards in PvE, this issue also occurs in spt
+     * We check for newly completed Lk quests and run them through the servers `CompleteQuest` process
+     * This rewards players with items + craft unlocks + new trader assorts
+     * @param sessionId Session id
+     * @param postRaidQuests Quest statuses post-raid
+     * @param preRaidQuests Quest statuses pre-raid
+     * @param pmcProfile Players profile
+     */
+    protected lightkeeperQuestWorkaround(
+        sessionId: string,
+        postRaidQuests: IQuestStatus[],
+        preRaidQuests: IQuestStatus[],
+        pmcProfile: IPmcData,
+    ): void {
+        // LK quests that were not completed before raid but now are
+        const newlyCompletedLightkeeperQuests = postRaidQuests.filter(
+            (postRaidQuest) =>
+                postRaidQuest.status === QuestStatus.Success &&
+                preRaidQuests.find(
+                    (preRaidQuest) =>
+                        preRaidQuest.qid === postRaidQuest.qid && preRaidQuest.status !== QuestStatus.Success,
+                ) &&
+                this.databaseService.getQuests()[postRaidQuest.qid]?.traderId === Traders.LIGHTHOUSEKEEPER,
+        );
+
+        // Run server complete quest process to ensure player gets rewards
+        for (const questToComplete of newlyCompletedLightkeeperQuests) {
+            this.questHelper.completeQuest(
+                pmcProfile,
+                { Action: "CompleteQuest", qid: questToComplete.qid, removeExcessItems: false },
+                sessionId,
+            );
+        }
+    }
+
+    /**
+     * Convert post-raid quests into correct format
+     * Quest status comes back as a string version of the enum `Success`, not the expected value of 1
+     * @param questsToProcess quests data from client
+     * @param preRaidQuestStatuses quest data from before raid
+     * @returns IQuestStatus
+     */
+    protected processPostRaidQuests(questsToProcess: IQuestStatus[]): IQuestStatus[] {
+        for (const quest of questsToProcess) {
+            quest.status = Number(QuestStatus[quest.status]);
+
+            // Iterate over each status timer key and convert from a string into the enums number value
+            for (const statusTimerKey in quest.statusTimers) {
+                if (Number.isNaN(Number.parseInt(statusTimerKey))) {
+                    // Is a string, convert
+                    quest.statusTimers[QuestStatus[statusTimerKey]] = quest.statusTimers[statusTimerKey];
+
+                    // Delete the old string key/value
+                    quest.statusTimers[statusTimerKey] = undefined;
+                }
+            }
+        }
+
+        // Find marked as failed quests + flagged as restartable and re-status them as 'failed' so they can be restarted by player
+        const failedQuests = questsToProcess.filter((quest) => quest.status === QuestStatus.MarkedAsFailed);
+        for (const failedQuest of failedQuests) {
+            const dbQuest = this.databaseService.getQuests()[failedQuest.qid];
+            if (!dbQuest) {
+                continue;
+            }
+
+            if (dbQuest.restartable) {
+                failedQuest.status = QuestStatus.Fail;
+            }
+        }
+
+        return questsToProcess;
     }
 
     /**
@@ -499,8 +858,8 @@ export class LocationLifecycleService {
      * @param tradersClientProfile Client
      */
     protected applyTraderStandingAdjustments(
-        tradersServerProfile: Record<string, TraderInfo>,
-        tradersClientProfile: Record<string, TraderInfo>,
+        tradersServerProfile: Record<string, ITraderInfo>,
+        tradersClientProfile: Record<string, ITraderInfo>,
     ): void {
         for (const traderId in tradersClientProfile) {
             const serverProfileTrader = tradersServerProfile[traderId];
@@ -517,20 +876,28 @@ export class LocationLifecycleService {
     }
 
     /**
-     * Check if player used BTR item sending service and send items to player via mail if found
+     * Check if player used BTR or transit item sending service and send items to player via mail if found
      * @param sessionId Session id
      * @param request End raid request
      */
-    protected handleBTRItemTransferEvent(sessionId: string, request: IEndLocalRaidRequestData): void {
-        const btrKey = "BTRTransferStash";
-        const btrContainerAndItems = request.transferItems[btrKey] ?? [];
-        if (btrContainerAndItems.length > 0) {
-            const itemsToSend = btrContainerAndItems.filter((item) => item._id !== btrKey);
-            this.btrItemDelivery(sessionId, Traders.BTR, itemsToSend);
+    protected handleItemTransferEvent(sessionId: string, request: IEndLocalRaidRequestData): void {
+        const transferTypes = ["btr", "transit"];
+
+        for (const trasferType of transferTypes) {
+            const rootId = `${Traders.BTR}_${trasferType}`;
+            let itemsToSend = request.transferItems[rootId] ?? [];
+
+            // Filter out the btr container item from transferred items before delivering
+            itemsToSend = itemsToSend.filter((item) => item._id !== Traders.BTR);
+            if (itemsToSend.length === 0) {
+                continue;
+            }
+
+            this.transferItemDelivery(sessionId, Traders.BTR, itemsToSend);
         }
     }
 
-    protected btrItemDelivery(sessionId: string, traderId: string, items: Item[]): void {
+    protected transferItemDelivery(sessionId: string, traderId: string, items: IItem[]): void {
         const serverProfile = this.saveServer.getProfile(sessionId);
         const pmcData = serverProfile.characters.pmc;
 
@@ -563,12 +930,36 @@ export class LocationLifecycleService {
         );
     }
 
+    protected handleInsuredItemLostEvent(
+        sessionId: string,
+        preRaidPmcProfile: IPmcData,
+        request: IEndLocalRaidRequestData,
+        locationName: string,
+    ): void {
+        if (request.lostInsuredItems?.length > 0) {
+            const mappedItems = this.insuranceService.mapInsuredItemsToTrader(
+                sessionId,
+                request.lostInsuredItems,
+                request.results.profile,
+            );
+
+            // Is possible to have items in lostInsuredItems but removed before reaching mappedItems
+            if (mappedItems.length === 0) {
+                return;
+            }
+
+            this.insuranceService.storeGearLostInRaidToSendLater(sessionId, mappedItems);
+
+            this.insuranceService.startPostRaidInsuranceLostProcess(preRaidPmcProfile, sessionId, locationName);
+        }
+    }
+
     /**
      * Return the equipped items from a players inventory
      * @param items Players inventory to search through
      * @returns an array of equipped items
      */
-    protected getEquippedGear(items: Item[]): Item[] {
+    protected getEquippedGear(items: IItem[]): IItem[] {
         // Player Slots we care about
         const inventorySlots = [
             "FirstPrimaryWeapon",
@@ -593,7 +984,7 @@ export class LocationLifecycleService {
             "SpecialSlot3",
         ];
 
-        let inventoryItems: Item[] = [];
+        let inventoryItems: IItem[] = [];
 
         // Get an array of root player items
         for (const item of items) {
@@ -627,12 +1018,30 @@ export class LocationLifecycleService {
     }
 
     /**
-     * Is the player dead after a raid - dead = anything other than "survived" / "runner"
+     * Checks to see if player survives. run through will return false
      * @param statusOnExit Exit value from offraidData object
+     * @returns true if Survived
+     */
+    protected isPlayerSurvived(results: IEndRaidResult): boolean {
+        return results.result === ExitStatus.SURVIVED;
+    }
+
+    /**
+     * Is the player dead after a raid - dead = anything other than "survived" / "runner"
+     * @param results Post raid request
      * @returns true if dead
      */
     protected isPlayerDead(results: IEndRaidResult): boolean {
-        return ["killed", "missinginaction", "left"].includes(results.result.toLowerCase());
+        return [ExitStatus.KILLED, ExitStatus.MISSINGINACTION, ExitStatus.LEFT].includes(results.result);
+    }
+
+    /**
+     * Has the player moved from one map to another
+     * @param results Post raid request
+     * @returns True if players transfered
+     */
+    protected isMapToMapTransfer(results: IEndRaidResult) {
+        return results.result === ExitStatus.TRANSIT;
     }
 
     /**

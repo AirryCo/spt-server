@@ -390,9 +390,9 @@
         "COVER_SELF_ALWAYS_IF_DAMAGED": false,
         "DAMAGE_REDUCTION_TIME_SEC": 30,
         "DANGER_POINT_CHOOSE_COEF": 1,
-        "DEFAULT_BEAR_BEHAVIOUR": "Attack",
-        "DEFAULT_SAVAGE_BEHAVIOUR": "Attack",
-        "DEFAULT_USEC_BEHAVIOUR": "Attack",
+        "DEFAULT_BEAR_BEHAVIOUR": "AlwaysEnemies",
+        "DEFAULT_SAVAGE_BEHAVIOUR": "AlwaysEnemies",
+        "DEFAULT_USEC_BEHAVIOUR": "AlwaysEnemies",
         "DIST_TO_ENEMY_YO_CAN_HEAL": 30,
         "DIST_TO_FOUND_SQRT": 400,
         "DIST_TO_STOP_RUN_ENEMY": 15,
@@ -890,9 +890,9 @@
         "COVER_SELF_ALWAYS_IF_DAMAGED": false,
         "DAMAGE_REDUCTION_TIME_SEC": 30,
         "DANGER_POINT_CHOOSE_COEF": 1,
-        "DEFAULT_BEAR_BEHAVIOUR": "Attack",
-        "DEFAULT_SAVAGE_BEHAVIOUR": "Attack",
-        "DEFAULT_USEC_BEHAVIOUR": "Attack",
+        "DEFAULT_BEAR_BEHAVIOUR": "AlwaysEnemies",
+        "DEFAULT_SAVAGE_BEHAVIOUR": "AlwaysEnemies",
+        "DEFAULT_USEC_BEHAVIOUR": "AlwaysEnemies",
         "DIST_TO_ENEMY_YO_CAN_HEAL": 30,
         "DIST_TO_FOUND_SQRT": 400,
         "DIST_TO_STOP_RUN_ENEMY": 15,
@@ -1390,9 +1390,9 @@
         "COVER_SELF_ALWAYS_IF_DAMAGED": false,
         "DAMAGE_REDUCTION_TIME_SEC": 30,
         "DANGER_POINT_CHOOSE_COEF": 1,
-        "DEFAULT_BEAR_BEHAVIOUR": "Attack",
-        "DEFAULT_SAVAGE_BEHAVIOUR": "Attack",
-        "DEFAULT_USEC_BEHAVIOUR": "Attack",
+        "DEFAULT_BEAR_BEHAVIOUR": "AlwaysEnemies",
+        "DEFAULT_SAVAGE_BEHAVIOUR": "AlwaysEnemies",
+        "DEFAULT_USEC_BEHAVIOUR": "AlwaysEnemies",
         "DIST_TO_ENEMY_YO_CAN_HEAL": 30,
         "DIST_TO_FOUND_SQRT": 400,
         "DIST_TO_STOP_RUN_ENEMY": 15,
@@ -1890,9 +1890,9 @@
         "COVER_SELF_ALWAYS_IF_DAMAGED": false,
         "DAMAGE_REDUCTION_TIME_SEC": 30,
         "DANGER_POINT_CHOOSE_COEF": 1,
-        "DEFAULT_BEAR_BEHAVIOUR": "Attack",
-        "DEFAULT_SAVAGE_BEHAVIOUR": "Attack",
-        "DEFAULT_USEC_BEHAVIOUR": "Attack",
+        "DEFAULT_BEAR_BEHAVIOUR": "AlwaysEnemies",
+        "DEFAULT_SAVAGE_BEHAVIOUR": "AlwaysEnemies",
+        "DEFAULT_USEC_BEHAVIOUR": "AlwaysEnemies",
         "DIST_TO_ENEMY_YO_CAN_HEAL": 30,
         "DIST_TO_FOUND_SQRT": 400,
         "DIST_TO_STOP_RUN_ENEMY": 15,
@@ -2307,41 +2307,6 @@
       }
     },
     "mods": {
-		"5f5f41476bdad616ad46d631": {
-        "Back_plate": [
-          "657b2797c3dbcb01d60c35ea"
-        ],
-        "Collar": [
-          "65731b666e709cddd001ec43"
-        ],
-        "Front_plate": [
-          "656f664200d62bcd2e024077"
-        ],
-        "Groin": [
-          "65731b716e709cddd001ec47"
-        ],
-        "Groin_back": [
-          "65731b6b6042b0f210020ef6"
-        ],
-        "Left_side_plate": [
-          "654a4f8bc721968a4404ef18"
-        ],
-        "Right_side_plate": [
-          "654a4f8bc721968a4404ef18"
-        ],
-        "Soft_armor_back": [
-          "65731b4fcea9255e2102360e"
-        ],
-        "Soft_armor_front": [
-          "65731b46cea9255e2102360a"
-        ],
-        "Soft_armor_left": [
-          "65731b576e709cddd001ec3f"
-        ],
-        "soft_armor_right": [
-          "65731b60ff6dc44a7d068c4a"
-        ]
-      },
       "57dc2fa62459775949412633": {
         "mod_gas_block": [
           "59d36a0086f7747e673f3946"
@@ -2452,6 +2417,41 @@
       "5d120a10d7ad1a4e1026ba85": {
         "mod_stock": [
           "5d120a28d7ad1a1c8962e295"
+        ]
+      },
+      "5f5f41476bdad616ad46d631": {
+        "Back_plate": [
+          "657b2797c3dbcb01d60c35ea"
+        ],
+        "Collar": [
+          "65731b666e709cddd001ec43"
+        ],
+        "Front_plate": [
+          "656f664200d62bcd2e024077"
+        ],
+        "Groin": [
+          "65731b716e709cddd001ec47"
+        ],
+        "Groin_back": [
+          "65731b6b6042b0f210020ef6"
+        ],
+        "Left_side_plate": [
+          "654a4f8bc721968a4404ef18"
+        ],
+        "Right_side_plate": [
+          "654a4f8bc721968a4404ef18"
+        ],
+        "Soft_armor_back": [
+          "65731b4fcea9255e2102360e"
+        ],
+        "Soft_armor_front": [
+          "65731b46cea9255e2102360a"
+        ],
+        "Soft_armor_left": [
+          "65731b576e709cddd001ec3f"
+        ],
+        "soft_armor_right": [
+          "65731b60ff6dc44a7d068c4a"
         ]
       },
       "602e3f1254072b51b239f713": {

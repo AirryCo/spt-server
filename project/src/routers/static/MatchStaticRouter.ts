@@ -1,6 +1,7 @@
 import { MatchCallbacks } from "@spt/callbacks/MatchCallbacks";
 import { RouteAction, StaticRouter } from "@spt/di/Router";
 import { IEmptyRequestData } from "@spt/models/eft/common/IEmptyRequestData";
+import { IMetrics } from "@spt/models/eft/common/tables/IMatch";
 import { IGetBodyResponseData } from "@spt/models/eft/httpResponse/IGetBodyResponseData";
 import { INullResponseData } from "@spt/models/eft/httpResponse/INullResponseData";
 import { IGroupCharacter } from "@spt/models/eft/match/IGroupCharacter";
@@ -95,7 +96,7 @@ export class MatchStaticRouter extends StaticRouter {
             new RouteAction(
                 "/client/match/group/exit_from_menu",
                 async (url: string, info: any, sessionID: string, output: string): Promise<INullResponseData> => {
-                    return this.matchCallbacks.exitToMenu(url, info, sessionID);
+                    return this.matchCallbacks.exitFromMenu(url, info, sessionID);
                 },
             ),
             new RouteAction(
@@ -216,13 +217,19 @@ export class MatchStaticRouter extends StaticRouter {
                 },
             ),
             new RouteAction(
+                "/client/analytics/event-disconnect",
+                async (url: string, info: any, sessionID: string, output: string): Promise<INullResponseData> => {
+                    return this.matchCallbacks.eventDisconnect(url, info, sessionID);
+                },
+            ),
+            new RouteAction(
                 "/client/getMetricsConfig",
                 async (
                     url: string,
                     info: any,
                     sessionID: string,
                     output: string,
-                ): Promise<IGetBodyResponseData<string>> => {
+                ): Promise<IGetBodyResponseData<IMetrics>> => {
                     return this.matchCallbacks.getMetrics(url, info, sessionID);
                 },
             ),

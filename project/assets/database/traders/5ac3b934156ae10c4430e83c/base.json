@@ -44,7 +44,15 @@
       "660312cc4d6cdfa6f500c703",
       "660bbc98c38b837877075e4a",
       "660bc341c38b837877075e4c",
-      "6638a5474e92f038531e210e"
+      "6638a5474e92f038531e210e",
+      "66bc98a01a47be227a5e956e",
+      "6655e35b6bc645cb7b059912",
+      "666879d498b97e3a8f09f1ae",
+      "6399f54b0a36db13c823ad21",
+      "66687bc89111279d600b5062",
+      "66d98233302686954b0c6f81",
+      "6707d0bdaab679420007e01a",
+      "6707d0804e617ec94f0e562f"
     ]
   },
   "location": "",
@@ -106,9 +114,7 @@
     "excluded_id_list": [],
     "quality": "1"
   },
-  "sell_category": [
-    "5b47574386f77428ca22b33f"
-  ],
+  "sell_category": [],
   "sell_modifier_for_prohibited_items": 0,
   "surname": "Абрамян",
   "transferableItems": {

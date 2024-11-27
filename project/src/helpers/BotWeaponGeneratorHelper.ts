@@ -1,9 +1,9 @@
 import { BotGeneratorHelper } from "@spt/helpers/BotGeneratorHelper";
 import { ItemHelper } from "@spt/helpers/ItemHelper";
 import { WeightedRandomHelper } from "@spt/helpers/WeightedRandomHelper";
-import { Inventory } from "@spt/models/eft/common/tables/IBotBase";
-import { GenerationData } from "@spt/models/eft/common/tables/IBotType";
-import { Item } from "@spt/models/eft/common/tables/IItem";
+import { IInventory } from "@spt/models/eft/common/tables/IBotBase";
+import { IGenerationData } from "@spt/models/eft/common/tables/IBotType";
+import { IItem } from "@spt/models/eft/common/tables/IItem";
 import { ITemplateItem } from "@spt/models/eft/common/tables/ITemplateItem";
 import { BaseClasses } from "@spt/models/enums/BaseClasses";
 import { EquipmentSlots } from "@spt/models/enums/EquipmentSlots";
@@ -34,7 +34,7 @@ export class BotWeaponGeneratorHelper {
      * @param magTemplate magazine to generate bullet count for
      * @returns bullet count number
      */
-    public getRandomizedBulletCount(magCounts: GenerationData, magTemplate: ITemplateItem): number {
+    public getRandomizedBulletCount(magCounts: IGenerationData, magTemplate: ITemplateItem): number {
         const randomizedMagazineCount = this.getRandomizedMagazineCount(magCounts);
         const parentItem = this.itemHelper.getItem(magTemplate._parent)[1];
         let chamberBulletCount = 0;
@@ -62,7 +62,7 @@ export class BotWeaponGeneratorHelper {
      * @param magCounts min and max value returned value can be between
      * @returns numerical value of magazine count
      */
-    public getRandomizedMagazineCount(magCounts: GenerationData): number {
+    public getRandomizedMagazineCount(magCounts: IGenerationData): number {
         // const range = magCounts.max - magCounts.min;
         // return this.randomUtil.getBiasedRandomNumber(magCounts.min, magCounts.max, Math.round(range * 0.75), 4);
 
@@ -85,8 +85,8 @@ export class BotWeaponGeneratorHelper {
      * @param magTemplate template object of magazine
      * @returns Item array
      */
-    public createMagazineWithAmmo(magazineTpl: string, ammoTpl: string, magTemplate: ITemplateItem): Item[] {
-        const magazine: Item[] = [{ _id: this.hashUtil.generate(), _tpl: magazineTpl }];
+    public createMagazineWithAmmo(magazineTpl: string, ammoTpl: string, magTemplate: ITemplateItem): IItem[] {
+        const magazine: IItem[] = [{ _id: this.hashUtil.generate(), _tpl: magazineTpl }];
 
         this.itemHelper.fillMagazineWithCartridge(magazine, magTemplate, ammoTpl, 1);
 
@@ -103,7 +103,7 @@ export class BotWeaponGeneratorHelper {
     public addAmmoIntoEquipmentSlots(
         ammoTpl: string,
         cartridgeCount: number,
-        inventory: Inventory,
+        inventory: IInventory,
         equipmentSlotsToAddTo: EquipmentSlots[] = [EquipmentSlots.TACTICAL_VEST, EquipmentSlots.POCKETS],
     ): void {
         const ammoItems = this.itemHelper.splitStack({

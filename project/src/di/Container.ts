@@ -123,6 +123,7 @@ import { TradeHelper } from "@spt/helpers/TradeHelper";
 import { TraderAssortHelper } from "@spt/helpers/TraderAssortHelper";
 import { TraderHelper } from "@spt/helpers/TraderHelper";
 import { UtilityHelper } from "@spt/helpers/UtilityHelper";
+import { WeatherHelper } from "@spt/helpers/WeatherHelper";
 import { WeightedRandomHelper } from "@spt/helpers/WeightedRandomHelper";
 import { BundleLoader } from "@spt/loaders/BundleLoader";
 import { ModLoadOrder } from "@spt/loaders/ModLoadOrder";
@@ -201,11 +202,14 @@ import { BotEquipmentFilterService } from "@spt/services/BotEquipmentFilterServi
 import { BotEquipmentModPoolService } from "@spt/services/BotEquipmentModPoolService";
 import { BotGenerationCacheService } from "@spt/services/BotGenerationCacheService";
 import { BotLootCacheService } from "@spt/services/BotLootCacheService";
+import { BotNameService } from "@spt/services/BotNameService";
 import { BotWeaponModLimitService } from "@spt/services/BotWeaponModLimitService";
+import { CircleOfCultistService } from "@spt/services/CircleOfCultistService";
 import { CustomLocationWaveService } from "@spt/services/CustomLocationWaveService";
 import { DatabaseService } from "@spt/services/DatabaseService";
 import { FenceService } from "@spt/services/FenceService";
 import { GiftService } from "@spt/services/GiftService";
+import { InMemoryCacheService } from "@spt/services/InMemoryCacheService";
 import { InsuranceService } from "@spt/services/InsuranceService";
 import { ItemBaseClassService } from "@spt/services/ItemBaseClassService";
 import { ItemFilterService } from "@spt/services/ItemFilterService";
@@ -222,9 +226,9 @@ import { OpenZoneService } from "@spt/services/OpenZoneService";
 import { PaymentService } from "@spt/services/PaymentService";
 import { PlayerService } from "@spt/services/PlayerService";
 import { PmcChatResponseService } from "@spt/services/PmcChatResponseService";
+import { PostDbLoadService } from "@spt/services/PostDbLoadService";
 import { ProfileActivityService } from "@spt/services/ProfileActivityService";
 import { ProfileFixerService } from "@spt/services/ProfileFixerService";
-import { ProfileSnapshotService } from "@spt/services/ProfileSnapshotService";
 import { RagfairCategoriesService } from "@spt/services/RagfairCategoriesService";
 import { RagfairLinkedItemService } from "@spt/services/RagfairLinkedItemService";
 import { RagfairOfferService } from "@spt/services/RagfairOfferService";
@@ -232,6 +236,7 @@ import { RagfairPriceService } from "@spt/services/RagfairPriceService";
 import { RagfairRequiredItemsService } from "@spt/services/RagfairRequiredItemsService";
 import { RagfairTaxService } from "@spt/services/RagfairTaxService";
 import { RaidTimeAdjustmentService } from "@spt/services/RaidTimeAdjustmentService";
+import { RaidWeatherService } from "@spt/services/RaidWeatherService";
 import { RepairService } from "@spt/services/RepairService";
 import { SeasonalEventService } from "@spt/services/SeasonalEventService";
 import { TraderAssortService } from "@spt/services/TraderAssortService";
@@ -272,6 +277,7 @@ import { DependencyContainer, Lifecycle } from "tsyringe";
 /**
  * Handle the registration of classes to be used by the Dependency Injection code
  */
+// biome-ignore lint/complexity/noStaticOnlyClass: <explanation>
 export class Container {
     public static registerPostLoadTypes(container: DependencyContainer, childContainer: DependencyContainer): void {
         container.register<SptHttpListener>("SptHttpListener", SptHttpListener, { lifecycle: Lifecycle.Singleton });
@@ -614,6 +620,7 @@ export class Container {
         depContainer.register<NotificationSendHelper>("NotificationSendHelper", { useClass: NotificationSendHelper });
         depContainer.register<SecureContainerHelper>("SecureContainerHelper", { useClass: SecureContainerHelper });
         depContainer.register<ProbabilityHelper>("ProbabilityHelper", { useClass: ProbabilityHelper });
+        depContainer.register<WeatherHelper>("WeatherHelper", { useClass: WeatherHelper });
         depContainer.register<BotWeaponGeneratorHelper>("BotWeaponGeneratorHelper", {
             useClass: BotWeaponGeneratorHelper,
         });
@@ -739,7 +746,7 @@ export class Container {
         });
         depContainer.register<CustomItemService>("CustomItemService", CustomItemService);
         depContainer.register<BotEquipmentFilterService>("BotEquipmentFilterService", BotEquipmentFilterService);
-        depContainer.register<ProfileSnapshotService>("ProfileSnapshotService", ProfileSnapshotService, {
+        depContainer.register<InMemoryCacheService>("InMemoryCacheService", InMemoryCacheService, {
             lifecycle: Lifecycle.Singleton,
         });
         depContainer.register<ItemFilterService>("ItemFilterService", ItemFilterService, {
@@ -790,6 +797,18 @@ export class Container {
             lifecycle: Lifecycle.Singleton,
         });
         depContainer.register<LocationLifecycleService>("LocationLifecycleService", LocationLifecycleService, {
+            lifecycle: Lifecycle.Singleton,
+        });
+        depContainer.register<CircleOfCultistService>("CircleOfCultistService", CircleOfCultistService, {
+            lifecycle: Lifecycle.Singleton,
+        });
+        depContainer.register<BotNameService>("BotNameService", BotNameService, {
+            lifecycle: Lifecycle.Singleton,
+        });
+        depContainer.register<RaidWeatherService>("RaidWeatherService", RaidWeatherService, {
+            lifecycle: Lifecycle.Singleton,
+        });
+        depContainer.register<PostDbLoadService>("PostDbLoadService", PostDbLoadService, {
             lifecycle: Lifecycle.Singleton,
         });
     }

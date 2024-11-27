@@ -47,6 +47,8 @@ export class OpenZoneService {
         for (const mapKey in this.locationConfig.openZones) {
             if (!dbLocations[mapKey]) {
                 this.logger.error(this.localisationService.getText("openzone-unable_to_find_map", mapKey));
+
+                continue;
             }
 
             const dbLocationToUpdate: ILocationBase = dbLocations[mapKey].base;

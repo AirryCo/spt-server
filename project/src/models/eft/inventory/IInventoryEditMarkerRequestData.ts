@@ -5,10 +5,10 @@ export interface IInventoryEditMarkerRequestData extends IInventoryBaseActionReq
     item: string;
     X: number;
     Y: number;
-    mapMarker: MapMarker;
+    mapMarker: IMapMarker;
 }
 
-export interface MapMarker {
+export interface IMapMarker {
     Type: string;
     X: number;
     Y: number;

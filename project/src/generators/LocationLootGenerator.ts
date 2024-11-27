@@ -10,8 +10,8 @@ import {
     IStaticLootDetails,
 } from "@spt/models/eft/common/ILocation";
 import { ILocationBase } from "@spt/models/eft/common/ILocationBase";
-import { ILooseLoot, Spawnpoint, SpawnpointTemplate, SpawnpointsForced } from "@spt/models/eft/common/ILooseLoot";
-import { Item } from "@spt/models/eft/common/tables/IItem";
+import { ILooseLoot, ISpawnpoint, ISpawnpointTemplate, ISpawnpointsForced } from "@spt/models/eft/common/ILooseLoot";
+import { IItem } from "@spt/models/eft/common/tables/IItem";
 import { BaseClasses } from "@spt/models/enums/BaseClasses";
 import { ConfigTypes } from "@spt/models/enums/ConfigTypes";
 import { ILocationConfig } from "@spt/models/spt/config/ILocationConfig";
@@ -28,7 +28,7 @@ import { ICloner } from "@spt/utils/cloners/ICloner";
 import { inject, injectable } from "tsyringe";
 
 export interface IContainerItem {
-    items: Item[];
+    items: IItem[];
     width: number;
     height: number;
 }
@@ -71,9 +71,9 @@ export class LocationLootGenerator {
     public generateStaticContainers(
         locationBase: ILocationBase,
         staticAmmoDist: Record<string, IStaticAmmoDetails[]>,
-    ): SpawnpointTemplate[] {
+    ): ISpawnpointTemplate[] {
         let staticLootItemCount = 0;
-        const result: SpawnpointTemplate[] = [];
+        const result: ISpawnpointTemplate[] = [];
         const locationId = locationBase.Id.toLowerCase();
 
         const mapData = this.databaseService.getLocation(locationId);
@@ -440,8 +440,8 @@ export class LocationLootGenerator {
 
             this.containerHelper.fillContainerMapWithItem(
                 containerMap,
-                result.x!,
-                result.y!,
+                result.x,
+                result.y,
                 width,
                 height,
                 result.rotation,
@@ -449,7 +449,7 @@ export class LocationLootGenerator {
             const rotation = result.rotation ? 1 : 0;
 
             items[0].slotId = "main";
-            items[0].location = { x: result.x!, y: result.y!, r: rotation };
+            items[0].location = { x: result.x, y: result.y, r: rotation };
 
             // Add loot to container before returning
             for (const item of items) {
@@ -470,8 +470,8 @@ export class LocationLootGenerator {
         const containerTemplate = this.itemHelper.getItem(containerTpl)[1];
 
         // Get height/width
-        const height = containerTemplate._props.Grids![0]._props.cellsV;
-        const width = containerTemplate._props.Grids![0]._props.cellsH;
+        const height = containerTemplate._props.Grids[0]._props.cellsV;
+        const width = containerTemplate._props.Grids[0]._props.cellsH;
 
         // Calcualte 2d array and return
         return Array(height)
@@ -575,16 +575,16 @@ export class LocationLootGenerator {
         dynamicLootDist: ILooseLoot,
         staticAmmoDist: Record<string, IStaticAmmoDetails[]>,
         locationName: string,
-    ): SpawnpointTemplate[] {
-        const loot: SpawnpointTemplate[] = [];
-        const dynamicForcedSpawnPoints: SpawnpointsForced[] = [];
+    ): ISpawnpointTemplate[] {
+        const loot: ISpawnpointTemplate[] = [];
+        const dynamicForcedSpawnPoints: ISpawnpointsForced[] = [];
 
         // Build the list of forced loot from both `spawnpointsForced` and any point marked `IsAlwaysSpawn`
         dynamicForcedSpawnPoints.push(...dynamicLootDist.spawnpointsForced);
         dynamicForcedSpawnPoints.push(...dynamicLootDist.spawnpoints.filter((point) => point.template.IsAlwaysSpawn));
 
         // Add forced loot
-        this.addForcedLoot(loot, dynamicForcedSpawnPoints, locationName);
+        this.addForcedLoot(loot, dynamicForcedSpawnPoints, locationName, staticAmmoDist);
 
         const allDynamicSpawnpoints = dynamicLootDist.spawnpoints;
 
@@ -598,10 +598,10 @@ export class LocationLootGenerator {
         );
 
         // Positions not in forced but have 100% chance to spawn
-        const guaranteedLoosePoints: Spawnpoint[] = [];
+        const guaranteedLoosePoints: ISpawnpoint[] = [];
 
         const blacklistedSpawnpoints = this.locationConfig.looseLootBlacklist[locationName];
-        const spawnpointArray = new ProbabilityObjectArray<string, Spawnpoint>(this.mathUtil, this.cloner);
+        const spawnpointArray = new ProbabilityObjectArray<string, ISpawnpoint>(this.mathUtil, this.cloner);
 
         for (const spawnpoint of allDynamicSpawnpoints) {
             // Point is blacklsited, skip
@@ -626,14 +626,14 @@ export class LocationLootGenerator {
 
         // Select a number of spawn points to add loot to
         // Add ALL loose loot with 100% chance to pool
-        let chosenSpawnpoints: Spawnpoint[] = [...guaranteedLoosePoints];
+        let chosenSpawnpoints: ISpawnpoint[] = [...guaranteedLoosePoints];
 
         const randomSpawnpointCount = desiredSpawnpointCount - chosenSpawnpoints.length;
         // Only draw random spawn points if needed
         if (randomSpawnpointCount > 0 && spawnpointArray.length > 0) {
             // Add randomly chosen spawn points
             for (const si of spawnpointArray.draw(randomSpawnpointCount, false)) {
-                chosenSpawnpoints.push(spawnpointArray.data(si)!);
+                chosenSpawnpoints.push(spawnpointArray.data(si));
             }
         }
 
@@ -711,7 +711,7 @@ export class LocationLootGenerator {
 
             // Draw a random item from spawn points possible items
             const chosenComposedKey = itemArray.draw(1)[0];
-            const createItemResult = this.createDynamicLootItem(chosenComposedKey, spawnPoint, staticAmmoDist);
+            const createItemResult = this.createDynamicLootItem(chosenComposedKey, spawnPoint.template.Items, staticAmmoDist);
 
             // Root id can change when generating a weapon, ensure ids match
             spawnPoint.template.Root = createItemResult.items[0]._id;
@@ -732,9 +732,10 @@ export class LocationLootGenerator {
      * @param locationName Name of map currently having force loot created for
      */
     protected addForcedLoot(
-        lootLocationTemplates: SpawnpointTemplate[],
-        forcedSpawnPoints: SpawnpointsForced[],
+        lootLocationTemplates: ISpawnpointTemplate[],
+        forcedSpawnPoints: ISpawnpointsForced[],
         locationName: string,
+        staticAmmoDist: Record<string, IStaticAmmoDetails[]>,
     ): void {
         const lootToForceSingleAmountOnMap = this.locationConfig.forcedLootSingleSpawnById[locationName];
         if (lootToForceSingleAmountOnMap) {
@@ -752,7 +753,7 @@ export class LocationLootGenerator {
                 }
 
                 // Create probability array of all spawn positions for this spawn id
-                const spawnpointArray = new ProbabilityObjectArray<string, SpawnpointsForced>(
+                const spawnpointArray = new ProbabilityObjectArray<string, ISpawnpointsForced>(
                     this.mathUtil,
                     this.cloner,
                 );
@@ -771,8 +772,16 @@ export class LocationLootGenerator {
                         );
                         continue;
                     }
-                    lootItem.Root = this.objectId.generate();
-                    lootItem.Items[0]._id = lootItem.Root;
+
+                    const createItemResult = this.createDynamicLootItem(
+                        lootItem.Items[0]._id,
+                        lootItem.Items,
+                        staticAmmoDist
+                    );
+        
+                    // Update root ID with the dynamically generated ID
+                    lootItem.Root = createItemResult.items[0]._id;
+                    lootItem.Items = createItemResult.items;
                     lootLocationTemplates.push(lootItem);
                 }
             }
@@ -796,10 +805,15 @@ export class LocationLootGenerator {
             }
 
             const locationTemplateToAdd = forcedLootLocation.template;
+            const createItemResult = this.createDynamicLootItem(
+                locationTemplateToAdd.Items[0]._id,
+                forcedLootLocation.template.Items,
+                staticAmmoDist
+            );
 
-            // Ensure root id matches the first items id
-            locationTemplateToAdd.Root = this.objectId.generate();
-            locationTemplateToAdd.Items[0]._id = locationTemplateToAdd.Root;
+            // Update root ID with the dynamically generated ID
+            forcedLootLocation.template.Root = createItemResult.items[0]._id;
+            forcedLootLocation.template.Items = createItemResult.items;
 
             // Push forced location into array as long as it doesnt exist already
             const existingLocation = lootLocationTemplates.some(
@@ -824,10 +838,10 @@ export class LocationLootGenerator {
      */
     protected createDynamicLootItem(
         chosenComposedKey: string,
-        spawnPoint: Spawnpoint,
+        items: IItem[],
         staticAmmoDist: Record<string, IStaticAmmoDetails[]>,
     ): IContainerItem {
-        const chosenItem = spawnPoint.template.Items.find((item) => item._id === chosenComposedKey);
+        const chosenItem = items.find((item) => item._id === chosenComposedKey);
         const chosenTpl = chosenItem?._tpl;
         if (!chosenTpl) {
             throw new Error(`Item for tpl ${chosenComposedKey} was not found in the spawn point`);
@@ -835,14 +849,14 @@ export class LocationLootGenerator {
         const itemTemplate = this.itemHelper.getItem(chosenTpl)[1];
 
         // Item array to return
-        const itemWithMods: Item[] = [];
+        const itemWithMods: IItem[] = [];
 
         // Money/Ammo - don't rely on items in spawnPoint.template.Items so we can randomise it ourselves
         if (this.itemHelper.isOfBaseclasses(chosenTpl, [BaseClasses.MONEY, BaseClasses.AMMO])) {
             const stackCount =
                 itemTemplate._props.StackMaxSize === 1
                     ? 1
-                    : this.randomUtil.getInt(itemTemplate._props.StackMinRandom!, itemTemplate._props.StackMaxRandom!);
+                    : this.randomUtil.getInt(itemTemplate._props.StackMinRandom, itemTemplate._props.StackMaxRandom);
 
             itemWithMods.push({
                 _id: this.objectId.generate(),
@@ -851,12 +865,12 @@ export class LocationLootGenerator {
             });
         } else if (this.itemHelper.isOfBaseclass(chosenTpl, BaseClasses.AMMO_BOX)) {
             // Fill with cartridges
-            const ammoBoxItem: Item[] = [{ _id: this.objectId.generate(), _tpl: chosenTpl }];
+            const ammoBoxItem: IItem[] = [{ _id: this.objectId.generate(), _tpl: chosenTpl }];
             this.itemHelper.addCartridgesToAmmoBox(ammoBoxItem, itemTemplate);
             itemWithMods.push(...ammoBoxItem);
         } else if (this.itemHelper.isOfBaseclass(chosenTpl, BaseClasses.MAGAZINE)) {
             // Create array with just magazine
-            const magazineItem: Item[] = [{ _id: this.objectId.generate(), _tpl: chosenTpl }];
+            const magazineItem: IItem[] = [{ _id: this.objectId.generate(), _tpl: chosenTpl }];
 
             if (this.randomUtil.getChance100(this.locationConfig.staticMagazineLootHasAmmoChancePercent)) {
                 // Add randomised amount of cartridges
@@ -873,13 +887,13 @@ export class LocationLootGenerator {
         } else {
             // Also used by armors to get child mods
             // Get item + children and add into array we return
-            const itemWithChildren = this.itemHelper.findAndReturnChildrenAsItems(
-                spawnPoint.template.Items,
+            let itemWithChildren = this.itemHelper.findAndReturnChildrenAsItems(
+                items,
                 chosenItem._id,
             );
 
-            // We need to reparent to ensure ids are unique
-            this.reparentItemAndChildren(itemWithChildren);
+            // Ensure all IDs are unique
+            itemWithChildren = this.itemHelper.replaceIDs(itemWithChildren);
 
             itemWithMods.push(...itemWithChildren);
         }
@@ -891,32 +905,12 @@ export class LocationLootGenerator {
     }
 
     /**
-     * Replace the _id value for base item + all children items parentid value
-     * @param itemWithChildren Item with mods to update
-     * @param newId new id to add on chidren of base item
-     */
-    protected reparentItemAndChildren(itemWithChildren: Item[], newId = this.objectId.generate()): void {
-        // original id on base item
-        const oldId = itemWithChildren[0]._id;
-
-        // Update base item to use new id
-        itemWithChildren[0]._id = newId;
-
-        // Update all parentIds of items attached to base item to use new id
-        for (const item of itemWithChildren) {
-            if (item.parentId === oldId) {
-                item.parentId = newId;
-            }
-        }
-    }
-
-    /**
      * Find an item in array by its _tpl, handle differently if chosenTpl is a weapon
      * @param items Items array to search
      * @param chosenTpl Tpl we want to get item with
      * @returns Item object
      */
-    protected getItemInArray(items: Item[], chosenTpl: string): Item | undefined {
+    protected getItemInArray(items: IItem[], chosenTpl: string): IItem | undefined {
         if (this.itemHelper.isOfBaseclass(chosenTpl, BaseClasses.WEAPON)) {
             return items.find((v) => v._tpl === chosenTpl && v.parentId === undefined);
         }
@@ -931,9 +925,9 @@ export class LocationLootGenerator {
         parentId?: string,
     ): IContainerItem {
         const itemTemplate = this.itemHelper.getItem(chosenTpl)[1];
-        let width = itemTemplate._props.Width!;
-        let height = itemTemplate._props.Height!;
-        let items: Item[] = [{ _id: this.objectId.generate(), _tpl: chosenTpl }];
+        let width = itemTemplate._props.Width;
+        let height = itemTemplate._props.Height;
+        let items: IItem[] = [{ _id: this.objectId.generate(), _tpl: chosenTpl }];
         const rootItem = items[0];
 
         // Use passed in parentId as override for new item
@@ -949,13 +943,13 @@ export class LocationLootGenerator {
             const stackCount =
                 itemTemplate._props.StackMaxSize === 1
                     ? 1
-                    : this.randomUtil.getInt(itemTemplate._props.StackMinRandom!, itemTemplate._props.StackMaxRandom!);
+                    : this.randomUtil.getInt(itemTemplate._props.StackMinRandom, itemTemplate._props.StackMaxRandom);
 
             rootItem.upd = { StackObjectsCount: stackCount };
         }
         // No spawn point, use default template
         else if (this.itemHelper.isOfBaseclass(chosenTpl, BaseClasses.WEAPON)) {
-            let children: Item[] = [];
+            let children: IItem[] = [];
             const defaultPreset = this.cloner.clone(this.presetHelper.getDefaultPreset(chosenTpl));
             if (defaultPreset?._items) {
                 try {
@@ -977,7 +971,7 @@ export class LocationLootGenerator {
                 }
             } else {
                 // RSP30 (62178be9d0050232da3485d9/624c0b3340357b5f566e8766/6217726288ed9f0845317459) doesnt have any default presets and kills this code below as it has no chidren to reparent
-                this.logger.debug(`createItem() No preset found for weapon: ${chosenTpl}`);
+                this.logger.debug(`createStaticLootItem() No preset found for weapon: ${chosenTpl}`);
             }
 
             const rootItem = items[0];
@@ -1059,7 +1053,7 @@ export class LocationLootGenerator {
         } else if (this.itemHelper.armorItemCanHoldMods(chosenTpl)) {
             const defaultPreset = this.presetHelper.getDefaultPreset(chosenTpl);
             if (defaultPreset) {
-                const presetAndMods: Item[] = this.itemHelper.replaceIDs(defaultPreset._items);
+                const presetAndMods: IItem[] = this.itemHelper.replaceIDs(defaultPreset._items);
                 this.itemHelper.remapRootItemId(presetAndMods);
 
                 // Use original items parentId otherwise item doesnt get added to container correctly

@@ -64,6 +64,7 @@ export default {
     "6614230055afee107f05e998": "Unheard phone 2",
     "661421c7c1f2f548c50ee649": "Unheard laptop",
     "661423200d240a5f5d0f679b": "Unheard laptop 2",
+    "66a0f0926fee20fa70036da6": "Quest blood sample nf2024",
 
     // Weapon Parts
     "5d1340b3d7ad1a0b52682ed7": "GEN M3 FDE",
@@ -90,4 +91,8 @@ export default {
     "5e81ebcd8e146c7080625e15": "FN40GL 01",
     "639c3fbbd0446708ee622ee9": "FN40GL 02",
     "639af924d0446708ee62294e": "FN40GL 03",
+
+    // Airdrop crates
+    "66da1b49099cf6adcc07a36b": "Airdrop technical supply crate event 1",
+    "66da1b546916142b3b022777": "Airdrop technical supply crate event 2",
 };

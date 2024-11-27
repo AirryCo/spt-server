@@ -12,7 +12,7 @@ export class BundleInfo {
     crc: number;
     dependencies: string[];
 
-    constructor(modpath: string, bundle: BundleManifestEntry, bundleHash: number) {
+    constructor(modpath: string, bundle: IBundleManifestEntry, bundleHash: number) {
         this.modpath = modpath;
         this.filename = bundle.key;
         this.crc = bundleHash;
@@ -50,12 +50,12 @@ export class BundleLoader {
     }
 
     public addBundles(modpath: string): void {
-        const bundleManifestArr = this.jsonUtil.deserialize<BundleManifest>(
+        const bundleManifestArr = this.jsonUtil.deserialize<IBundleManifest>(
             this.vfs.readFile(`${modpath}bundles.json`),
         ).manifest;
 
         for (const bundleManifest of bundleManifestArr) {
-            const absoluteModPath = path.join(process.cwd(), modpath).slice(0, -1).replace(/\\/g, "/");
+            const relativeModPath = modpath.slice(0, -1).replace(/\\/g, "/");
             const bundleLocalPath = `${modpath}bundles/${bundleManifest.key}`.replace(/\\/g, "/");
 
             if (!this.bundleHashCacheService.calculateAndMatchHash(bundleLocalPath)) {
@@ -64,7 +64,7 @@ export class BundleLoader {
 
             const bundleHash = this.bundleHashCacheService.getStoredValue(bundleLocalPath);
 
-            this.addBundle(bundleManifest.key, new BundleInfo(absoluteModPath, bundleManifest, bundleHash));
+            this.addBundle(bundleManifest.key, new BundleInfo(relativeModPath, bundleManifest, bundleHash));
         }
     }
 
@@ -73,11 +73,11 @@ export class BundleLoader {
     }
 }
 
-export interface BundleManifest {
-    manifest: BundleManifestEntry[];
+export interface IBundleManifest {
+    manifest: IBundleManifestEntry[];
 }
 
-export interface BundleManifestEntry {
+export interface IBundleManifestEntry {
     key: string;
     dependencyKeys: string[];
 }

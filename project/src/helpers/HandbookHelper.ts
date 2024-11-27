@@ -1,5 +1,5 @@
-import { Category } from "@spt/models/eft/common/tables/IHandbookBase";
-import { Item } from "@spt/models/eft/common/tables/IItem";
+import { IHandbookCategory } from "@spt/models/eft/common/tables/IHandbookBase";
+import { IItem } from "@spt/models/eft/common/tables/IItem";
 import { ConfigTypes } from "@spt/models/enums/ConfigTypes";
 import { Money } from "@spt/models/enums/Money";
 import { IItemConfig } from "@spt/models/spt/config/IItemConfig";
@@ -48,18 +48,20 @@ export class HandbookHelper {
     public hydrateLookup(): void {
         const handbook = this.databaseService.getHandbook();
         // Add handbook overrides found in items.json config into db
-        for (const itemTpl in this.itemConfig.handbookPriceOverride) {
-            let itemToUpdate = handbook.Items.find((item) => item.Id === itemTpl);
+        for (const itemTplKey of Object.keys(this.itemConfig.handbookPriceOverride)) {
+            const data = this.itemConfig.handbookPriceOverride[itemTplKey];
+
+            let itemToUpdate = handbook.Items.find((item) => item.Id === itemTplKey);
             if (!itemToUpdate) {
                 handbook.Items.push({
-                    Id: itemTpl,
-                    ParentId: this.databaseService.getItems()[itemTpl]._parent,
-                    Price: this.itemConfig.handbookPriceOverride[itemTpl],
+                    Id: itemTplKey,
+                    ParentId: data.parentId,
+                    Price: data.price,
                 });
-                itemToUpdate = handbook.Items.find((item) => item.Id === itemTpl);
+                itemToUpdate = handbook.Items.find((item) => item.Id === itemTplKey);
             }
 
-            itemToUpdate.Price = this.itemConfig.handbookPriceOverride[itemTpl];
+            itemToUpdate.Price = data.price;
         }
 
         const handbookDbClone = this.cloner.clone(handbook);
@@ -110,7 +112,7 @@ export class HandbookHelper {
         return handbookItem.Price;
     }
 
-    public getTemplatePriceForItems(items: Item[]): number {
+    public getTemplatePriceForItems(items: IItem[]): number {
         let total = 0;
         for (const item of items) {
             total += this.getTemplatePrice(item._tpl);
@@ -176,7 +178,7 @@ export class HandbookHelper {
         return price ? Math.max(1, Math.round(roubleCurrencyCount / price)) : 0;
     }
 
-    public getCategoryById(handbookId: string): Category {
+    public getCategoryById(handbookId: string): IHandbookCategory {
         return this.databaseService.getHandbook().Categories.find((category) => category.Id === handbookId);
     }
 }

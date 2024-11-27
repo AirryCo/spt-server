@@ -1,7 +1,7 @@
 import "reflect-metadata";
 
 import { IPmcData } from "@spt/models/eft/common/IPmcData";
-import { Item } from "@spt/models/eft/common/tables/IItem";
+import { IItem } from "@spt/models/eft/common/tables/IItem";
 import { ITraderBase } from "@spt/models/eft/common/tables/ITrader";
 import { IItemEventRouterResponse } from "@spt/models/eft/itemEvent/IItemEventRouterResponse";
 import { IProcessBuyTradeRequestData } from "@spt/models/eft/trade/IProcessBuyTradeRequestData";
@@ -39,7 +39,7 @@ describe("PaymentService", () => {
                 upd: {
                     StackObjectsCount: costAmount * 4, // More than enough.
                 },
-            } as Item;
+            } as IItem;
 
             // Object representing the player's PMC inventory.
             const pmcData = {
@@ -123,12 +123,12 @@ describe("PaymentService", () => {
     describe("isInStash", () => {
         it("should return true when item is direct parent of stash", () => {
             const hashUtil = container.resolve<HashUtil>("HashUtil");
-            const stashItem: Item = {
+            const stashItem: IItem = {
                 _id: "stashid",
                 _tpl: "55d7217a4bdc2d86028b456d", // standard stash id
             };
 
-            const inventoryItemToFind: Item = {
+            const inventoryItemToFind: IItem = {
                 _id: hashUtil.generate(),
                 _tpl: "544fb6cc4bdc2d34748b456e", // Slickers chocolate bar
                 parentId: stashItem._id,
@@ -143,19 +143,19 @@ describe("PaymentService", () => {
 
         it("should return true when item is indirect parent of inventory", () => {
             const hashUtil = container.resolve<HashUtil>("HashUtil");
-            const stashItem: Item = {
+            const stashItem: IItem = {
                 _id: "stashId",
                 _tpl: "55d7217a4bdc2d86028b456d", // standard stash id
             };
 
-            const foodBagToHoldItemToFind: Item = {
+            const foodBagToHoldItemToFind: IItem = {
                 _id: hashUtil.generate(),
                 _tpl: "5c093db286f7740a1b2617e3",
                 parentId: stashItem._id,
                 slotId: "hideout",
             };
 
-            const inventoryItemToFind: Item = {
+            const inventoryItemToFind: IItem = {
                 _id: hashUtil.generate(),
                 _tpl: "544fb6cc4bdc2d34748b456e", // Slickers chocolate bar
                 parentId: foodBagToHoldItemToFind._id,
@@ -169,12 +169,12 @@ describe("PaymentService", () => {
 
         it("should return false when desired item is not in inventory", () => {
             const hashUtil = container.resolve<HashUtil>("HashUtil");
-            const stashItem: Item = {
+            const stashItem: IItem = {
                 _id: "stashId",
                 _tpl: "55d7217a4bdc2d86028b456d", // standard stash id
             };
 
-            const inventoryItemToFind: Item = {
+            const inventoryItemToFind: IItem = {
                 _id: hashUtil.generate(),
                 _tpl: "544fb6cc4bdc2d34748b456e", // Slickers chocolate bar
                 parentId: stashItem._id,
@@ -189,12 +189,12 @@ describe("PaymentService", () => {
 
         it("should return false when player inventory array has no inventory item", () => {
             const hashUtil = container.resolve<HashUtil>("HashUtil");
-            const stashItem: Item = {
+            const stashItem: IItem = {
                 _id: "stashId",
                 _tpl: "55d7217a4bdc2d86028b456d", // standard stash id
             };
 
-            const inventoryItemToFind: Item = {
+            const inventoryItemToFind: IItem = {
                 _id: hashUtil.generate(),
                 _tpl: "544fb6cc4bdc2d34748b456e", // Slickers chocolate bar
                 parentId: stashItem._id,

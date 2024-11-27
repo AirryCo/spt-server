@@ -1,12 +1,13 @@
 import { MinMax } from "@spt/models/common/MinMax";
-import { Difficulty, IBotType } from "@spt/models/eft/common/tables/IBotType";
+import { IBotType, IDifficultyCategories } from "@spt/models/eft/common/tables/IBotType";
 import { ConfigTypes } from "@spt/models/enums/ConfigTypes";
-import { EquipmentFilters, IBotConfig, RandomisationDetails } from "@spt/models/spt/config/IBotConfig";
+import { EquipmentFilters, IBotConfig, IRandomisationDetails } from "@spt/models/spt/config/IBotConfig";
 import { IPmcConfig } from "@spt/models/spt/config/IPmcConfig";
 import { ILogger } from "@spt/models/spt/utils/ILogger";
 import { ConfigServer } from "@spt/servers/ConfigServer";
 import { DatabaseService } from "@spt/services/DatabaseService";
 import { RandomUtil } from "@spt/utils/RandomUtil";
+import { max } from "date-fns";
 import { inject, injectable } from "tsyringe";
 
 @injectable()
@@ -55,7 +56,7 @@ export class BotHelper {
      * @param difficultySettings bot settings to alter
      * @param typeToAdd bot type to add to friendly list
      */
-    public addBotToFriendlyList(difficultySettings: Difficulty, typeToAdd: string): void {
+    public addBotToFriendlyList(difficultySettings: IDifficultyCategories, typeToAdd: string): void {
         const friendlyBotTypesKey = "FRIENDLY_BOT_TYPES";
 
         // Null guard
@@ -71,7 +72,7 @@ export class BotHelper {
      * @param difficultySettings bot settings to alter
      * @param typesToAdd bot type to add to revenge list
      */
-    public addBotToRevengeList(difficultySettings: Difficulty, typesToAdd: string[]): void {
+    public addBotToRevengeList(difficultySettings: IDifficultyCategories, typesToAdd: string[]): void {
         const revengePropKey = "REVENGE_BOT_TYPES";
 
         // Nothing to add
@@ -92,34 +93,17 @@ export class BotHelper {
         }
     }
 
-    /**
-     * Choose if a bot should become a PMC by checking if bot type is allowed to become a Pmc in botConfig.convertFromChances and doing a random int check
-     * @param botRole the bot role to check if should be a pmc
-     * @returns true if should be a pmc
-     */
-    public shouldBotBePmc(botRole: string): boolean {
-        const botRoleLowered = botRole.toLowerCase();
-
-        // Handle when map waves have these types in the bot type
-        if (this.botRoleIsPmc(botRoleLowered)) {
-            return true;
-        }
-
-        const botConvertMinMax = this.pmcConfig.convertIntoPmcChance[botRoleLowered];
-
-        // no bot type defined in config, default to false
-        if (!botConvertMinMax) {
-            return false;
-        }
-
-        return this.rollChanceToBePmc(botRoleLowered, botConvertMinMax);
+    public rollChanceToBePmc(botConvertMinMax: MinMax): boolean {
+        return this.randomUtil.getChance100(this.randomUtil.getInt(botConvertMinMax.min, botConvertMinMax.max));
     }
 
-    public rollChanceToBePmc(role: string, botConvertMinMax: MinMax): boolean {
-        return (
-            role.toLowerCase() in this.pmcConfig.convertIntoPmcChance &&
-            this.randomUtil.getChance100(this.randomUtil.getInt(botConvertMinMax.min, botConvertMinMax.max))
-        );
+    protected getPmcConversionValuesForLocation(location: string) {
+        const result = this.pmcConfig.convertIntoPmcChance[location.toLowerCase()];
+        if (!result) {
+            this.pmcConfig.convertIntoPmcChance.default;
+        }
+
+        return result;
     }
 
     /**
@@ -142,13 +126,15 @@ export class BotHelper {
     public getBotRandomizationDetails(
         botLevel: number,
         botEquipConfig: EquipmentFilters,
-    ): RandomisationDetails | undefined {
+    ): IRandomisationDetails | undefined {
         // No randomisation details found, skip
         if (!botEquipConfig || Object.keys(botEquipConfig).length === 0 || !botEquipConfig.randomisation) {
             return undefined;
         }
 
-        return botEquipConfig.randomisation.find((x) => botLevel >= x.levelRange.min && botLevel <= x.levelRange.max);
+        return botEquipConfig.randomisation.find(
+            (randDetails) => botLevel >= randDetails.levelRange.min && botLevel <= randDetails.levelRange.max,
+        );
     }
 
     /**
@@ -183,10 +169,24 @@ export class BotHelper {
         return this.randomUtil.getChance100(this.pmcConfig.isUsec) ? "Usec" : "Bear";
     }
 
-    public getPmcNicknameOfMaxLength(userId: string, maxLength: number): string {
-        // recurivse if name is longer than max characters allowed (15 characters)
-        const randomType = this.randomUtil.getInt(0, 1) === 0 ? "usec" : "bear";
-        const name = this.randomUtil.getStringArrayValue(this.databaseService.getBots().types[randomType].firstName);
-        return name.length > maxLength ? this.getPmcNicknameOfMaxLength(userId, maxLength) : name;
+    /**
+     * Get a name from a PMC that fits the desired length
+     * @param maxLength Max length of name, inclusive
+     * @param side OPTIONAL - what side PMC to get name from (usec/bear)
+     * @returns name of PMC
+     */
+    public getPmcNicknameOfMaxLength(maxLength: number, side?: string): string {
+        const randomType = side ? side : this.randomUtil.getInt(0, 1) === 0 ? "usec" : "bear";
+        const allNames = this.databaseService.getBots().types[randomType.toLowerCase()].firstName;
+        const filteredNames = allNames.filter((name) => name.length <= maxLength);
+        if (filteredNames.length === 0) {
+            this.logger.warning(
+                `Unable to filter: ${randomType} PMC names to only those under: ${maxLength}, none found that match that criteria, selecting from entire name pool instead`,
+            );
+
+            return this.randomUtil.getStringArrayValue(allNames);
+        }
+
+        return this.randomUtil.getStringArrayValue(filteredNames);
     }
 }

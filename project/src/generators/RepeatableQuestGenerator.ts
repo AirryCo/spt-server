@@ -1,8 +1,8 @@
 import { RepeatableQuestRewardGenerator } from "@spt/generators/RepeatableQuestRewardGenerator";
 import { ItemHelper } from "@spt/helpers/ItemHelper";
 import { RepeatableQuestHelper } from "@spt/helpers/RepeatableQuestHelper";
-import { Exit } from "@spt/models/eft/common/ILocationBase";
-import { TraderInfo } from "@spt/models/eft/common/tables/IBotBase";
+import { IExit } from "@spt/models/eft/common/ILocationBase";
+import { ITraderInfo } from "@spt/models/eft/common/tables/IBotBase";
 import { IQuestCondition, IQuestConditionCounterCondition } from "@spt/models/eft/common/tables/IQuest";
 import { IRepeatableQuest } from "@spt/models/eft/common/tables/IRepeatableQuests";
 import { BaseClasses } from "@spt/models/enums/BaseClasses";
@@ -28,6 +28,7 @@ import { inject, injectable } from "tsyringe";
 @injectable()
 export class RepeatableQuestGenerator {
     protected questConfig: IQuestConfig;
+    protected maxRandomNumberAttempts = 6;
 
     constructor(
         @inject("PrimaryLogger") protected logger: ILogger,
@@ -57,7 +58,7 @@ export class RepeatableQuestGenerator {
      */
     public generateRepeatableQuest(
         pmcLevel: number,
-        pmcTraderInfo: Record<string, TraderInfo>,
+        pmcTraderInfo: Record<string, ITraderInfo>,
         questTypePool: IQuestTypePool,
         repeatableConfig: IRepeatableQuestConfig,
     ): IRepeatableQuest {
@@ -448,8 +449,6 @@ export class RepeatableQuestGenerator {
         const levelsConfig = repeatableConfig.rewardScaling.levels;
         const roublesConfig = repeatableConfig.rewardScaling.roubles;
 
-        const distinctItemsToRetrieveCount = this.randomUtil.getInt(1, completionConfig.uniqueItemCount);
-
         const quest = this.generateRepeatableTemplate("Completion", traderId, repeatableConfig.side);
 
         // Filter the items.json items to items the player must retrieve to complete quest: shouldn't be a quest item or "non-existant"
@@ -516,24 +515,46 @@ export class RepeatableQuestGenerator {
 
         // Draw items to ask player to retrieve
         let isAmmo = 0;
-        const randomNumbersUsed = [];
+
+        // Store the indexes of items we are asking player to provide
+        const distinctItemsToRetrieveCount = this.randomUtil.getInt(1, completionConfig.uniqueItemCount);
+        const chosenRequirementItemsTpls = [];
+        const usedItemIndexes = new Set();
         for (let i = 0; i < distinctItemsToRetrieveCount; i++) {
-            let randomNumber = this.randomUtil.randInt(itemSelection.length);
-            while (randomNumbersUsed.includes(randomNumber) && randomNumbersUsed.length !== itemSelection.length) {
-                randomNumber = this.randomUtil.randInt(itemSelection.length);
+            let chosenItemIndex = this.randomUtil.randInt(itemSelection.length);
+            let found = false;
+
+            for (let j = 0; j < this.maxRandomNumberAttempts; j++) {
+                if (usedItemIndexes.has(chosenItemIndex)) {
+                    chosenItemIndex = this.randomUtil.randInt(itemSelection.length);
+                } else {
+                    found = true;
+                    break;
+                }
             }
 
-            randomNumbersUsed.push(randomNumber);
+            if (!found) {
+                this.logger.error(
+                    this.localisationService.getText("repeatable-no_reward_item_found_in_price_range", {
+                        minPrice: 0,
+                        roublesBudget: roublesBudget,
+                    }),
+                );
 
-            const itemSelected = itemSelection[randomNumber];
+                return undefined;
+            }
+            usedItemIndexes.add(chosenItemIndex);
+
+            const itemSelected = itemSelection[chosenItemIndex];
             const itemUnitPrice = this.itemHelper.getItemPrice(itemSelected[0]);
             let minValue = completionConfig.minRequestedAmount;
             let maxValue = completionConfig.maxRequestedAmount;
             if (this.itemHelper.isOfBaseclass(itemSelected[0], BaseClasses.AMMO)) {
-                // Prevent multiple ammo requirements from being picked, stop after 6 attempts
-                if (isAmmo > 0 && isAmmo < 6) {
+                // Prevent multiple ammo requirements from being picked
+                if (isAmmo > 0 && isAmmo < this.maxRandomNumberAttempts) {
                     isAmmo++;
                     i--;
+
                     continue;
                 }
                 isAmmo++;
@@ -542,21 +563,24 @@ export class RepeatableQuestGenerator {
             }
             let value = minValue;
 
-            // get the value range within budget
+            // Get the value range within budget
             maxValue = Math.min(maxValue, Math.floor(roublesBudget / itemUnitPrice));
             if (maxValue > minValue) {
-                // if it doesn't blow the budget we have for the request, draw a random amount of the selected
-                // item type to be requested
+                // If it doesn't blow the budget we have for the request, draw a random amount of the selected
+                // Item type to be requested
                 value = this.randomUtil.randInt(minValue, maxValue + 1);
             }
             roublesBudget -= value * itemUnitPrice;
 
-            // push a CompletionCondition with the item and the amount of the item
+            // Push a CompletionCondition with the item and the amount of the item
+            chosenRequirementItemsTpls.push(itemSelected[0]);
             quest.conditions.AvailableForFinish.push(this.generateCompletionAvailableForFinish(itemSelected[0], value));
 
             if (roublesBudget > 0) {
-                // reduce the list possible items to fulfill the new budget constraint
-                itemSelection = itemSelection.filter((x) => this.itemHelper.getItemPrice(x[0]) < roublesBudget);
+                // Reduce the list possible items to fulfill the new budget constraint
+                itemSelection = itemSelection.filter(
+                    (dbItem) => this.itemHelper.getItemPrice(dbItem[0]) < roublesBudget,
+                );
                 if (itemSelection.length === 0) {
                     break;
                 }
@@ -571,6 +595,7 @@ export class RepeatableQuestGenerator {
             traderId,
             repeatableConfig,
             completionConfig,
+            chosenRequirementItemsTpls,
         );
 
         return quest;
@@ -725,7 +750,7 @@ export class RepeatableQuestGenerator {
      * @param playerSide Scav/Pmc
      * @returns Array of Exit objects
      */
-    protected getLocationExitsForSide(locationKey: string, playerSide: string): Exit[] {
+    protected getLocationExitsForSide(locationKey: string, playerSide: string): IExit[] {
         const mapExtracts = this.databaseService.getLocation(locationKey.toLocaleLowerCase()).allExtracts;
 
         return mapExtracts.filter((exit) => exit.Side === playerSide);
@@ -793,7 +818,7 @@ export class RepeatableQuestGenerator {
      * @param   {string}        exit                The exit name to generate the condition for
      * @returns {object}                            Exit condition
      */
-    protected generateExplorationExitCondition(exit: Exit): IQuestConditionCounterCondition {
+    protected generateExplorationExitCondition(exit: IExit): IQuestConditionCounterCondition {
         return { conditionType: "ExitName", exitName: exit.Name, id: this.objectId.generate(), dynamicLocale: true };
     }
 

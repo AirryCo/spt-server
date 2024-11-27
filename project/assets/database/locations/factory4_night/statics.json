@@ -1,389 +1,559 @@
 {
   "containersGroups": {
     "bad_sportN1_2_factory": {
-      "minContainers": 0,
-      "maxContainers": 2
+      "minContainers": 6,
+      "maxContainers": 9
     },
     "MedKitN1_2_factory": {
-      "minContainers": 0,
-      "maxContainers": 2
-    },
-    "weapon_box_N13_2_factory": {
-      "minContainers": 0,
-      "maxContainers": 2
-    },
-    "WoodenBoxN1_3_factory": {
-      "minContainers": 0,
-      "maxContainers": 2
+      "minContainers": 3,
+      "maxContainers": 5
     },
     "NearWithExit_2_factory": {
-      "minContainers": 0,
-      "maxContainers": 2
+      "minContainers": 4,
+      "maxContainers": 7
     },
-    "scontainer_toolbox_N11_2_factory": {
-      "minContainers": 0,
-      "maxContainers": 2
-    },
-    "weapon_box_N6_2_factory": {
-      "minContainers": 0,
-      "maxContainers": 2
+    "Basment_scontainer_Weapon_box_01": {
+      "minContainers": 4,
+      "maxContainers": 6
     },
     "CaseN3_factory": {
-      "minContainers": 0,
+      "minContainers": 1,
+      "maxContainers": 3
+    },
+    "wb_Area_04": {
+      "minContainers": 3,
+      "maxContainers": 4
+    },
+    "terra_stock": {
+      "minContainers": 1,
       "maxContainers": 2
     },
-    "WoodenBox_N3_3_factory": {
-      "minContainers": 0,
-      "maxContainers": 2
+    "wb_Administration_office": {
+      "minContainers": 3,
+      "maxContainers": 4
     },
-    "weapon_box_N3_4_factory": {
-      "minContainers": 0,
-      "maxContainers": 2
+    "wb_Area_02": {
+      "minContainers": 4,
+      "maxContainers": 7
     },
-    "Factory_nearBalloon_2": {
-      "minContainers": 0,
-      "maxContainers": 2
+    "wb_Area_01": {
+      "minContainers": 3,
+      "maxContainers": 6
     },
-    "weapon_box_N8_2_factory": {
-      "minContainers": 0,
-      "maxContainers": 2
-    },
-    "Plastic_suitcase_N10_2_factory": {
-      "minContainers": 0,
-      "maxContainers": 2
-    },
-    "weapon_box_N9_2_factory": {
-      "minContainers": 0,
-      "maxContainers": 2
-    },
-    "weapon_box_N12_2_factory": {
-      "minContainers": 0,
-      "maxContainers": 2
-    },
-    "weapon_box_N4_2_factory": {
-      "minContainers": 0,
-      "maxContainers": 2
-    },
-    "weapon_box_N5_2_factory": {
-      "minContainers": 0,
-      "maxContainers": 2
+    "wb_Area_03": {
+      "minContainers": 3,
+      "maxContainers": 5
     },
     "ToolkitboxN1_2_factory": {
-      "minContainers": 0,
-      "maxContainers": 2
-    },
-    "WoodeenBoxN2_2_factory": {
-      "minContainers": 0,
-      "maxContainers": 2
-    },
-    "weapon_box_N7_2_factory": {
-      "minContainers": 0,
-      "maxContainers": 2
-    },
-    "WoodenBoxN2_3_factory": {
-      "minContainers": 0,
-      "maxContainers": 2
+      "minContainers": 7,
+      "maxContainers": 12
     },
     "scontainer_ammo_grenade_N14_2_factory": {
-      "minContainers": 0,
-      "maxContainers": 2
-    },
-    "CasesN2_2_factory": {
-      "minContainers": 0,
-      "maxContainers": 2
+      "minContainers": 4,
+      "maxContainers": 6
     }
   },
   "containers": {
-    "00158": {
-      "groupId": "weapon_box_N8_2_factory"
-    },
-    "container_Factory_DesignStuff_00026": {
-      "groupId": "weapon_box_N13_2_factory"
-    },
-    "00170": {
+    "container_City_SW_02_LexOs_blockpost_00024": {
       "groupId": ""
     },
-    "00174": {
+    "container_Factory_Rework_DesignStuff_00031": {
       "groupId": ""
     },
-    "00156": {
-      "groupId": "weapon_box_N7_2_factory"
-    },
-    "00190": {
+    "container_Factory_Rework_DesignStuff_00006": {
       "groupId": ""
     },
-    "00176": {
+    "Lootable_00000": {
       "groupId": ""
     },
-    "00149": {
-      "groupId": "WoodenBoxN1_3_factory"
-    },
-    "00157": {
-      "groupId": "weapon_box_N6_2_factory"
-    },
-    "container_Factory_DesignStuff_00012": {
-      "groupId": "weapon_box_N13_2_factory"
-    },
-    "00159": {
-      "groupId": "weapon_box_N9_2_factory"
-    },
-    "00185": {
+    "container_Factory_Rework_DesignStuff_00130": {
       "groupId": ""
     },
-    "container_Factory_DesignStuff_00011": {
-      "groupId": "weapon_box_N5_2_factory"
+    "Lootable_00002": {
+      "groupId": ""
     },
-    "00151": {
-      "groupId": "weapon_box_N3_4_factory"
+    "container_Factory_Rework_DesignStuff_00036": {
+      "groupId": ""
     },
-    "container_Factory_DesignStuff_00034": {
+    "Lootable_00009": {
+      "groupId": ""
+    },
+    "container_Factory_Rework_DesignStuff_00032": {
+      "groupId": ""
+    },
+    "container_Factory_Rework_DesignStuff_00029": {
+      "groupId": ""
+    },
+    "container_Factory_Rework_DesignStuff_00030": {
+      "groupId": ""
+    },
+    "container_Factory_Rework_DesignStuff_00028": {
+      "groupId": ""
+    },
+    "container_Factory_Rework_DesignStuff_00027": {
+      "groupId": ""
+    },
+    "container_Factory_Rework_DesignStuff_00038": {
+      "groupId": ""
+    },
+    "Lootable_00008": {
+      "groupId": ""
+    },
+    "Lootable_00007": {
+      "groupId": ""
+    },
+    "Lootable_00005": {
+      "groupId": ""
+    },
+    "Lootable_00006": {
+      "groupId": ""
+    },
+    "container_Factory_Rework_DesignStuff_00034": {
+      "groupId": ""
+    },
+    "container_Factory_Rework_DesignStuff_00033": {
+      "groupId": ""
+    },
+    "container_Factory_Eugene_Temp_00002": {
+      "groupId": ""
+    },
+    "container_Factory_Rework_DesignStuff_00035": {
+      "groupId": ""
+    },
+    "container_Factory_Rework_DesignStuff_00106": {
+      "groupId": ""
+    },
+    "container_Factory_Rework_DesignStuff_00124": {
+      "groupId": ""
+    },
+    "container_Factory_Rework_DesignStuff_00125": {
+      "groupId": ""
+    },
+    "container_Factory_Rework_DesignStuff_00122": {
+      "groupId": ""
+    },
+    "container_Factory_Rework_DesignStuff_00037": {
+      "groupId": ""
+    },
+    "container_Factory_Rework_DesignStuff_00120": {
+      "groupId": ""
+    },
+    "container_Factory_Rework_DesignStuff_00119": {
+      "groupId": ""
+    },
+    "container_Test_for_export_00000": {
       "groupId": "bad_sportN1_2_factory"
     },
-    "00184": {
-      "groupId": "WoodeenBoxN2_2_factory"
-    },
-    "container_Factory_DesignStuff_00043": {
-      "groupId": "weapon_box_N7_2_factory"
-    },
-    "container_Factory_DesignStuff_00005": {
-      "groupId": "WoodenBoxN1_3_factory"
-    },
-    "container_Factory_DesignStuff_00006": {
-      "groupId": "WoodenBoxN1_3_factory"
-    },
-    "00177": {
-      "groupId": ""
-    },
-    "container_Factory_DesignStuff_00015": {
-      "groupId": "weapon_box_N9_2_factory"
-    },
-    "container_Factory_DesignStuff_00010": {
-      "groupId": "weapon_box_N3_4_factory"
-    },
-    "00180": {
-      "groupId": "WoodenBox_N3_3_factory"
-    },
-    "container_Factory_DesignStuff_00007": {
-      "groupId": "WoodenBoxN2_3_factory"
-    },
-    "00165": {
-      "groupId": ""
-    },
-    "00166": {
-      "groupId": ""
-    },
-    "00168": {
-      "groupId": ""
-    },
-    "00167": {
-      "groupId": ""
-    },
-    "00169": {
-      "groupId": ""
-    },
-    "00160": {
-      "groupId": ""
-    },
-    "00181": {
+    "container_Factory_Rework_DesignStuff_00089": {
       "groupId": "bad_sportN1_2_factory"
     },
-    "00171": {
-      "groupId": ""
-    },
-    "container_Factory_DesignStuff_00020": {
+    "container_Factory_Rework_DesignStuff_00108": {
       "groupId": "bad_sportN1_2_factory"
     },
-    "00152": {
-      "groupId": "weapon_box_N4_2_factory"
+    "container_Factory_Rework_DesignStuff_00102": {
+      "groupId": "bad_sportN1_2_factory"
     },
-    "00154": {
-      "groupId": "weapon_box_N5_2_factory"
+    "container_Factory_Rework_DesignStuff_00094": {
+      "groupId": "bad_sportN1_2_factory"
     },
-    "00150": {
-      "groupId": "WoodenBoxN2_3_factory"
+    "container_Factory_Rework_DesignStuff_00040": {
+      "groupId": "bad_sportN1_2_factory"
     },
-    "00172": {
+    "container_Factory_Rework_DesignStuff_00111": {
+      "groupId": "bad_sportN1_2_factory"
+    },
+    "container_Factory_Rework_DesignStuff_00098": {
+      "groupId": "bad_sportN1_2_factory"
+    },
+    "container_Factory_Rework_DesignStuff_00073": {
+      "groupId": "bad_sportN1_2_factory"
+    },
+    "container_Factory_Rework_DesignStuff_00095": {
+      "groupId": "bad_sportN1_2_factory"
+    },
+    "container_Factory_Rework_DesignStuff_00088": {
+      "groupId": "bad_sportN1_2_factory"
+    },
+    "container_Factory_Rework_DesignStuff_00091": {
+      "groupId": "bad_sportN1_2_factory"
+    },
+    "container_Factory_Rework_DesignStuff_00129": {
       "groupId": ""
     },
-    "container_Factory_DesignStuff_00014": {
-      "groupId": "weapon_box_N8_2_factory"
-    },
-    "00153": {
-      "groupId": "weapon_box_N3_4_factory"
-    },
-    "container_Factory_DesignStuff_00035": {
-      "groupId": "WoodeenBoxN2_2_factory"
-    },
-    "container_Factory_DesignStuff_00019": {
-      "groupId": "WoodenBox_N3_3_factory"
-    },
-    "00187": {
-      "groupId": "weapon_box_N12_2_factory"
-    },
-    "container_Factory_DesignStuff_00046": {
-      "groupId": "weapon_box_N9_2_factory"
-    },
-    "container_Factory_DesignStuff_00038": {
-      "groupId": "weapon_box_N4_2_factory"
-    },
-    "container_Factory_DesignStuff_00009": {
-      "groupId": "weapon_box_N3_4_factory"
-    },
-    "container_Factory_DesignStuff_00018": {
-      "groupId": "WoodenBox_N3_3_factory"
-    },
-    "container_Factory_DesignStuff_00040": {
-      "groupId": "weapon_box_N5_2_factory"
-    },
-    "container_Factory_DesignStuff_00045": {
-      "groupId": "weapon_box_N8_2_factory"
-    },
-    "00173": {
+    "container_Factory_Rework_DesignStuff_00004": {
       "groupId": ""
     },
-    "00189": {
+    "container_Factory_Rework_DesignStuff_00092": {
+      "groupId": "ToolkitboxN1_2_factory"
+    },
+    "container_Factory_Rework_DesignStuff_00020": {
+      "groupId": "ToolkitboxN1_2_factory"
+    },
+    "container_Factory_Rework_DesignStuff_00075": {
+      "groupId": "ToolkitboxN1_2_factory"
+    },
+    "container_Factory_Rework_DesignStuff_00018": {
+      "groupId": "ToolkitboxN1_2_factory"
+    },
+    "container_Factory_Rework_DesignStuff_00077": {
+      "groupId": "ToolkitboxN1_2_factory"
+    },
+    "container_Factory_Rework_DesignStuff_00115": {
+      "groupId": "ToolkitboxN1_2_factory"
+    },
+    "container_Factory_Rework_DesignStuff_00087": {
+      "groupId": "ToolkitboxN1_2_factory"
+    },
+    "container_Factory_Rework_DesignStuff_00147": {
       "groupId": ""
     },
-    "container_Factory_DesignStuff_00039": {
-      "groupId": "weapon_box_N4_2_factory"
-    },
-    "00186": {
+    "container_Factory_Rework_DesignStuff_00127": {
       "groupId": ""
     },
-    "container_Factory_DesignStuff_00041": {
-      "groupId": "weapon_box_N6_2_factory"
-    },
-    "container_Factory_DesignStuff_00013": {
-      "groupId": "weapon_box_N7_2_factory"
-    },
-    "container_Factory_DesignStuff_00008": {
-      "groupId": "WoodenBoxN2_3_factory"
-    },
-    "container_Factory_DesignStuff_00044": {
-      "groupId": "weapon_box_N7_2_factory"
-    },
-    "00155": {
-      "groupId": "weapon_box_N6_2_factory"
-    },
-    "container_Factory_DesignStuff_00022": {
-      "groupId": "weapon_box_N4_2_factory"
-    },
-    "container_Factory_DesignStuff_00042": {
-      "groupId": "weapon_box_N6_2_factory"
-    },
-    "container_Factory_DesignStuff_00021": {
-      "groupId": "WoodeenBoxN2_2_factory"
-    },
-    "container_Factory_DesignStuff_00025": {
-      "groupId": "weapon_box_N12_2_factory"
-    },
-    "container_Factory_DesignStuff_00049": {
-      "groupId": "weapon_box_N12_2_factory"
-    },
-    "container_Factory_DesignStuff_00036": {
-      "groupId": "WoodeenBoxN2_2_factory"
-    },
-    "00163": {
+    "container_Factory_Rework_DesignStuff_00126": {
       "groupId": ""
     },
-    "00164": {
+    "container_Factory_Rework_DesignStuff_00069": {
+      "groupId": "ToolkitboxN1_2_factory"
+    },
+    "container_Factory_Rework_DesignStuff_00110": {
+      "groupId": "ToolkitboxN1_2_factory"
+    },
+    "container_Factory_Rework_DesignStuff_00128": {
       "groupId": ""
     },
-    "00162": {
+    "container_Factory_Rework_DesignStuff_00134": {
+      "groupId": "ToolkitboxN1_2_factory"
+    },
+    "container_Factory_Rework_DesignStuff_00076": {
+      "groupId": "ToolkitboxN1_2_factory"
+    },
+    "container_Factory_Rework_DesignStuff_00090": {
+      "groupId": "ToolkitboxN1_2_factory"
+    },
+    "container_Factory_Rework_DesignStuff_00113": {
+      "groupId": "ToolkitboxN1_2_factory"
+    },
+    "container_Factory_Rework_DesignStuff_00019": {
+      "groupId": "ToolkitboxN1_2_factory"
+    },
+    "container_Factory_Rework_DesignStuff_00105": {
+      "groupId": "ToolkitboxN1_2_factory"
+    },
+    "container_Factory_Rework_DesignStuff_00097": {
+      "groupId": "ToolkitboxN1_2_factory"
+    },
+    "container_Factory_Rework_DesignStuff_00104": {
+      "groupId": "ToolkitboxN1_2_factory"
+    },
+    "container_Factory_Rework_DesignStuff_00086": {
+      "groupId": "ToolkitboxN1_2_factory"
+    },
+    "container_Factory_Rework_DesignStuff_00131": {
       "groupId": ""
     },
-    "00161": {
+    "container_ProfileEditor_00002": {
       "groupId": ""
     },
-    "container_Factory_DesignStuff_00037": {
-      "groupId": "weapon_box_N3_4_factory"
-    },
-    "container_Factory_DesignStuff_00050": {
-      "groupId": "weapon_box_N13_2_factory"
-    },
-    "00175": {
+    "Lootable_00004": {
       "groupId": ""
     },
-    "00179": {
+    "container_Factory_Eugene_Temp_00003": {
+      "groupId": ""
+    },
+    "container_Factory_Rework_DesignStuff_00137": {
+      "groupId": "terra_stock"
+    },
+    "container_Factory_Rework_DesignStuff_00148": {
+      "groupId": "terra_stock"
+    },
+    "container_Factory_Rework_DesignStuff_00039": {
+      "groupId": ""
+    },
+    "00012": {
+      "groupId": ""
+    },
+    "container_Factory_Rework_DesignStuff_00099": {
       "groupId": "MedKitN1_2_factory"
     },
-    "container_Factory_DesignStuff_00017": {
+    "container_Factory_Rework_DesignStuff_00100": {
       "groupId": "MedKitN1_2_factory"
     },
-    "container_Factory_DesignStuff_00033": {
+    "container_Factory_Rework_DesignStuff_00023": {
       "groupId": "MedKitN1_2_factory"
     },
-    "00188": {
-      "groupId": "scontainer_ammo_grenade_N14_2_factory"
+    "container_Factory_Rework_DesignStuff_00022": {
+      "groupId": "MedKitN1_2_factory"
     },
-    "container_Factory_DesignStuff_00051": {
-      "groupId": "scontainer_ammo_grenade_N14_2_factory"
+    "container_Factory_Rework_DesignStuff_00114": {
+      "groupId": "MedKitN1_2_factory"
     },
-    "container_Factory_DesignStuff_00027": {
-      "groupId": "scontainer_ammo_grenade_N14_2_factory"
+    "container_Factory_Rework_DesignStuff_00101": {
+      "groupId": "MedKitN1_2_factory"
     },
-    "container_Factory_DesignStuff_00016": {
-      "groupId": "ToolkitboxN1_2_factory"
+    "container_Factory_Rework_DesignStuff_00021": {
+      "groupId": "MedKitN1_2_factory"
     },
-    "00178": {
-      "groupId": "ToolkitboxN1_2_factory"
-    },
-    "container_Factory_DesignStuff_00024": {
-      "groupId": "scontainer_toolbox_N11_2_factory"
-    },
-    "container_Factory_DesignStuff_00032": {
-      "groupId": "ToolkitboxN1_2_factory"
-    },
-    "container_Factory_DesignStuff_00048": {
-      "groupId": "scontainer_toolbox_N11_2_factory"
-    },
-    "container_Factory_DesignStuff_00031": {
-      "groupId": "ToolkitboxN1_2_factory"
-    },
-    "00183": {
-      "groupId": "scontainer_toolbox_N11_2_factory"
-    },
-    "container_Factory_DesignStuff_00004": {
+    "container_Factory_Rework_DesignStuff_00109": {
       "groupId": "CaseN3_factory"
     },
-    "00148": {
+    "container_Factory_Rework_DesignStuff_00010": {
       "groupId": "CaseN3_factory"
     },
-    "container_Factory_DesignStuff_00030": {
-      "groupId": "CasesN2_2_factory"
+    "container_Factory_Rework_DesignStuff_00112": {
+      "groupId": "CaseN3_factory"
     },
-    "container_Factory_DesignStuff_00028": {
-      "groupId": "Factory_nearBalloon_2"
+    "container_Factory_Rework_DesignStuff_00135": {
+      "groupId": "CaseN3_factory"
     },
-    "container_Factory_DesignStuff_00002": {
+    "container_Factory_Rework_Background_00003": {
+      "groupId": ""
+    },
+    "container_Factory_Rework_DesignStuff_00051": {
+      "groupId": "wb_Area_02"
+    },
+    "container_Factory_Rework_DesignStuff_00080": {
+      "groupId": "Basment_scontainer_Weapon_box_01"
+    },
+    "container_Factory_Rework_DesignStuff_00123": {
+      "groupId": "Basment_scontainer_Weapon_box_01"
+    },
+    "container_Factory_Rework_DesignStuff_00081": {
+      "groupId": "wb_Area_01"
+    },
+    "container_Factory_Rework_DesignStuff_00013": {
+      "groupId": "wb_Area_04"
+    },
+    "container_Factory_Rework_DesignStuff_00139": {
+      "groupId": "Basment_scontainer_Weapon_box_01"
+    },
+    "container_Factory_Rework_DesignStuff_00052": {
+      "groupId": "wb_Area_02"
+    },
+    "container_Factory_Rework_DesignStuff_00060": {
+      "groupId": "wb_Area_03"
+    },
+    "container_Factory_Rework_DesignStuff_00065": {
+      "groupId": "wb_Area_02"
+    },
+    "container_Factory_Rework_DesignStuff_00055": {
+      "groupId": "wb_Administration_office"
+    },
+    "container_Factory_Rework_DesignStuff_00045": {
+      "groupId": "Basment_scontainer_Weapon_box_01"
+    },
+    "container_Factory_Rework_DesignStuff_00067": {
+      "groupId": "wb_Area_01"
+    },
+    "container_Factory_Rework_DesignStuff_00066": {
+      "groupId": "wb_Area_01"
+    },
+    "container_Factory_Rework_DesignStuff_00070": {
+      "groupId": "wb_Area_04"
+    },
+    "container_Factory_Rework_DesignStuff_00015": {
+      "groupId": "wb_Area_02"
+    },
+    "container_Factory_Rework_DesignStuff_00012": {
+      "groupId": "wb_Area_04"
+    },
+    "container_Factory_Rework_DesignStuff_00138": {
+      "groupId": "Basment_scontainer_Weapon_box_01"
+    },
+    "container_Factory_Rework_DesignStuff_00061": {
+      "groupId": "wb_Area_01"
+    },
+    "container_Factory_Rework_DesignStuff_00048": {
+      "groupId": "wb_Area_03"
+    },
+    "container_Factory_Rework_DesignStuff_00146": {
+      "groupId": "Basment_scontainer_Weapon_box_01"
+    },
+    "container_Factory_Rework_DesignStuff_00016": {
+      "groupId": "wb_Area_02"
+    },
+    "container_Factory_Rework_DesignStuff_00025": {
+      "groupId": "wb_Area_03"
+    },
+    "container_Factory_Rework_DesignStuff_00044": {
+      "groupId": "wb_Administration_office"
+    },
+    "container_Factory_Rework_DesignStuff_00050": {
+      "groupId": "wb_Area_02"
+    },
+    "container_Factory_Rework_DesignStuff_00054": {
+      "groupId": "wb_Area_02"
+    },
+    "container_Factory_Rework_DesignStuff_00096": {
+      "groupId": "wb_Area_04"
+    },
+    "container_Factory_Rework_Background_00001": {
+      "groupId": ""
+    },
+    "container_Factory_Rework_DesignStuff_00121": {
+      "groupId": "Basment_scontainer_Weapon_box_01"
+    },
+    "container_Factory_Rework_DesignStuff_00049": {
+      "groupId": "weapon_box_N3_4_factory"
+    },
+    "container_Factory_Rework_DesignStuff_00103": {
+      "groupId": "wb_Area_03"
+    },
+    "container_Factory_Rework_Background_00000": {
+      "groupId": ""
+    },
+    "container_Factory_Rework_DesignStuff_00064": {
+      "groupId": "wb_Area_02"
+    },
+    "container_Factory_Rework_DesignStuff_00046": {
+      "groupId": "wb_Area_02"
+    },
+    "container_Factory_Rework_DesignStuff_00107": {
+      "groupId": "wb_Area_01"
+    },
+    "container_Factory_Rework_DesignStuff_00047": {
+      "groupId": "wb_Area_02"
+    },
+    "container_Factory_Rework_DesignStuff_00132": {
+      "groupId": "Basment_scontainer_Weapon_box_01"
+    },
+    "Lootable_00003": {
+      "groupId": "wb_Area_01"
+    },
+    "container_Factory_Rework_DesignStuff_00145": {
+      "groupId": "Basment_scontainer_Weapon_box_01"
+    },
+    "container_Factory_Rework_DesignStuff_00053": {
+      "groupId": "wb_Area_03"
+    },
+    "container_Factory_Rework_DesignStuff_00058": {
+      "groupId": "wb_Area_01"
+    },
+    "container_Factory_Rework_DesignStuff_00063": {
+      "groupId": "wb_Area_02"
+    },
+    "container_Factory_Rework_DesignStuff_00043": {
+      "groupId": "wb_Administration_office"
+    },
+    "container_Factory_Rework_DesignStuff_00042": {
+      "groupId": "wb_Administration_office"
+    },
+    "container_Factory_Rework_DesignStuff_00068": {
+      "groupId": "wb_Area_01"
+    },
+    "container_Factory_Rework_DesignStuff_00143": {
+      "groupId": "Basment_scontainer_Weapon_box_01"
+    },
+    "container_Factory_Rework_DesignStuff_00116": {
+      "groupId": "Basment_scontainer_Weapon_box_01"
+    },
+    "container_Factory_Rework_DesignStuff_00014": {
+      "groupId": "wb_Area_02"
+    },
+    "container_Factory_Rework_DesignStuff_00079": {
+      "groupId": "Basment_scontainer_Weapon_box_01"
+    },
+    "container_Factory_Rework_DesignStuff_00056": {
+      "groupId": "wb_Administration_office"
+    },
+    "container_Factory_Rework_DesignStuff_00142": {
+      "groupId": "Basment_scontainer_Weapon_box_01"
+    },
+    "container_Factory_Rework_DesignStuff_00011": {
+      "groupId": "wb_Area_04"
+    },
+    "container_Factory_Rework_DesignStuff_00062": {
+      "groupId": "wb_Area_02"
+    },
+    "container_Factory_Rework_DesignStuff_00024": {
+      "groupId": "wb_Area_03"
+    },
+    "container_Factory_Rework_DesignStuff_00026": {
+      "groupId": "wb_Area_03"
+    },
+    "container_Factory_Rework_DesignStuff_00144": {
+      "groupId": "Basment_scontainer_Weapon_box_01"
+    },
+    "container_Factory_Rework_DesignStuff_00078": {
+      "groupId": "Basment_scontainer_Weapon_box_01"
+    },
+    "container_Factory_Rework_DesignStuff_00117": {
+      "groupId": "Basment_scontainer_Weapon_box_01"
+    },
+    "container_Factory_Rework_DesignStuff_00082": {
+      "groupId": "wb_Area_01"
+    },
+    "container_Factory_Rework_DesignStuff_00071": {
+      "groupId": "wb_Area_04"
+    },
+    "container_Factory_Rework_DesignStuff_00118": {
+      "groupId": "Basment_scontainer_Weapon_box_01"
+    },
+    "container_Factory_Rework_DesignStuff_00140": {
+      "groupId": "Basment_scontainer_Weapon_box_01"
+    },
+    "container_Factory_Rework_DesignStuff_00141": {
+      "groupId": "Basment_scontainer_Weapon_box_01"
+    },
+    "container_Factory_Rework_DesignStuff_00059": {
+      "groupId": "wb_Area_03"
+    },
+    "container_Factory_Rework_DesignStuff_00085": {
+      "groupId": "scontainer_ammo_grenade_N14_2_factory"
+    },
+    "container_Factory_Rework_DesignStuff_00072": {
+      "groupId": "scontainer_ammo_grenade_N14_2_factory"
+    },
+    "container_Factory_Rework_DesignStuff_00084": {
+      "groupId": "scontainer_ammo_grenade_N14_2_factory"
+    },
+    "container_Factory_Rework_DesignStuff_00041": {
+      "groupId": "scontainer_ammo_grenade_N14_2_factory"
+    },
+    "container_Factory_Rework_DesignStuff_00017": {
+      "groupId": "scontainer_ammo_grenade_N14_2_factory"
+    },
+    "container_Factory_Rework_DesignStuff_00009": {
+      "groupId": "scontainer_ammo_grenade_N14_2_factory"
+    },
+    "container_Factory_Rework_DesignStuff_00083": {
+      "groupId": "scontainer_ammo_grenade_N14_2_factory"
+    },
+    "container_Factory_Rework_DesignStuff_00057": {
+      "groupId": "scontainer_ammo_grenade_N14_2_factory"
+    },
+    "container_Factory_Rework_DesignStuff_00093": {
+      "groupId": "scontainer_ammo_grenade_N14_2_factory"
+    },
+    "container_Factory_Rework_DesignStuff_00133": {
+      "groupId": "scontainer_ammo_grenade_N14_2_factory"
+    },
+    "container_Factory_Rework_DesignStuff_00001": {
       "groupId": "NearWithExit_2_factory"
     },
-    "container_Factory_DesignStuff_00047": {
-      "groupId": "Plastic_suitcase_N10_2_factory"
-    },
-    "00147": {
-      "groupId": "CasesN2_2_factory"
-    },
-    "container_Factory_DesignStuff_00003": {
-      "groupId": "CasesN2_2_factory"
-    },
-    "00182": {
-      "groupId": "Plastic_suitcase_N10_2_factory"
-    },
-    "container_Factory_DesignStuff_00001": {
-      "groupId": "Factory_nearBalloon_2"
-    },
-    "container_Factory_DesignStuff_00029": {
-      "groupId": "Factory_nearBalloon_2"
-    },
-    "00146": {
+    "container_Factory_Rework_DesignStuff_00005": {
       "groupId": "NearWithExit_2_factory"
     },
-    "container_Factory_DesignStuff_00023": {
-      "groupId": "Plastic_suitcase_N10_2_factory"
+    "container_Factory_Rework_DesignStuff_00008": {
+      "groupId": "NearWithExit_2_factory"
     },
-    "00145": {
-      "groupId": "Factory_nearBalloon_2"
+    "container_Factory_Rework_DesignStuff_00002": {
+      "groupId": "NearWithExit_2_factory"
+    },
+    "container_Factory_Rework_DesignStuff_00074": {
+      "groupId": "NearWithExit_2_factory"
+    },
+    "container_Factory_Rework_DesignStuff_00000": {
+      "groupId": "NearWithExit_2_factory"
+    },
+    "container_Factory_Rework_DesignStuff_00003": {
+      "groupId": "NearWithExit_2_factory"
+    },
+    "container_Factory_Rework_DesignStuff_00007": {
+      "groupId": "NearWithExit_2_factory"
+    },
+    "container_Factory_Rework_DesignStuff_00136": {
+      "groupId": "NearWithExit_2_factory"
     }
   }
 }

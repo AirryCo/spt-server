@@ -24,7 +24,6 @@ export class RecursiveCloner implements ICloner {
         // clone the object types
         if (typeOfObj === "object") {
             if (Array.isArray(obj)) {
-                // biome-ignore lint/suspicious/noExplicitAny: used for clone
                 const objArr = obj as Array<any>;
                 return objArr.map((v) => this.clone(v)) as T;
             }

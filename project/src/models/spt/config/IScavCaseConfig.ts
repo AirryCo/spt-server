@@ -4,8 +4,8 @@ import { IBaseConfig } from "@spt/models/spt/config/IBaseConfig";
 export interface IScavCaseConfig extends IBaseConfig {
     kind: "spt-scavcase";
     rewardItemValueRangeRub: Record<string, MinMax>;
-    moneyRewards: MoneyRewards;
-    ammoRewards: AmmoRewards;
+    moneyRewards: IMoneyRewards;
+    ammoRewards: IAmmoRewards;
     rewardItemParentBlacklist: string[];
     rewardItemBlacklist: string[];
     allowMultipleMoneyRewardsPerRarity: boolean;
@@ -13,21 +13,21 @@ export interface IScavCaseConfig extends IBaseConfig {
     allowBossItemsAsRewards: boolean;
 }
 
-export interface MoneyRewards {
+export interface IMoneyRewards {
     moneyRewardChancePercent: number;
-    rubCount: MoneyLevels;
-    usdCount: MoneyLevels;
-    eurCount: MoneyLevels;
-    gpCount: MoneyLevels;
+    rubCount: IMoneyLevels;
+    usdCount: IMoneyLevels;
+    eurCount: IMoneyLevels;
+    gpCount: IMoneyLevels;
 }
 
-export interface MoneyLevels {
+export interface IMoneyLevels {
     common: MinMax;
     rare: MinMax;
     superrare: MinMax;
 }
 
-export interface AmmoRewards {
+export interface IAmmoRewards {
     ammoRewardChancePercent: number;
     ammoRewardBlacklist: Record<string, string[]>;
     ammoRewardValueRangeRub: Record<string, MinMax>;

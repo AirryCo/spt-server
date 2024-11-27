@@ -21,13 +21,13 @@
     "repairKit": {
         "armor": {
             "rarityWeight": {
-                "common": 5,
-                "rare": 1
+                "Common": 5,
+                "Rare": 1
             },
             "bonusTypeWeight": {
                 "DamageReduction": 1
             },
-            "common": {
+            "Common": {
                 "DamageReduction": {
                     "valuesMinMax": {
                         "min": 0.9,
@@ -39,7 +39,7 @@
                     }
                 }
             },
-            "rare": {
+            "Rare": {
                 "DamageReduction": {
                     "valuesMinMax": {
                         "min": 0.8,
@@ -54,13 +54,13 @@
         },
         "vest": {
             "rarityWeight": {
-                "common": 5,
-                "rare": 1
+                "Common": 5,
+                "Rare": 1
             },
             "bonusTypeWeight": {
                 "DamageReduction": 1
             },
-            "common": {
+            "Common": {
                 "DamageReduction": {
                     "valuesMinMax": {
                         "min": 0.9,
@@ -72,7 +72,7 @@
                     }
                 }
             },
-            "rare": {
+            "Rare": {
                 "DamageReduction": {
                     "valuesMinMax": {
                         "min": 0.8,
@@ -87,13 +87,13 @@
         },
         "headwear": {
             "rarityWeight": {
-                "common": 5,
-                "rare": 1
+                "Common": 5,
+                "Rare": 1
             },
             "bonusTypeWeight": {
                 "DamageReduction": 1
             },
-            "common": {
+            "Common": {
                 "DamageReduction": {
                     "valuesMinMax": {
                         "min": 0.9,
@@ -105,7 +105,7 @@
                     }
                 }
             },
-            "rare": {
+            "Rare": {
                 "DamageReduction": {
                     "valuesMinMax": {
                         "min": 0.8,
@@ -120,14 +120,14 @@
         },
         "weapon": {
             "rarityWeight": {
-                "common": 5,
-                "rare": 1
+                "Common": 5,
+                "Rare": 1
             },
             "bonusTypeWeight": {
                 "WeaponSpread": 1,
                 "MalfunctionProtections": 1
             },
-            "common": {
+            "Common": {
                 "WeaponSpread": {
                     "valuesMinMax": {
                         "min": 0.9,
@@ -149,7 +149,7 @@
                     }
                 }
             },
-            "rare": {
+            "Rare": {
                 "WeaponSpread": {
                     "valuesMinMax": {
                         "min": 0.8,

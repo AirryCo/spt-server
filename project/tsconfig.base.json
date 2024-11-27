@@ -1,5 +1,7 @@
 {
     "compilerOptions": {
+        "noUncheckedIndexedAccess": true,
+        "moduleDetection": "force",
         "allowJs": false,
         "module": "CommonJS",
         "target": "ES2022",

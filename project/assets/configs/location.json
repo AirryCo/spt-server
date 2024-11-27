@@ -41,952 +41,161 @@
     },
     "customWaves": {
         "boss": {
-            "factory4_day": [
-                {
-                    "sptId": "pmcBEARFactoryDayBossSpawn",
-                    "BossName": "pmcBEAR",
-                    "BossChance": 25,
-                    "BossZone": "BotZone",
-                    "BossPlayer": false,
+            "bigmap": [{
+                    "sptId": "usecbigmap",
+                    "BossChance": 50,
                     "BossDifficult": "normal",
-                    "BossEscortType": "pmcBEAR",
+                    "BossEscortAmount": "0,0,2,2,2,1,1,1,1,1,0,2,3",
                     "BossEscortDifficult": "normal",
-                    "BossEscortAmount": "1",
-                    "Time": -1,
-                    "Supports": [
-                        {
-                            "BossEscortType": "pmcBEAR",
-                            "BossEscortDifficult": ["normal"],
-                            "BossEscortAmount": "1"
-                        }
-                    ],
-                    "RandomTimeSpawn": false,
-                    "ChanceGroup": 0
-                },
-                {
-                    "sptId": "pmcUSECFactoryDayBossSpawn",
-                    "BossName": "pmcUSEC",
-                    "BossChance": 25,
-                    "BossZone": "BotZone",
-                    "BossPlayer": false,
-                    "BossDifficult": "normal",
                     "BossEscortType": "pmcUSEC",
-                    "BossEscortDifficult": "normal",
-                    "BossEscortAmount": "1",
-                    "Time": -1,
-                    "Supports": [
-                        {
-                            "BossEscortType": "pmcUSEC",
-                            "BossEscortDifficult": ["normal"],
-                            "BossEscortAmount": "1"
-                        }
-                    ],
+                    "BossName": "pmcUSEC",
+                    "BossPlayer": false,
+                    "BossZone": "",
+                    "Delay": 0,
+                    "DependKarma": false,
+                    "DependKarmaPVE": false,
+                    "ForceSpawn": false,
+                    "IgnoreMaxBots": true,
                     "RandomTimeSpawn": false,
-                    "ChanceGroup": 0
+                    "SpawnMode": [
+                        "pve"
+                    ],
+                    "Supports": null,
+                    "Time": -1,
+                    "TriggerId": "",
+                    "TriggerName": ""
+                }, {
+                    "sptId": "bearbigmap",
+                    "BossChance": 50,
+                    "BossDifficult": "normal",
+                    "BossEscortAmount": "0,0,2,2,2,1,1,1,1,1,0,2,3",
+                    "BossEscortDifficult": "normal",
+                    "BossEscortType": "pmcBEAR",
+                    "BossName": "pmcBEAR",
+                    "BossPlayer": false,
+                    "BossZone": "",
+                    "Delay": 0,
+                    "DependKarma": false,
+                    "DependKarmaPVE": false,
+                    "ForceSpawn": false,
+                    "IgnoreMaxBots": true,
+                    "RandomTimeSpawn": false,
+                    "SpawnMode": [
+                        "pve"
+                    ],
+                    "Supports": null,
+                    "Time": -1,
+                    "TriggerId": "",
+                    "TriggerName": ""
                 }
             ],
-            "bigmap": [
-                {
-                    "sptId": "pmcBEARCustomsScavBaseNormalSpawn",
-                    "BossName": "pmcBEAR",
-                    "BossChance": 25,
-                    "BossZone": "ZoneScavBase",
-                    "BossPlayer": false,
+            "woods": [{
+                    "sptId": "usecbigmap",
+                    "BossChance": 50,
                     "BossDifficult": "normal",
-                    "BossEscortType": "pmcBEAR",
+                    "BossEscortAmount": "0,0,2,2,2,1,1,1,1,1,1,2,3",
                     "BossEscortDifficult": "normal",
-                    "BossEscortAmount": "2",
-                    "Time": -1,
-                    "Supports": [
-                        {
-                            "BossEscortType": "pmcBEAR",
-                            "BossEscortDifficult": ["normal"],
-                            "BossEscortAmount": "2"
-                        }
-                    ],
-                    "RandomTimeSpawn": false,
-                    "ChanceGroup": 0
-                },
-                {
-                    "sptId": "pmcUSECCustomsScavBaseNormalSpawn",
-                    "BossName": "pmcUSEC",
-                    "BossChance": 25,
-                    "BossZone": "ZoneScavBase",
-                    "BossPlayer": false,
-                    "BossDifficult": "normal",
                     "BossEscortType": "pmcUSEC",
-                    "BossEscortDifficult": "normal",
-                    "BossEscortAmount": "2",
-                    "Time": -1,
-                    "Supports": [
-                        {
-                            "BossEscortType": "pmcUSEC",
-                            "BossEscortDifficult": ["normal"],
-                            "BossEscortAmount": "2"
-                        }
-                    ],
+                    "BossName": "pmcUSEC",
+                    "BossPlayer": false,
+                    "BossZone": "",
+                    "Delay": 0,
+                    "DependKarma": false,
+                    "DependKarmaPVE": false,
+                    "ForceSpawn": false,
+                    "IgnoreMaxBots": true,
                     "RandomTimeSpawn": false,
-                    "ChanceGroup": 0
+                    "SpawnMode": [
+                        "pve"
+                    ],
+                    "Supports": null,
+                    "Time": -1,
+                    "TriggerId": "",
+                    "TriggerName": ""
+                }, {
+                    "sptId": "bearbigmap",
+                    "BossChance": 50,
+                    "BossDifficult": "normal",
+                    "BossEscortAmount": "0,0,2,2,2,1,1,1,1,1,1,2,3",
+                    "BossEscortDifficult": "normal",
+                    "BossEscortType": "pmcBEAR",
+                    "BossName": "pmcBEAR",
+                    "BossPlayer": false,
+                    "BossZone": "",
+                    "Delay": 0,
+                    "DependKarma": false,
+                    "DependKarmaPVE": false,
+                    "ForceSpawn": false,
+                    "IgnoreMaxBots": true,
+                    "RandomTimeSpawn": false,
+                    "SpawnMode": [
+                        "pve"
+                    ],
+                    "Supports": null,
+                    "Time": -1,
+                    "TriggerId": "",
+                    "TriggerName": ""
                 }
             ],
-            "woods": [
-                {
-                    "sptId": "pmcBEARWoodScavBaseNormalSpawn",
-                    "BossName": "pmcBEAR",
-                    "BossChance": 25,
-                    "BossZone": "ZoneScavBase2",
-                    "BossPlayer": false,
+			"sandbox_high": [{
+                    "sptId": "usecbigmap",
+                    "BossChance": 50,
                     "BossDifficult": "normal",
-                    "BossEscortType": "pmcBEAR",
-                    "BossEscortDifficult": "normal",
-                    "BossEscortAmount": "2",
-                    "Time": -1,
-                    "Supports": [
-                        {
-                            "BossEscortType": "pmcBEAR",
-                            "BossEscortDifficult": ["normal"],
-                            "BossEscortAmount": "2"
-                        }
-                    ],
-                    "RandomTimeSpawn": false,
-                    "ChanceGroup": 0
-                },
-                {
-                    "sptId": "pmcUSECWoodScavBaseNormalSpawn",
-                    "BossName": "pmcUSEC",
-                    "BossChance": 25,
-                    "BossZone": "ZoneScavBase2",
-                    "BossPlayer": false,
-                    "BossDifficult": "normal",
-                    "BossEscortType": "pmcUSEC",
-                    "BossEscortDifficult": "normal",
-                    "BossEscortAmount": "2",
-                    "Time": -1,
-                    "Supports": [
-                        {
-                            "BossEscortType": "pmcUSEC",
-                            "BossEscortDifficult": ["normal"],
-                            "BossEscortAmount": "2"
-                        }
-                    ],
-                    "RandomTimeSpawn": false,
-                    "ChanceGroup": 0
-                },
-                {
-                    "sptId": "pmcBEARWoodRoadNormalSpawn",
-                    "BossName": "pmcBEAR",
-                    "BossChance": 25,
-                    "BossZone": "ZoneRoad",
-                    "BossPlayer": false,
-                    "BossDifficult": "normal",
-                    "BossEscortType": "pmcBEAR",
-                    "BossEscortDifficult": "normal",
-                    "BossEscortAmount": "2",
-                    "Time": -1,
-                    "Supports": [
-                        {
-                            "BossEscortType": "pmcBEAR",
-                            "BossEscortDifficult": ["normal"],
-                            "BossEscortAmount": "2"
-                        }
-                    ],
-                    "RandomTimeSpawn": false,
-                    "ChanceGroup": 0
-                },
-                {
-                    "sptId": "pmcUSECWoodRoadNormalSpawn",
-                    "BossName": "pmcUSEC",
-                    "BossChance": 25,
-                    "BossZone": "ZoneRoad",
-                    "BossPlayer": false,
-                    "BossDifficult": "normal",
-                    "BossEscortType": "pmcUSEC",
-                    "BossEscortDifficult": "normal",
-                    "BossEscortAmount": "2",
-                    "Time": -1,
-                    "Supports": [
-                        {
-                            "BossEscortType": "pmcUSEC",
-                            "BossEscortDifficult": ["normal"],
-                            "BossEscortAmount": "2"
-                        }
-                    ],
-                    "RandomTimeSpawn": false,
-                    "ChanceGroup": 0
-                },
-                {
-                    "sptId": "pmcBEARWoodVillageNormalSpawn",
-                    "BossName": "pmcBEAR",
-                    "BossChance": 25,
-                    "BossZone": "ZoneClearVill",
-                    "BossPlayer": false,
-                    "BossDifficult": "normal",
-                    "BossEscortType": "pmcBEAR",
-                    "BossEscortDifficult": "normal",
-                    "BossEscortAmount": "2",
-                    "Time": -1,
-                    "Supports": [
-                        {
-                            "BossEscortType": "pmcBEAR",
-                            "BossEscortDifficult": ["normal"],
-                            "BossEscortAmount": "2"
-                        }
-                    ],
-                    "RandomTimeSpawn": false,
-                    "ChanceGroup": 0
-                },
-                {
-                    "sptId": "pmcUSECWoodVillageNormalSpawn",
-                    "BossName": "pmcUSEC",
-                    "BossChance": 25,
-                    "BossZone": "ZoneClearVill",
-                    "BossPlayer": false,
-                    "BossDifficult": "normal",
-                    "BossEscortType": "pmcUSEC",
-                    "BossEscortDifficult": "normal",
-                    "BossEscortAmount": "2",
-                    "Time": -1,
-                    "Supports": [
-                        {
-                            "BossEscortType": "pmcUSEC",
-                            "BossEscortDifficult": ["normal"],
-                            "BossEscortAmount": "2"
-                        }
-                    ],
-                    "RandomTimeSpawn": false,
-                    "ChanceGroup": 0
-                }
-            ],
-            "shoreline": [
-                {
-                    "sptId": "pmcBEARShorelinePortNormalSpawn",
-                    "BossName": "pmcBEAR",
-                    "BossChance": 20,
-                    "BossZone": "ZonePort",
-                    "BossPlayer": false,
-                    "BossDifficult": "normal",
-                    "BossEscortType": "pmcBEAR",
-                    "BossEscortDifficult": "normal",
-                    "BossEscortAmount": "2",
-                    "Time": -1,
-                    "Supports": [
-                        {
-                            "BossEscortType": "pmcBEAR",
-                            "BossEscortDifficult": ["normal"],
-                            "BossEscortAmount": "1"
-                        }
-                    ],
-                    "RandomTimeSpawn": false,
-                    "ChanceGroup": 0
-                },
-                {
-                    "sptId": "pmcUSECShorelinePortNormalSpawn",
-                    "BossName": "pmcUSEC",
-                    "BossChance": 20,
-                    "BossZone": "ZonePort",
-                    "BossPlayer": false,
-                    "BossDifficult": "normal",
-                    "BossEscortType": "pmcUSEC",
-                    "BossEscortDifficult": "normal",
-                    "BossEscortAmount": "2",
-                    "Time": -1,
-                    "Supports": [
-                        {
-                            "BossEscortType": "pmcUSEC",
-                            "BossEscortDifficult": ["normal"],
-                            "BossEscortAmount": "1"
-                        }
-                    ],
-                    "RandomTimeSpawn": false,
-                    "ChanceGroup": 0
-                },
-                {
-                    "sptId": "pmcUSECShorelineSanatorium1NormalSpawn",
-                    "BossName": "pmcUSEC",
-                    "BossChance": 10,
-                    "BossZone": "ZoneSanatorium1",
-                    "BossPlayer": false,
-                    "BossDifficult": "normal",
-                    "BossEscortType": "pmcUSEC",
-                    "BossEscortDifficult": "normal",
-                    "BossEscortAmount": "1",
-                    "Time": -1,
-                    "Supports": [
-                        {
-                            "BossEscortType": "pmcUSEC",
-                            "BossEscortDifficult": ["normal"],
-                            "BossEscortAmount": "1"
-                        }
-                    ],
-                    "RandomTimeSpawn": false,
-                    "ChanceGroup": 0
-                },
-                {
-                    "sptId": "pmcBEARShorelineSanatorium1NormalSpawn",
-                    "BossName": "pmcBEAR",
-                    "BossChance": 10,
-                    "BossZone": "ZoneSanatorium1",
-                    "BossPlayer": false,
-                    "BossDifficult": "normal",
-                    "BossEscortType": "pmcBEAR",
-                    "BossEscortDifficult": "normal",
-                    "BossEscortAmount": "1",
-                    "Time": -1,
-                    "Supports": [
-                        {
-                            "BossEscortType": "pmcBEAR",
-                            "BossEscortDifficult": ["normal"],
-                            "BossEscortAmount": "1"
-                        }
-                    ],
-                    "RandomTimeSpawn": false,
-                    "ChanceGroup": 0
-                },
-                {
-                    "sptId": "pmcUSECShorelineSanatorium2NormalSpawn",
-                    "BossName": "pmcUSEC",
-                    "BossChance": 10,
-                    "BossZone": "ZoneSanatorium2",
-                    "BossPlayer": false,
-                    "BossDifficult": "normal",
-                    "BossEscortType": "pmcUSEC",
-                    "BossEscortDifficult": "normal",
-                    "BossEscortAmount": "1",
-                    "Time": -1,
-                    "Supports": [
-                        {
-                            "BossEscortType": "pmcUSEC",
-                            "BossEscortDifficult": ["normal"],
-                            "BossEscortAmount": "1"
-                        }
-                    ],
-                    "RandomTimeSpawn": false,
-                    "ChanceGroup": 0
-                },
-                {
-                    "sptId": "pmcBEARShorelineSanatorium2NormalSpawn",
-                    "BossName": "pmcBEAR",
-                    "BossChance": 10,
-                    "BossZone": "ZoneSanatorium2",
-                    "BossPlayer": false,
-                    "BossDifficult": "normal",
-                    "BossEscortType": "pmcBEAR",
-                    "BossEscortDifficult": "normal",
-                    "BossEscortAmount": "1",
-                    "Time": -1,
-                    "Supports": [
-                        {
-                            "BossEscortType": "pmcBEAR",
-                            "BossEscortDifficult": ["normal"],
-                            "BossEscortAmount": "1"
-                        }
-                    ],
-                    "RandomTimeSpawn": false,
-                    "ChanceGroup": 0
-                }
-            ],
-            "laboratory": [
-                {
-                    "sptId": "pmcBEARLabsZoneFloor1NormalSpawn",
-                    "BossName": "pmcBEAR",
-                    "BossChance": 30,
-                    "BossZone": "BotZoneFloor1",
-                    "BossDifficult": "normal",
-                    "BossEscortAmount": "1",
-                    "BossEscortDifficult": "normal",
-                    "BossEscortType": "pmcBEAR",
-                    "BossPlayer": false,
-                    "Time": -1,
-                    "Supports": [
-                        {
-                            "BossEscortType": "pmcBEAR",
-                            "BossEscortDifficult": ["normal"],
-                            "BossEscortAmount": "1"
-                        }
-                    ],
-                    "RandomTimeSpawn": false,
-                    "ChanceGroup": 0
-                },
-                {
-                    "sptId": "pmcBEARLabsZoneFloor2NormalSpawn",
-                    "BossChance": 30,
-                    "BossName": "pmcBEAR",
-                    "BossZone": "BotZoneFloor2",
-                    "BossDifficult": "normal",
-                    "BossEscortAmount": "1",
-                    "BossEscortDifficult": "normal",
-                    "BossEscortType": "pmcBEAR",
-                    "BossPlayer": false,
-                    "Time": -1,
-                    "Supports": [
-                        {
-                            "BossEscortType": "pmcBEAR",
-                            "BossEscortDifficult": ["normal"],
-                            "BossEscortAmount": "1"
-                        }
-                    ],
-                    "RandomTimeSpawn": false,
-                    "ChanceGroup": 0
-                },
-                {
-                    "sptId": "pmcBEARLabsZoneBasementNormalSpawn",
-                    "BossChance": 30,
-                    "BossDifficult": "normal",
-                    "BossEscortAmount": "0",
-                    "BossEscortDifficult": "normal",
-                    "BossEscortType": "pmcBEAR",
-                    "BossName": "pmcBEAR",
-                    "BossPlayer": false,
-                    "BossZone": "BotZoneBasement",
-                    "Time": -1,
-                    "Supports": [
-                        {
-                            "BossEscortType": "pmcBEAR",
-                            "BossEscortDifficult": ["normal"],
-                            "BossEscortAmount": "0"
-                        }
-                    ],
-                    "RandomTimeSpawn": false,
-                    "ChanceGroup": 0
-                },
-                {
-                    "sptId": "pmcUSECLabsZoneFloor1NormalSpawn",
-                    "BossChance": 30,
-                    "BossDifficult": "normal",
-                    "BossEscortAmount": "1",
+                    "BossEscortAmount": "0,0,2,2,2,1,1,1,1,1,0,2,3",
                     "BossEscortDifficult": "normal",
                     "BossEscortType": "pmcUSEC",
                     "BossName": "pmcUSEC",
                     "BossPlayer": false,
-                    "BossZone": "BotZoneFloor1",
-                    "Time": -1,
-                    "Supports": [
-                        {
-                            "BossEscortType": "pmcUSEC",
-                            "BossEscortDifficult": ["normal"],
-                            "BossEscortAmount": "1"
-                        }
-                    ],
+                    "BossZone": "",
+                    "Delay": 0,
+                    "DependKarma": false,
+                    "DependKarmaPVE": false,
+                    "ForceSpawn": false,
+                    "IgnoreMaxBots": true,
                     "RandomTimeSpawn": false,
-                    "ChanceGroup": 0
-                },
-                {
-                    "sptId": "pmcUSECLabsZoneFloor2NormalSpawn",
-                    "BossChance": 30,
+                    "SpawnMode": [
+                        "pve"
+                    ],
+                    "Supports": null,
+                    "Time": -1,
+                    "TriggerId": "",
+                    "TriggerName": ""
+                }, {
+                    "sptId": "bearbigmap",
+                    "BossChance": 50,
                     "BossDifficult": "normal",
-                    "BossEscortAmount": "1",
+                    "BossEscortAmount": "0,0,2,2,2,1,1,1,1,1,0,2,3",
                     "BossEscortDifficult": "normal",
-                    "BossEscortType": "pmcUSEC",
-                    "BossName": "pmcUSEC",
-                    "BossPlayer": false,
-                    "BossZone": "BotZoneFloor2",
-                    "Time": -1,
-                    "Supports": [
-                        {
-                            "BossEscortType": "pmcUSEC",
-                            "BossEscortDifficult": ["normal"],
-                            "BossEscortAmount": "1"
-                        }
-                    ],
-                    "RandomTimeSpawn": false,
-                    "ChanceGroup": 0
-                },
-                {
-                    "sptId": "pmcUSECLabsZoneBasementNormalSpawn",
-                    "BossChance": 30,
-                    "BossDifficult": "normal",
-                    "BossEscortAmount": "0",
-                    "BossEscortDifficult": "normal",
-                    "BossEscortType": "pmcUSEC",
-                    "BossName": "pmcUSEC",
-                    "BossPlayer": false,
-                    "BossZone": "BotZoneBasement",
-                    "Time": -1,
-                    "Supports": [
-                        {
-                            "BossEscortType": "pmcUSEC",
-                            "BossEscortDifficult": ["normal"],
-                            "BossEscortAmount": "0"
-                        }
-                    ],
-                    "RandomTimeSpawn": false,
-                    "ChanceGroup": 0
-                }
-            ],
-            "interchange": [
-                {
-                    "sptId": "pmcBEARInterchangeNormalSpawn",
-                    "BossName": "pmcBEAR",
-                    "BossChance": 15,
-                    "BossZone": "ZoneCenter,ZoneCenterBot,ZoneOLI,ZoneIDEA,ZoneGoshan,ZonePowerStation",
-                    "BossPlayer": false,
-                    "BossDifficult": "normal",
                     "BossEscortType": "pmcBEAR",
-                    "BossEscortDifficult": "normal",
-                    "BossEscortAmount": "1",
-                    "Time": -1,
-                    "Supports": [
-                        {
-                            "BossEscortType": "pmcBEAR",
-                            "BossEscortDifficult": ["normal"],
-                            "BossEscortAmount": "1"
-                        }
-                    ],
-                    "RandomTimeSpawn": false,
-                    "ChanceGroup": 0
-                },
-                {
-                    "sptId": "pmcUSECInterchangeNormalSpawn",
-                    "BossName": "pmcUSEC",
-                    "BossChance": 15,
-                    "BossZone": "ZoneCenter,ZoneCenterBot,ZoneOLI,ZoneIDEA,ZoneGoshan,ZonePowerStation",
-                    "BossPlayer": false,
-                    "BossDifficult": "normal",
-                    "BossEscortType": "pmcUSEC",
-                    "BossEscortDifficult": "normal",
-                    "BossEscortAmount": "1",
-                    "Time": -1,
-                    "Supports": [
-                        {
-                            "BossEscortType": "pmcUSEC",
-                            "BossEscortDifficult": ["normal"],
-                            "BossEscortAmount": "1"
-                        }
-                    ],
-                    "RandomTimeSpawn": false,
-                    "ChanceGroup": 0
-                }
-            ],
-            "lighthouse": [
-                {
-                    "sptId": "pmcBEARLighthouseNormalSpawn",
                     "BossName": "pmcBEAR",
-                    "BossChance": 15,
-                    "BossZone": "Zone_Village,Zone_Chalet,Zone_DestroyedHouse,Zone_Rocks,Zone_OldHouse",
                     "BossPlayer": false,
-                    "BossDifficult": "normal",
-                    "BossEscortType": "pmcBEAR",
-                    "BossEscortDifficult": "normal",
-                    "BossEscortAmount": "1",
-                    "Time": -1,
-                    "Supports": [
-                        {
-                            "BossEscortType": "pmcBEAR",
-                            "BossEscortDifficult": ["normal"],
-                            "BossEscortAmount": "1"
-                        }
-                    ],
+                    "BossZone": "",
+                    "Delay": 0,
+                    "DependKarma": false,
+                    "DependKarmaPVE": false,
+                    "ForceSpawn": false,
+                    "IgnoreMaxBots": true,
                     "RandomTimeSpawn": false,
-                    "ChanceGroup": 0
-                },
-                {
-                    "sptId": "pmcUSECLighthouseNormalSpawn",
-                    "BossName": "pmcUSEC",
-                    "BossChance": 15,
-                    "BossZone": "Zone_Village,Zone_Chalet,Zone_DestroyedHouse,Zone_Rocks,Zone_OldHouse",
-                    "BossPlayer": false,
-                    "BossDifficult": "normal",
-                    "BossEscortType": "pmcUSEC",
-                    "BossEscortDifficult": "normal",
-                    "BossEscortAmount": "1",
-                    "Time": -1,
-                    "Supports": [
-                        {
-                            "BossEscortType": "pmcUSEC",
-                            "BossEscortDifficult": ["normal"],
-                            "BossEscortAmount": "1"
-                        }
+                    "SpawnMode": [
+                        "pve"
                     ],
-                    "RandomTimeSpawn": false,
-                    "ChanceGroup": 0
-                }
-            ],
-            "rezervbase": [
-                {
-                    "sptId": "pmcBEARReserveNormalSpawnA",
-                    "BossName": "pmcBEAR",
-                    "BossChance": 15,
-                    "BossZone": "ZoneBarrack,ZonePTOR1,ZonePTOR2,ZoneSubCommand,ZoneSubStorage,ZoneRailStrorage",
-                    "BossPlayer": false,
-                    "BossDifficult": "normal",
-                    "BossEscortType": "pmcBEAR",
-                    "BossEscortDifficult": "normal",
-                    "BossEscortAmount": "1",
+                    "Supports": null,
                     "Time": -1,
-                    "Supports": [
-                        {
-                            "BossEscortType": "pmcBEAR",
-                            "BossEscortDifficult": ["normal"],
-                            "BossEscortAmount": "1"
-                        }
-                    ],
-                    "RandomTimeSpawn": false,
-                    "ChanceGroup": 0
-                },
-                {
-                    "sptId": "pmcBEARReserveNormalSpawnB",
-                    "BossName": "pmcBEAR",
-                    "BossChance": 15,
-                    "BossZone": "ZoneBarrack,ZonePTOR1,ZonePTOR2,ZoneSubCommand,ZoneSubStorage,ZoneRailStrorage",
-                    "BossPlayer": false,
-                    "BossDifficult": "normal",
-                    "BossEscortType": "pmcBEAR",
-                    "BossEscortDifficult": "normal",
-                    "BossEscortAmount": "1",
-                    "Time": -1,
-                    "Supports": [
-                        {
-                            "BossEscortType": "pmcBEAR",
-                            "BossEscortDifficult": ["normal"],
-                            "BossEscortAmount": "1"
-                        }
-                    ],
-                    "RandomTimeSpawn": false,
-                    "ChanceGroup": 0
-                },
-                {
-                    "sptId": "pmcUSECReserveNormalSpawnA",
-                    "BossName": "pmcUSEC",
-                    "BossChance": 15,
-                    "BossZone": "ZoneBarrack,ZonePTOR1,ZonePTOR2,ZoneSubCommand,ZoneSubStorage,ZoneRailStrorage",
-                    "BossPlayer": false,
-                    "BossDifficult": "normal",
-                    "BossEscortType": "pmcUSEC",
-                    "BossEscortDifficult": "normal",
-                    "BossEscortAmount": "1",
-                    "Time": -1,
-                    "Supports": [
-                        {
-                            "BossEscortType": "pmcUSEC",
-                            "BossEscortDifficult": ["normal"],
-                            "BossEscortAmount": "1"
-                        }
-                    ],
-                    "RandomTimeSpawn": false,
-                    "ChanceGroup": 0
-                },
-                {
-                    "sptId": "pmcUSECReserveNormalSpawnB",
-                    "BossName": "pmcUSEC",
-                    "BossChance": 15,
-                    "BossZone": "ZoneBarrack,ZonePTOR1,ZonePTOR2,ZoneSubCommand,ZoneSubStorage,ZoneRailStrorage",
-                    "BossPlayer": false,
-                    "BossDifficult": "normal",
-                    "BossEscortType": "pmcUSEC",
-                    "BossEscortDifficult": "normal",
-                    "BossEscortAmount": "1",
-                    "Time": -1,
-                    "Supports": [
-                        {
-                            "BossEscortType": "pmcUSEC",
-                            "BossEscortDifficult": ["normal"],
-                            "BossEscortAmount": "1"
-                        }
-                    ],
-                    "RandomTimeSpawn": false,
-                    "ChanceGroup": 0
-                }
-            ],
-            "sandbox": [
-                {
-                    "sptId": "pmcBEARSandboxNormalSpawn",
-                    "BossName": "pmcBEAR",
-                    "BossChance": 30,
-                    "BossZone": "ZoneSandbox",
-                    "BossPlayer": false,
-                    "BossDifficult": "normal",
-                    "BossEscortType": "pmcBEAR",
-                    "BossEscortDifficult": "normal",
-                    "BossEscortAmount": "2",
-                    "Time": -1,
-                    "Supports": [
-                        {
-                            "BossEscortType": "pmcBEAR",
-                            "BossEscortDifficult": ["normal"],
-                            "BossEscortAmount": "2"
-                        }
-                    ],
-                    "RandomTimeSpawn": false,
-                    "ChanceGroup": 0
-                },
-                {
-                    "sptId": "pmcUSECSandboxNormalSpawn",
-                    "BossName": "pmcUSEC",
-                    "BossChance": 30,
-                    "BossZone": "ZoneSandbox",
-                    "BossPlayer": false,
-                    "BossDifficult": "normal",
-                    "BossEscortType": "pmcUSEC",
-                    "BossEscortDifficult": "normal",
-                    "BossEscortAmount": "2",
-                    "Time": -1,
-                    "Supports": [
-                        {
-                            "BossEscortType": "pmcUSEC",
-                            "BossEscortDifficult": ["normal"],
-                            "BossEscortAmount": "2"
-                        }
-                    ],
-                    "RandomTimeSpawn": false,
-                    "ChanceGroup": 0
-                }
-            ],
-            "sandbox_high": [
-                {
-                    "sptId": "pmcBEARSandboxNormalSpawn",
-                    "BossName": "pmcBEAR",
-                    "BossChance": 30,
-                    "BossZone": "ZoneSandbox",
-                    "BossPlayer": false,
-                    "BossDifficult": "normal",
-                    "BossEscortType": "pmcBEAR",
-                    "BossEscortDifficult": "normal",
-                    "BossEscortAmount": "2",
-                    "Time": -1,
-                    "Supports": [
-                        {
-                            "BossEscortType": "pmcBEAR",
-                            "BossEscortDifficult": ["normal"],
-                            "BossEscortAmount": "2"
-                        }
-                    ],
-                    "RandomTimeSpawn": false,
-                    "ChanceGroup": 0
-                },
-                {
-                    "sptId": "pmcUSECSandboxNormalSpawn",
-                    "BossName": "pmcUSEC",
-                    "BossChance": 30,
-                    "BossZone": "ZoneSandbox",
-                    "BossPlayer": false,
-                    "BossDifficult": "normal",
-                    "BossEscortType": "pmcUSEC",
-                    "BossEscortDifficult": "normal",
-                    "BossEscortAmount": "2",
-                    "Time": -1,
-                    "Supports": [
-                        {
-                            "BossEscortType": "pmcUSEC",
-                            "BossEscortDifficult": ["normal"],
-                            "BossEscortAmount": "2"
-                        }
-                    ],
-                    "RandomTimeSpawn": false,
-                    "ChanceGroup": 0
+                    "TriggerId": "",
+                    "TriggerName": ""
                 }
             ]
         },
-        "normal": {
-            "factory4_day": [
-                {
-                    "sptId": "factoryDayScav1",
-                    "number": 1,
-                    "time_min": 5,
-                    "time_max": 500,
-                    "slots_min": 0,
-                    "slots_max": 1,
-                    "SpawnPoints": "BotZone",
-                    "BotSide": "Savage",
-                    "BotPreset": "normal",
-                    "WildSpawnType": "assault",
-                    "isPlayers": true
-                },
-                {
-                    "sptId": "factoryDayScav2",
-                    "number": 1,
-                    "time_min": 5,
-                    "time_max": 500,
-                    "slots_min": 0,
-                    "slots_max": 1,
-                    "SpawnPoints": "BotZone",
-                    "BotSide": "Savage",
-                    "BotPreset": "normal",
-                    "WildSpawnType": "assault",
-                    "isPlayers": true
-                },
-                {
-                    "sptId": "factoryDayScav3",
-                    "number": 1,
-                    "time_min": 5,
-                    "time_max": 500,
-                    "slots_min": 0,
-                    "slots_max": 1,
-                    "SpawnPoints": "BotZone",
-                    "BotSide": "Savage",
-                    "BotPreset": "normal",
-                    "WildSpawnType": "assault",
-                    "isPlayers": true
-                },
-                {
-                    "sptId": "factoryDayScav4",
-                    "number": 1,
-                    "time_min": 5,
-                    "time_max": 500,
-                    "slots_min": 0,
-                    "slots_max": 1,
-                    "SpawnPoints": "BotZone",
-                    "BotSide": "Savage",
-                    "BotPreset": "normal",
-                    "WildSpawnType": "assault",
-                    "isPlayers": true
-                },
-                {
-                    "sptId": "factoryDayScav5",
-                    "number": 1,
-                    "time_min": 5,
-                    "time_max": 500,
-                    "slots_min": 0,
-                    "slots_max": 1,
-                    "SpawnPoints": "BotZone",
-                    "BotSide": "Savage",
-                    "BotPreset": "normal",
-                    "WildSpawnType": "assault",
-                    "isPlayers": true
-                },
-                {
-                    "sptId": "factoryDayScav6",
-                    "number": 1,
-                    "time_min": 5,
-                    "time_max": 500,
-                    "slots_min": 0,
-                    "slots_max": 1,
-                    "SpawnPoints": "BotZone",
-                    "BotSide": "Savage",
-                    "BotPreset": "normal",
-                    "WildSpawnType": "assault",
-                    "isPlayers": true
-                },
-                {
-                    "sptId": "factoryDayScav7",
-                    "number": 1,
-                    "time_min": 5,
-                    "time_max": 500,
-                    "slots_min": 0,
-                    "slots_max": 1,
-                    "SpawnPoints": "BotZone",
-                    "BotSide": "Savage",
-                    "BotPreset": "normal",
-                    "WildSpawnType": "assault",
-                    "isPlayers": true
-                },
-                {
-                    "sptId": "factoryDayScav8",
-                    "number": 1,
-                    "time_min": 5,
-                    "time_max": 500,
-                    "slots_min": 0,
-                    "slots_max": 1,
-                    "SpawnPoints": "BotZone",
-                    "BotSide": "Savage",
-                    "BotPreset": "normal",
-                    "WildSpawnType": "assault",
-                    "isPlayers": true
-                },
-                {
-                    "sptId": "factoryDayScav9",
-                    "number": 1,
-                    "time_min": 5,
-                    "time_max": 500,
-                    "slots_min": 0,
-                    "slots_max": 1,
-                    "SpawnPoints": "BotZone",
-                    "BotSide": "Savage",
-                    "BotPreset": "normal",
-                    "WildSpawnType": "assault",
-                    "isPlayers": true
-                },
-                {
-                    "sptId": "factoryDayScav10",
-                    "number": 1,
-                    "time_min": 5,
-                    "time_max": 500,
-                    "slots_min": 0,
-                    "slots_max": 1,
-                    "SpawnPoints": "BotZone",
-                    "BotSide": "Savage",
-                    "BotPreset": "normal",
-                    "WildSpawnType": "assault",
-                    "isPlayers": true
-                },
-                {
-                    "sptId": "factoryDayScav11",
-                    "number": 1,
-                    "time_min": 5,
-                    "time_max": 500,
-                    "slots_min": 0,
-                    "slots_max": 1,
-                    "SpawnPoints": "BotZone",
-                    "BotSide": "Savage",
-                    "BotPreset": "normal",
-                    "WildSpawnType": "assault",
-                    "isPlayers": true
-                },
-                {
-                    "sptId": "factoryDayScav12",
-                    "number": 1,
-                    "time_min": 5,
-                    "time_max": 500,
-                    "slots_min": 0,
-                    "slots_max": 1,
-                    "SpawnPoints": "BotZone",
-                    "BotSide": "Savage",
-                    "BotPreset": "normal",
-                    "WildSpawnType": "assault",
-                    "isPlayers": true
-                },
-                {
-                    "sptId": "factoryDayScav13",
-                    "number": 1,
-                    "time_min": 5,
-                    "time_max": 500,
-                    "slots_min": 0,
-                    "slots_max": 1,
-                    "SpawnPoints": "BotZone",
-                    "BotSide": "Savage",
-                    "BotPreset": "normal",
-                    "WildSpawnType": "assault",
-                    "isPlayers": true
-                }
-            ],
-            "shoreline": [
-                {
-                    "sptId": "shorelineScav1",
-                    "number": 1,
-                    "time_min": 20,
-                    "time_max": 180,
-                    "slots_min": 1,
-                    "slots_max": 3,
-                    "SpawnPoints": "ZoneSmuglers",
-                    "BotSide": "Savage",
-                    "BotPreset": "normal",
-                    "WildSpawnType": "assault",
-                    "isPlayers": true
-                },
-                {
-                    "sptId": "shorelineScav2",
-                    "number": 1,
-                    "time_min": 600,
-                    "time_max": 720,
-                    "slots_min": 1,
-                    "slots_max": 4,
-                    "SpawnPoints": "ZoneSmuglers",
-                    "BotSide": "Savage",
-                    "BotPreset": "normal",
-                    "WildSpawnType": "assault",
-                    "isPlayers": true
-                }
-            ]
-        }
+        "normal": {}
     },
-    "openZones": {
-        "bigmap": ["ZoneScavBase"]
-    },
+    "openZones": {},
     "forcedLootSingleSpawnById": {
         "bigmap": [
             "5ac620eb86f7743a8e6e0da0",
             "5939e5a786f77461f11c0098",
             "64e74a3d4d49d23b2c39d319",
-            "6614230055afee107f05e998"
+            "6614230055afee107f05e998",
+			"66b22630a6b4e5ec7c02cdb7"
         ],
         "interchange": ["64e74a5ac2b4f829615ec336"],
         "lighthouse": [
@@ -1027,7 +236,8 @@
             "6582dbf0b8d7830efc45016f"
         ],
         "laboratory": ["6398a4cfb5992f573c6562b3", "64e74a44c2b4f829615ec334"],
-        "sandbox": ["6575a6ca8778e96ded05a802", "6582bd252b50c61c565828e2"]
+        "sandbox": ["6575a6ca8778e96ded05a802", "6582bd252b50c61c565828e2"],
+        "factory4_day": ["591093bb86f7747caa7bb2ee", "66c0b39ca1f68fcc1d0c0cc3"]
     },
     "splitWaveIntoSingleSpawnsSettings": {
         "enabled": true,
@@ -1045,34 +255,27 @@
         "waveSizeThreshold": 4
     },
     "rogueLighthouseSpawnTimeSettings": {
-        "enabled": true,
+        "enabled": false,
         "waitTimeSeconds": 120
-    },
-    "fixEmptyBotWavesSettings": {
-        "enabled": true,
-        "ignoreMaps": ["base", "develop", "hideout", "privatearea", "suburbs", "terminal", "town"]
     },
     "fitLootIntoContainerAttempts": 3,
     "addOpenZonesToAllMaps": true,
     "addCustomBotWavesToMaps": true,
     "enableBotTypeLimits": true,
     "botTypeLimits": {
-        "tarkovstreets": [
-            {
+        "tarkovstreets": [{
                 "type": "marksman",
                 "min": 2,
                 "max": 4
             }
         ],
-        "woods": [
-            {
+        "woods": [{
                 "type": "marksman",
                 "min": 2,
                 "max": 5
             }
         ],
-        "bigmap": [
-            {
+        "bigmap": [{
                 "type": "marksman",
                 "min": 2,
                 "max": 4
@@ -1334,5 +537,10 @@
             "mod_mount": 5,
             "mod_equipment": 5
         }
-    }
+    },
+	"reserveRaiderSpawnChanceOverrides": {
+		"nonTriggered": 80,
+		"triggered": 90
+	},
+	"nonMaps": ["base", "develop", "hideout", "privatearea", "suburbs", "terminal", "town"]
 }

@@ -3,13 +3,14 @@ import { ItemHelper } from "@spt/helpers/ItemHelper";
 import { TraderAssortHelper } from "@spt/helpers/TraderAssortHelper";
 import { TraderHelper } from "@spt/helpers/TraderHelper";
 import { IPmcData } from "@spt/models/eft/common/IPmcData";
-import { Item } from "@spt/models/eft/common/tables/IItem";
+import { IItem } from "@spt/models/eft/common/tables/IItem";
 import { IAddItemsDirectRequest } from "@spt/models/eft/inventory/IAddItemsDirectRequest";
 import { IItemEventRouterResponse } from "@spt/models/eft/itemEvent/IItemEventRouterResponse";
 import { IProcessBuyTradeRequestData } from "@spt/models/eft/trade/IProcessBuyTradeRequestData";
 import { IProcessSellTradeRequestData } from "@spt/models/eft/trade/IProcessSellTradeRequestData";
 import { BackendErrorCodes } from "@spt/models/enums/BackendErrorCodes";
 import { ConfigTypes } from "@spt/models/enums/ConfigTypes";
+import { QuestStatus } from "@spt/models/enums/QuestStatus";
 import { Traders } from "@spt/models/enums/Traders";
 import { IInventoryConfig } from "@spt/models/spt/config/IInventoryConfig";
 import { ITraderConfig } from "@spt/models/spt/config/ITraderConfig";
@@ -17,6 +18,7 @@ import { ILogger } from "@spt/models/spt/utils/ILogger";
 import { EventOutputHolder } from "@spt/routers/EventOutputHolder";
 import { ConfigServer } from "@spt/servers/ConfigServer";
 import { RagfairServer } from "@spt/servers/RagfairServer";
+import { DatabaseService } from "@spt/services/DatabaseService";
 import { FenceService } from "@spt/services/FenceService";
 import { LocalisationService } from "@spt/services/LocalisationService";
 import { PaymentService } from "@spt/services/PaymentService";
@@ -32,6 +34,7 @@ export class TradeHelper {
 
     constructor(
         @inject("PrimaryLogger") protected logger: ILogger,
+        @inject("DatabaseService") protected databaseService: DatabaseService,
         @inject("EventOutputHolder") protected eventOutputHolder: EventOutputHolder,
         @inject("TraderHelper") protected traderHelper: TraderHelper,
         @inject("ItemHelper") protected itemHelper: ItemHelper,
@@ -67,7 +70,7 @@ export class TradeHelper {
         foundInRaid: boolean,
         output: IItemEventRouterResponse,
     ): void {
-        let offerItems: Item[] = [];
+        let offerItems: IItem[] = [];
         let buyCallback: (buyCount: number) => void;
         if (buyRequestData.tid.toLocaleLowerCase() === "ragfair") {
             buyCallback = (buyCount: number) => {
@@ -185,7 +188,7 @@ export class TradeHelper {
         let itemsToSendRemaining = itemsToSendTotalCount;
 
         // Construct array of items to send to player
-        const itemsToSendToPlayer: Item[][] = [];
+        const itemsToSendToPlayer: IItem[][] = [];
         while (itemsToSendRemaining > 0) {
             const offerClone = this.cloner.clone(offerItems);
             // Handle stackable items that have a max stack size limit
@@ -241,6 +244,14 @@ export class TradeHelper {
         sessionID: string,
         output: IItemEventRouterResponse,
     ): void {
+        // TODO - make more generic to support all quests that have this condition type
+        // Try to reduce perf hit as this is expensive to do every sale
+        // MUST OCCUR PRIOR TO ITEMS BEING REMOVED FROM INVENTORY
+        if (sellRequest.tid === Traders.RAGMAN) {
+            // Edge case, `Circulate` quest needs to track when certain items are sold to him
+            this.incrementCirculateSoldToTraderCounter(profileWithItemsToSell, profileToReceiveMoney, sellRequest);
+        }
+
         // Find item in inventory and remove it
         for (const itemToBeRemoved of sellRequest.items) {
             const itemIdToFind = itemToBeRemoved.id.replace(/\s+/g, ""); // Strip out whitespace
@@ -265,12 +276,81 @@ export class TradeHelper {
                 );
             }
 
-            // Also removes children
+            // Remove item from inventory + any child items it has
             this.inventoryHelper.removeItem(profileWithItemsToSell, itemToBeRemoved.id, sessionID, output);
         }
 
         // Give player money for sold item(s)
         this.paymentService.giveProfileMoney(profileToReceiveMoney, sellRequest.price, sellRequest, output, sessionID);
+    }
+
+    protected incrementCirculateSoldToTraderCounter(
+        profileWithItemsToSell: IPmcData,
+        profileToReceiveMoney: IPmcData,
+        sellRequest: IProcessSellTradeRequestData,
+    ) {
+        const circulateQuestId = "6663149f1d3ec95634095e75";
+        const activeCirculateQuest = profileToReceiveMoney.Quests.find(
+            (quest) => quest.qid === circulateQuestId && quest.status === QuestStatus.Started,
+        );
+
+        // Player not on Circulate quest ,exit
+        if (!activeCirculateQuest) {
+            return;
+        }
+
+        // Find related task condition
+        const taskCondition = Object.values(profileToReceiveMoney.TaskConditionCounters).find(
+            (condition) => condition.sourceId === circulateQuestId && condition.type === "SellItemToTrader",
+        );
+
+        // No relevant condtion in profile, nothing to increment
+        if (!taskCondition) {
+            this.logger.error("Unable to find `sellToTrader` task counter for Circulate quest in profile, skipping");
+
+            return;
+        }
+
+        // Condition exists in profile
+        const circulateQuestDb = this.databaseService.getQuests()[circulateQuestId];
+        if (!circulateQuestDb) {
+            this.logger.error(`Unable to find quest: ${circulateQuestId} in db, skipping`);
+
+            return;
+        }
+
+        // Get sellToTrader condition from quest
+        const sellItemToTraderCondition = circulateQuestDb.conditions.AvailableForFinish.find(
+            (condition) => condition.conditionType === "SellItemToTrader",
+        );
+
+        // Quest doesnt have a sellItemToTrader condition, nothing to do
+        if (!sellItemToTraderCondition) {
+            this.logger.error("Unable to find `sellToTrader` counter for Circulate quest in db, skipping");
+
+            return;
+        }
+
+        // Iterate over items sold to trader
+        const itemsTplsThatIncrement = sellItemToTraderCondition.target;
+        for (const itemSoldToTrader of sellRequest.items) {
+            // Get sold items' details from profile
+            const itemDetails = profileWithItemsToSell.Inventory.items.find(
+                (inventoryItem) => inventoryItem._id === itemSoldToTrader.id,
+            );
+            if (!itemDetails) {
+                this.logger.error(
+                    `Unable to find item in inventory to sell to trader with id: ${itemSoldToTrader.id}, cannot increment counter, skipping`,
+                );
+
+                continue;
+            }
+
+            // Is sold item on the increment list
+            if (itemsTplsThatIncrement.includes(itemDetails._tpl)) {
+                taskCondition.value += itemSoldToTrader.count;
+            }
+        }
     }
 
     /**
@@ -286,7 +366,7 @@ export class TradeHelper {
         sessionId: string,
         pmcData: IPmcData,
         traderId: string,
-        assortBeingPurchased: Item,
+        assortBeingPurchased: IItem,
         assortId: string,
         count: number,
     ): void {

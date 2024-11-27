@@ -2,19 +2,19 @@ import { BotHelper } from "@spt/helpers/BotHelper";
 import { ProfileHelper } from "@spt/helpers/ProfileHelper";
 import {
     EquipmentChances,
-    Generation,
-    GenerationData,
     IBotType,
-    ModsChances,
+    IGeneration,
+    IGenerationData,
+    IModsChances,
 } from "@spt/models/eft/common/tables/IBotType";
 import { ConfigTypes } from "@spt/models/enums/ConfigTypes";
-import { BotGenerationDetails } from "@spt/models/spt/bots/BotGenerationDetails";
+import { IBotGenerationDetails } from "@spt/models/spt/bots/BotGenerationDetails";
 import {
-    EquipmentFilterDetails,
     EquipmentFilters,
     IAdjustmentDetails,
     IBotConfig,
-    WeightingAdjustmentDetails,
+    IEquipmentFilterDetails,
+    IWeightingAdjustmentDetails,
 } from "@spt/models/spt/config/IBotConfig";
 import { ILogger } from "@spt/models/spt/utils/ILogger";
 import { ConfigServer } from "@spt/servers/ConfigServer";
@@ -46,7 +46,7 @@ export class BotEquipmentFilterService {
         sessionId: string,
         baseBotNode: IBotType,
         botLevel: number,
-        botGenerationDetails: BotGenerationDetails,
+        botGenerationDetails: IBotGenerationDetails,
     ): void {
         const pmcProfile = this.profileHelper.getPmcProfile(sessionId);
 
@@ -94,7 +94,7 @@ export class BotEquipmentFilterService {
      */
     protected adjustChances(
         equipmentChanges: Record<string, number>,
-        baseValues: EquipmentChances | ModsChances,
+        baseValues: EquipmentChances | IModsChances,
     ): void {
         if (!equipmentChanges) {
             return;
@@ -111,8 +111,8 @@ export class BotEquipmentFilterService {
      * @param baseBotGeneration dictionary to update
      */
     protected adjustGenerationChances(
-        generationChanges: Record<string, GenerationData>,
-        baseBotGeneration: Generation,
+        generationChanges: Record<string, IGenerationData>,
+        baseBotGeneration: IGeneration,
     ): void {
         if (!generationChanges) {
             return;
@@ -154,7 +154,7 @@ export class BotEquipmentFilterService {
      * @param playerLevel Level of the player
      * @returns EquipmentBlacklistDetails object
      */
-    public getBotEquipmentBlacklist(botRole: string, playerLevel: number): EquipmentFilterDetails | undefined {
+    public getBotEquipmentBlacklist(botRole: string, playerLevel: number): IEquipmentFilterDetails | undefined {
         const blacklistDetailsForBot = this.botEquipmentConfig[botRole];
 
         // No equipment blacklist found, skip
@@ -177,7 +177,7 @@ export class BotEquipmentFilterService {
      * @param playerLevel Players level
      * @returns EquipmentFilterDetails object
      */
-    protected getBotEquipmentWhitelist(botRole: string, playerLevel: number): EquipmentFilterDetails | undefined {
+    protected getBotEquipmentWhitelist(botRole: string, playerLevel: number): IEquipmentFilterDetails | undefined {
         const botEquipmentConfig = this.botEquipmentConfig[botRole];
 
         // No equipment blacklist found, skip
@@ -196,7 +196,7 @@ export class BotEquipmentFilterService {
      * @param botLevel Level of bot
      * @returns Weighting adjustments for bot items
      */
-    protected getBotWeightingAdjustments(botRole: string, botLevel: number): WeightingAdjustmentDetails | undefined {
+    protected getBotWeightingAdjustments(botRole: string, botLevel: number): IWeightingAdjustmentDetails | undefined {
         const botEquipmentConfig = this.botEquipmentConfig[botRole];
 
         // No config found, skip
@@ -222,7 +222,7 @@ export class BotEquipmentFilterService {
     protected getBotWeightingAdjustmentsByPlayerLevel(
         botRole: string,
         playerlevel: number,
-    ): WeightingAdjustmentDetails | undefined {
+    ): IWeightingAdjustmentDetails | undefined {
         const botEquipmentConfig = this.botEquipmentConfig[botRole];
 
         // No config found, skip
@@ -248,8 +248,8 @@ export class BotEquipmentFilterService {
      */
     protected filterEquipment(
         baseBotNode: IBotType,
-        blacklist: EquipmentFilterDetails,
-        whitelist: EquipmentFilterDetails,
+        blacklist: IEquipmentFilterDetails,
+        whitelist: IEquipmentFilterDetails,
     ): void {
         if (whitelist) {
             for (const equipmentSlotKey in baseBotNode.inventory.equipment) {
@@ -304,8 +304,8 @@ export class BotEquipmentFilterService {
      */
     protected filterCartridges(
         baseBotNode: IBotType,
-        blacklist: EquipmentFilterDetails,
-        whitelist: EquipmentFilterDetails,
+        blacklist: IEquipmentFilterDetails,
+        whitelist: IEquipmentFilterDetails,
     ): void {
         if (whitelist) {
             for (const ammoCaliberKey in baseBotNode.inventory.Ammo) {

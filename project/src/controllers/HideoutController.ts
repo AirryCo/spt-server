@@ -6,13 +6,14 @@ import { PaymentHelper } from "@spt/helpers/PaymentHelper";
 import { PresetHelper } from "@spt/helpers/PresetHelper";
 import { ProfileHelper } from "@spt/helpers/ProfileHelper";
 import { IPmcData } from "@spt/models/eft/common/IPmcData";
-import { HideoutArea, ITaskConditionCounter, Product, ScavCase } from "@spt/models/eft/common/tables/IBotBase";
-import { Item } from "@spt/models/eft/common/tables/IItem";
-import { HideoutUpgradeCompleteRequestData } from "@spt/models/eft/hideout/HideoutUpgradeCompleteRequestData";
+import { IBotHideoutArea, IProduct, IScavCase, ITaskConditionCounter } from "@spt/models/eft/common/tables/IBotBase";
+import { IItem } from "@spt/models/eft/common/tables/IItem";
 import { IHandleQTEEventRequestData } from "@spt/models/eft/hideout/IHandleQTEEventRequestData";
-import { IHideoutArea, Stage } from "@spt/models/eft/hideout/IHideoutArea";
+import { IHideoutArea, IStage } from "@spt/models/eft/hideout/IHideoutArea";
 import { IHideoutCancelProductionRequestData } from "@spt/models/eft/hideout/IHideoutCancelProductionRequestData";
+import { IHideoutCircleOfCultistProductionStartRequestData } from "@spt/models/eft/hideout/IHideoutCircleOfCultistProductionStartRequestData";
 import { IHideoutContinuousProductionStartRequestData } from "@spt/models/eft/hideout/IHideoutContinuousProductionStartRequestData";
+import { IHideoutDeleteProductionRequestData } from "@spt/models/eft/hideout/IHideoutDeleteProductionRequestData";
 import { IHideoutImproveAreaRequestData } from "@spt/models/eft/hideout/IHideoutImproveAreaRequestData";
 import { IHideoutProduction } from "@spt/models/eft/hideout/IHideoutProduction";
 import { IHideoutPutItemInRequestData } from "@spt/models/eft/hideout/IHideoutPutItemInRequestData";
@@ -21,21 +22,25 @@ import { IHideoutSingleProductionStartRequestData } from "@spt/models/eft/hideou
 import { IHideoutTakeItemOutRequestData } from "@spt/models/eft/hideout/IHideoutTakeItemOutRequestData";
 import { IHideoutTakeProductionRequestData } from "@spt/models/eft/hideout/IHideoutTakeProductionRequestData";
 import { IHideoutToggleAreaRequestData } from "@spt/models/eft/hideout/IHideoutToggleAreaRequestData";
+import { IHideoutUpgradeCompleteRequestData } from "@spt/models/eft/hideout/IHideoutUpgradeCompleteRequestData";
 import { IHideoutUpgradeRequestData } from "@spt/models/eft/hideout/IHideoutUpgradeRequestData";
-import { IQteData } from "@spt/models/eft/hideout/IQteData";
+import { IQteData, IQteResult } from "@spt/models/eft/hideout/IQteData";
 import { IRecordShootingRangePoints } from "@spt/models/eft/hideout/IRecordShootingRangePoints";
 import { IAddItemDirectRequest } from "@spt/models/eft/inventory/IAddItemDirectRequest";
 import { IAddItemsDirectRequest } from "@spt/models/eft/inventory/IAddItemsDirectRequest";
 import { IItemEventRouterResponse } from "@spt/models/eft/itemEvent/IItemEventRouterResponse";
 import { BackendErrorCodes } from "@spt/models/enums/BackendErrorCodes";
+import { BonusType } from "@spt/models/enums/BonusType";
 import { ConfigTypes } from "@spt/models/enums/ConfigTypes";
 import { HideoutAreas } from "@spt/models/enums/HideoutAreas";
+import { ItemTpl } from "@spt/models/enums/ItemTpl";
 import { SkillTypes } from "@spt/models/enums/SkillTypes";
 import { IHideoutConfig } from "@spt/models/spt/config/IHideoutConfig";
 import { ILogger } from "@spt/models/spt/utils/ILogger";
 import { EventOutputHolder } from "@spt/routers/EventOutputHolder";
 import { ConfigServer } from "@spt/servers/ConfigServer";
 import { SaveServer } from "@spt/servers/SaveServer";
+import { CircleOfCultistService } from "@spt/services/CircleOfCultistService";
 import { DatabaseService } from "@spt/services/DatabaseService";
 import { FenceService } from "@spt/services/FenceService";
 import { LocalisationService } from "@spt/services/LocalisationService";
@@ -51,7 +56,7 @@ import { inject, injectable } from "tsyringe";
 @injectable()
 export class HideoutController {
     /** Key used in TaskConditionCounters array */
-    protected static nameTaskConditionCountersCrafting = "CounterHoursCrafting";
+    protected static nameTaskConditionCountersCraftingId = "673f5d6fdd6ed700c703afdc";
     protected hideoutConfig: IHideoutConfig;
 
     constructor(
@@ -75,6 +80,7 @@ export class HideoutController {
         @inject("ProfileActivityService") protected profileActivityService: ProfileActivityService,
         @inject("ConfigServer") protected configServer: ConfigServer,
         @inject("FenceService") protected fenceService: FenceService,
+        @inject("CircleOfCultistService") protected circleOfCultistService: CircleOfCultistService,
         @inject("PrimaryCloner") protected cloner: ICloner,
     ) {
         this.hideoutConfig = this.configServer.getConfig(ConfigTypes.HIDEOUT);
@@ -165,7 +171,7 @@ export class HideoutController {
      */
     public upgradeComplete(
         pmcData: IPmcData,
-        request: HideoutUpgradeCompleteRequestData,
+        request: IHideoutUpgradeCompleteRequestData,
         sessionID: string,
         output: IItemEventRouterResponse,
     ): void {
@@ -221,7 +227,12 @@ export class HideoutController {
             profileHideoutArea.type === HideoutAreas.WATER_COLLECTOR ||
             profileHideoutArea.type === HideoutAreas.MEDSTATION
         ) {
-            this.checkAndUpgradeWall(pmcData);
+            this.SetWallVisibleIfPrereqsMet(pmcData);
+        }
+
+        // Cleanup temporary buffs/debuffs from wall if complete
+        if (profileHideoutArea.type === HideoutAreas.EMERGENCY_WALL && profileHideoutArea.level === 6) {
+            this.hideoutHelper.removeHideoutWallBuffsAndDebuffs(hideoutData, pmcData);
         }
 
         // Add Skill Points Per Area Upgrade
@@ -236,7 +247,7 @@ export class HideoutController {
      * Upgrade wall status to visible in profile if medstation/water collector are both level 1
      * @param pmcData Player profile
      */
-    protected checkAndUpgradeWall(pmcData: IPmcData): void {
+    protected SetWallVisibleIfPrereqsMet(pmcData: IPmcData): void {
         const medStation = pmcData.Hideout.Areas.find((area) => area.type === HideoutAreas.MEDSTATION);
         const waterCollector = pmcData.Hideout.Areas.find((area) => area.type === HideoutAreas.WATER_COLLECTOR);
         if (medStation?.level >= 1 && waterCollector?.level >= 1) {
@@ -259,9 +270,9 @@ export class HideoutController {
         output: IItemEventRouterResponse,
         sessionID: string,
         pmcData: IPmcData,
-        profileParentHideoutArea: HideoutArea,
+        profileParentHideoutArea: IBotHideoutArea,
         dbHideoutArea: IHideoutArea,
-        hideoutStage: Stage,
+        hideoutStage: IStage,
     ): void {
         // Add key/value to `hideoutAreaStashes` dictionary - used to link hideout area to inventory stash by its id
         if (!pmcData.Inventory.hideoutAreaStashes[dbHideoutArea.type]) {
@@ -269,15 +280,21 @@ export class HideoutController {
         }
 
         // Add/upgrade stash item in player inventory
-        this.addUpdateInventoryItemToProfile(pmcData, dbHideoutArea, hideoutStage);
+        this.addUpdateInventoryItemToProfile(sessionID, pmcData, dbHideoutArea, hideoutStage);
 
-        // Dont inform client when upgraded area is hall of fame, BSG doesnt inform client upgrade has occurred, will break client if data is sent
-        if (dbHideoutArea.type !== HideoutAreas.PLACE_OF_FAME) {
-            // Inform client of changes
-            this.addContainerUpgradeToClientOutput(output, sessionID, dbHideoutArea.type, dbHideoutArea, hideoutStage);
+        // Edge case, add/update `stand1/stand2/stand3` children
+        if (dbHideoutArea.type === HideoutAreas.EQUIPMENT_PRESETS_STAND) {
+            // Can have multiple 'standx' children depending on upgrade level
+            this.addMissingPresetStandItemsToProfile(sessionID, hideoutStage, pmcData, dbHideoutArea, output);
         }
 
-        // Some areas like gun stand have a child area linked to it, it needs to do the same as above
+        // Dont inform client when upgraded area is hall of fame or equipment stand, BSG doesn't inform client this specifc upgrade has occurred
+        // will break client if sent
+        if (![HideoutAreas.PLACE_OF_FAME].includes(dbHideoutArea.type)) {
+            this.addContainerUpgradeToClientOutput(sessionID, dbHideoutArea.type, dbHideoutArea, hideoutStage, output);
+        }
+
+        // Some hideout areas (Gun stand) have child areas linked to it
         const childDbArea = this.databaseService
             .getHideout()
             .areas.find((area) => area.parentArea === dbHideoutArea._id);
@@ -293,25 +310,76 @@ export class HideoutController {
 
             // Add/upgrade stash item in player inventory
             const childDbAreaStage = childDbArea.stages[profileParentHideoutArea.level];
-            this.addUpdateInventoryItemToProfile(pmcData, childDbArea, childDbAreaStage);
+            this.addUpdateInventoryItemToProfile(sessionID, pmcData, childDbArea, childDbAreaStage);
 
             // Inform client of the changes
-            this.addContainerUpgradeToClientOutput(output, sessionID, childDbArea.type, childDbArea, childDbAreaStage);
+            this.addContainerUpgradeToClientOutput(sessionID, childDbArea.type, childDbArea, childDbAreaStage, output);
+        }
+    }
+
+    /**
+     * Add stand1/stand2/stand3 inventory items to profile, depending on passed in hideout stage
+     * @param sessionId Session id
+     * @param equipmentPresetStage Current EQUIPMENT_PRESETS_STAND stage data
+     * @param pmcData Player profile
+     * @param equipmentPresetHideoutArea
+     * @param output Response to send back to client
+     */
+    protected addMissingPresetStandItemsToProfile(
+        sessionId: string,
+        equipmentPresetStage: IStage,
+        pmcData: IPmcData,
+        equipmentPresetHideoutArea: IHideoutArea,
+        output: IItemEventRouterResponse,
+    ) {
+        // Each slot is a single Mannequin
+        const slots = this.itemHelper.getItem(equipmentPresetStage.container)[1]._props.Slots;
+        for (const mannequinSlot of slots) {
+            // Chek if we've already added this manniquin
+            const existingMannequin = pmcData.Inventory.items.find(
+                (item) => item.parentId === equipmentPresetHideoutArea._id && item.slotId === mannequinSlot._name,
+            );
+
+            // No child, add it
+            if (!existingMannequin) {
+                const standId = this.hashUtil.generate();
+                const mannequinToAdd = {
+                    _id: standId,
+                    _tpl: ItemTpl.INVENTORY_DEFAULT,
+                    parentId: equipmentPresetHideoutArea._id,
+                    slotId: mannequinSlot._name,
+                };
+                pmcData.Inventory.items.push(mannequinToAdd);
+
+                // Add pocket child item
+                const mannequinPocketItemToAdd: IItem = {
+                    _id: this.hashUtil.generate(),
+                    _tpl: pmcData.Inventory.items.find(
+                        (item) => item.slotId === "Pockets" && item.parentId === pmcData.Inventory.equipment,
+                    )._tpl, // Same pocket tpl as players profile (unheard get bigger, matching pockets etc)
+                    parentId: standId,
+                    slotId: "Pockets",
+                };
+                pmcData.Inventory.items.push(mannequinPocketItemToAdd);
+                output.profileChanges[sessionId].items.new.push(mannequinToAdd);
+                output.profileChanges[sessionId].items.new.push(mannequinPocketItemToAdd);
+            }
         }
     }
 
     /**
      * Add an inventory item to profile from a hideout area stage data
      * @param pmcData Profile to update
-     * @param dbHideoutData Hideout area from db being upgraded
+     * @param dbHideoutArea Hideout area from db being upgraded
      * @param hideoutStage Stage area upgraded to
      */
     protected addUpdateInventoryItemToProfile(
+        sessionId: string,
         pmcData: IPmcData,
-        dbHideoutData: IHideoutArea,
-        hideoutStage: Stage,
+        dbHideoutArea: IHideoutArea,
+        hideoutStage: IStage,
     ): void {
-        const existingInventoryItem = pmcData.Inventory.items.find((item) => item._id === dbHideoutData._id);
+        const existingInventoryItem = pmcData.Inventory.items.find((item) => item._id === dbHideoutArea._id);
         if (existingInventoryItem) {
             // Update existing items container tpl to point to new id (tpl)
             existingInventoryItem._tpl = hideoutStage.container;
@@ -319,8 +387,9 @@ export class HideoutController {
             return;
         }
 
-        // Add new item as none exists
-        pmcData.Inventory.items.push({ _id: dbHideoutData._id, _tpl: hideoutStage.container });
+        // Add new item as none exists (don't inform client of newContainerItem, will be done in `profileChanges.changedHideoutStashes`)
+        const newContainerItem = { _id: dbHideoutArea._id, _tpl: hideoutStage.container };
+        pmcData.Inventory.items.push(newContainerItem);
     }
 
     /**
@@ -331,19 +400,20 @@ export class HideoutController {
      * @param hideoutStage Hideout area upgraded to this
      */
     protected addContainerUpgradeToClientOutput(
-        output: IItemEventRouterResponse,
         sessionID: string,
         areaType: HideoutAreas,
         hideoutDbData: IHideoutArea,
-        hideoutStage: Stage,
+        hideoutStage: IStage,
+        output: IItemEventRouterResponse,
     ): void {
         if (!output.profileChanges[sessionID].changedHideoutStashes) {
             output.profileChanges[sessionID].changedHideoutStashes = {};
         }
 
+        // Inform client of changes
         output.profileChanges[sessionID].changedHideoutStashes[areaType] = {
-            Id: hideoutDbData._id,
-            Tpl: hideoutStage.container,
+            id: hideoutDbData._id,
+            tpl: hideoutStage.container,
         };
     }
 
@@ -391,7 +461,16 @@ export class HideoutController {
 
             // Add item to area.slots
             const destinationLocationIndex = Number(item.slot);
-            const hideoutSlotIndex = hideoutArea.slots.findIndex((x) => x.locationIndex === destinationLocationIndex);
+            const hideoutSlotIndex = hideoutArea.slots.findIndex(
+                (slot) => slot.locationIndex === destinationLocationIndex,
+            );
+            if (hideoutSlotIndex === -1) {
+                this.logger.error(
+                    `Unable to put item: ${item.requestedItem.id} into slot as slot cannot be found for area: ${addItemToHideoutRequest.areaType}, skipping`,
+                );
+                continue;
+            }
+
             hideoutArea.slots[hideoutSlotIndex].item = [
                 {
                     _id: item.inventoryItem._id,
@@ -472,7 +551,7 @@ export class HideoutController {
         pmcData: IPmcData,
         removeResourceRequest: IHideoutTakeItemOutRequestData,
         output: IItemEventRouterResponse,
-        hideoutArea: HideoutArea,
+        hideoutArea: IBotHideoutArea,
     ): IItemEventRouterResponse {
         const slotIndexToRemove = removeResourceRequest.slots[0];
 
@@ -547,11 +626,11 @@ export class HideoutController {
         // Find the recipe of the production
         const recipe = this.databaseService
             .getHideout()
-            .production.find((production) => production._id === body.recipeId);
+            .production.recipes.find((production) => production._id === body.recipeId);
 
         // Find the actual amount of items we need to remove because body can send weird data
         const recipeRequirementsClone = this.cloner.clone(
-            recipe.requirements.filter((i) => i.type === "Item" || i.type === "Tool"),
+            recipe.requirements.filter((r) => r.type === "Item" || r.type === "Tool"),
         );
 
         const output = this.eventOutputHolder.getOutput(sessionID);
@@ -613,7 +692,7 @@ export class HideoutController {
             }
         }
 
-        const recipe = this.databaseService.getHideout().scavcase.find((r) => r._id === body.recipeId);
+        const recipe = this.databaseService.getHideout().production.scavRecipes.find((r) => r._id === body.recipeId);
         if (!recipe) {
             this.logger.error(
                 this.localisationService.getText("hideout-unable_to_find_scav_case_recipie_in_database", body.recipeId),
@@ -626,10 +705,10 @@ export class HideoutController {
         // - normal recipe: Production time value is stored in attribute "productionTime" with small "p"
         // - scav case recipe: Production time value is stored in attribute "ProductionTime" with capital "P"
         const adjustedCraftTime =
-            recipe.ProductionTime -
+            recipe.productionTime -
             this.hideoutHelper.getSkillProductionTimeReduction(
                 pmcData,
-                recipe.ProductionTime,
+                recipe.productionTime,
                 SkillTypes.CRAFTING,
                 this.databaseService.getGlobals().config.SkillsSettings.Crafting.CraftTimeReductionPerLevel,
             );
@@ -668,8 +747,8 @@ export class HideoutController {
      * @param rewards reward items to add to profile
      * @param recipeId recipe id to save into Production dict
      */
-    protected addScavCaseRewardsToProfile(pmcData: IPmcData, rewards: Product[], recipeId: string): void {
-        pmcData.Hideout.Production[`ScavCase${recipeId}`] = { Products: rewards };
+    protected addScavCaseRewardsToProfile(pmcData: IPmcData, rewards: IProduct[], recipeId: string): void {
+        pmcData.Hideout.Production[`ScavCase${recipeId}`] = { Products: rewards, RecipeId: recipeId };
     }
 
     /**
@@ -713,14 +792,14 @@ export class HideoutController {
             return output;
         }
 
-        const recipe = hideoutDb.production.find((r) => r._id === request.recipeId);
+        const recipe = hideoutDb.production.recipes.find((r) => r._id === request.recipeId);
         if (recipe) {
             this.handleRecipe(sessionID, recipe, pmcData, request, output);
 
             return output;
         }
 
-        const scavCase = hideoutDb.scavcase.find((r) => r._id === request.recipeId);
+        const scavCase = hideoutDb.production.scavRecipes.find((r) => r._id === request.recipeId);
         if (scavCase) {
             this.handleScavCase(sessionID, pmcData, request, output);
 
@@ -797,15 +876,15 @@ export class HideoutController {
         let hoursCrafting = counterHoursCrafting.value;
 
         /** Array of arrays of item + children */
-        let itemAndChildrenToSendToPlayer: Item[][] = [];
+        let itemAndChildrenToSendToPlayer: IItem[][] = [];
 
         // Reward is weapon/armor preset, handle differently compared to 'normal' items
         const rewardIsPreset = this.presetHelper.hasPreset(recipe.endProduct);
         if (rewardIsPreset) {
-            const preset = this.presetHelper.getDefaultPreset(recipe.endProduct);
+            const defaultPreset = this.presetHelper.getDefaultPreset(recipe.endProduct);
 
             // Ensure preset has unique ids and is cloned so we don't alter the preset data stored in memory
-            const presetAndMods: Item[] = this.itemHelper.replaceIDs(preset._items);
+            const presetAndMods: IItem[] = this.itemHelper.replaceIDs(defaultPreset._items);
 
             this.itemHelper.remapRootItemId(presetAndMods);
 
@@ -816,7 +895,7 @@ export class HideoutController {
         const rewardIsStackable = this.itemHelper.isItemTplStackable(recipe.endProduct);
         if (rewardIsStackable) {
             // Create root item
-            const rewardToAdd: Item = {
+            const rewardToAdd: IItem = {
                 _id: this.hashUtil.generate(),
                 _tpl: recipe.endProduct,
                 upd: { StackObjectsCount: recipe.count },
@@ -837,7 +916,7 @@ export class HideoutController {
             // Start index at one so we ignore first item in array
             const countOfItemsToReward = recipe.count;
             for (let index = 1; index < countOfItemsToReward; index++) {
-                const itemAndMods: Item[] = this.itemHelper.replaceIDs(itemAndChildrenToSendToPlayer[0]);
+                const itemAndMods: IItem[] = this.itemHelper.replaceIDs(itemAndChildrenToSendToPlayer[0]);
                 itemAndChildrenToSendToPlayer.push(...[itemAndMods]);
             }
         }
@@ -852,7 +931,7 @@ export class HideoutController {
         }
 
         // Build an array of the tools that need to be returned to the player
-        const toolsToSendToPlayer: Item[][] = [];
+        const toolsToSendToPlayer: IItem[][] = [];
         const production = pmcData.Hideout.Production[prodId];
         if (production.sptRequiredTools?.length > 0) {
             for (const tool of production.sptRequiredTools) {
@@ -946,6 +1025,16 @@ export class HideoutController {
         pmcData.Hideout.Production[prodId].sptIsComplete = true;
         pmcData.Hideout.Production[prodId].sptIsContinuous = recipe.continuous;
 
+        // Continious recipies need the craft time refreshed as it gets created once on initial craft and stays the same regardless of what
+        // production.json is set to
+        if (recipe.continuous) {
+            pmcData.Hideout.Production[prodId].ProductionTime = this.hideoutHelper.getAdjustedCraftTimeWithSkills(
+                pmcData,
+                recipe._id,
+                true,
+            );
+        }
+
         // Flag normal (non continious) crafts as complete
         if (!recipe.continuous) {
             pmcData.Hideout.Production[prodId].inProgress = false;
@@ -962,16 +1051,16 @@ export class HideoutController {
         pmcData: IPmcData,
         recipe: IHideoutProduction,
     ): ITaskConditionCounter {
-        let counterHoursCrafting = pmcData.TaskConditionCounters[HideoutController.nameTaskConditionCountersCrafting];
+        let counterHoursCrafting = pmcData.TaskConditionCounters[HideoutController.nameTaskConditionCountersCraftingId];
         if (!counterHoursCrafting) {
             // Doesn't exist, create
-            pmcData.TaskConditionCounters[HideoutController.nameTaskConditionCountersCrafting] = {
+            pmcData.TaskConditionCounters[HideoutController.nameTaskConditionCountersCraftingId] = {
                 id: recipe._id,
-                type: HideoutController.nameTaskConditionCountersCrafting,
+                type: HideoutController.nameTaskConditionCountersCraftingId,
                 sourceId: "CounterCrafting",
                 value: 0,
             };
-            counterHoursCrafting = pmcData.TaskConditionCounters[HideoutController.nameTaskConditionCountersCrafting];
+            counterHoursCrafting = pmcData.TaskConditionCounters[HideoutController.nameTaskConditionCountersCraftingId];
         }
         return counterHoursCrafting;
     }
@@ -994,7 +1083,7 @@ export class HideoutController {
         for (const production of ongoingProductions) {
             if (this.hideoutHelper.isProductionType(production[1])) {
                 // Production or ScavCase
-                if ((production[1] as ScavCase).RecipeId === request.recipeId) {
+                if ((production[1] as IScavCase).RecipeId === request.recipeId) {
                     prodId = production[0]; // Set to objects key
                     break;
                 }
@@ -1072,14 +1161,58 @@ export class HideoutController {
         // Skill changes are done in
         // /client/hideout/workout (applyWorkoutChanges).
 
-        pmcData.Health.Energy.Current -= 50;
+        const qteDb = this.databaseService.getHideout().qte;
+        const relevantQte = qteDb.find((qte) => qte.id === request.id);
+        for (const outcome of request.results) {
+            if (outcome) {
+                // Success
+                pmcData.Health.Energy.Current += relevantQte.results.singleSuccessEffect.energy;
+                pmcData.Health.Hydration.Current += relevantQte.results.singleSuccessEffect.hydration;
+            } else {
+                // Failed
+                pmcData.Health.Energy.Current += relevantQte.results.singleFailEffect.energy;
+                pmcData.Health.Hydration.Current += relevantQte.results.singleFailEffect.hydration;
+            }
+        }
+
         if (pmcData.Health.Energy.Current < 1) {
             pmcData.Health.Energy.Current = 1;
         }
 
-        pmcData.Health.Hydration.Current -= 50;
         if (pmcData.Health.Hydration.Current < 1) {
             pmcData.Health.Hydration.Current = 1;
+        }
+
+        this.handleMusclePain(pmcData, relevantQte.results.finishEffect);
+    }
+
+    /**
+     * Apply mild/severe muscle pain after gym use
+     * @param pmcData Profile to apply effect to
+     * @param finishEffect Effect data to apply after completing QTE gym event
+     */
+    protected handleMusclePain(pmcData: IPmcData, finishEffect: IQteResult): void {
+        const hasMildPain = !!pmcData.Health.BodyParts.Chest.Effects?.MildMusclePain;
+        const hasSeverePain = !!pmcData.Health.BodyParts.Chest.Effects?.SevereMusclePain;
+
+        // Has no muscle pain at all, add mild
+        if (!hasMildPain && !hasSeverePain) {
+            // nullguard
+            pmcData.Health.BodyParts.Chest.Effects ||= {};
+            pmcData.Health.BodyParts.Chest.Effects.MildMusclePain = {
+                Time: finishEffect.rewardsRange[0].time, // TODO - remove hard coded access, get value properly
+            };
+
+            return;
+        }
+
+        if (hasMildPain) {
+            // Already has mild pain, remove mild and add severe
+            delete pmcData.Health.BodyParts.Chest.Effects.MildMusclePain;
+
+            pmcData.Health.BodyParts.Chest.Effects.SevereMusclePain = {
+                Time: finishEffect.rewardsRange[0].time,
+            };
         }
     }
 
@@ -1173,7 +1306,9 @@ export class HideoutController {
                 improveCompleteTimestamp: timestamp + improvement.improvementTime,
             };
             output.profileChanges[sessionId].improvements[improvement.id] = improvementDetails;
-            pmcData.Hideout.Improvement[improvement.id] = improvementDetails;
+
+            pmcData.Hideout.Improvements ||= {};
+            pmcData.Hideout.Improvements[improvement.id] = improvementDetails;
         }
 
         return output;
@@ -1210,7 +1345,41 @@ export class HideoutController {
     }
 
     /**
-     * Function called every x seconds as part of onUpdate event
+     * Handle client/game/profile/items/moving - HideoutCircleOfCultistProductionStart
+     * @param sessionId Session id
+     * @param pmcData Profile of crafter
+     * @param request Request data
+     */
+    public circleOfCultistProductionStart(
+        sessionId: string,
+        pmcData: IPmcData,
+        request: IHideoutCircleOfCultistProductionStartRequestData,
+    ): IItemEventRouterResponse {
+        return this.circleOfCultistService.startSacrifice(sessionId, pmcData, request);
+    }
+
+    /**
+     * Handle HideoutDeleteProductionCommand event
+     * @param sessionId Session id
+     * @param pmcData Player profile
+     * @param request Client request data
+     * @returns IItemEventRouterResponse
+     */
+    public hideoutDeleteProductionCommand(
+        sessionId: string,
+        pmcData: IPmcData,
+        request: IHideoutDeleteProductionRequestData,
+    ): IItemEventRouterResponse {
+        const output = this.eventOutputHolder.getOutput(sessionId);
+
+        pmcData.Hideout.Production[request.recipeId] = null;
+        output.profileChanges[sessionId].production = null;
+
+        return output;
+    }
+
+    /**
+     * Function called every `hideoutConfig.runIntervalSeconds` seconds as part of onUpdate event
      */
     public update(): void {
         for (const sessionID in this.saveServer.getProfiles()) {

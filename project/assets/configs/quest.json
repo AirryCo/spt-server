@@ -7,14 +7,24 @@
         "6179b5eabca27a099552e052",
         "5e383a6386f77465910ce1f3",
         "5e4d515e86f77438b2195244",
-        "639282134ed9512be67647ed"
+        "639282134ed9512be67647ed",
+		"6613f3007f6666d56807c929",
+		"6613f307fca4f2f386029409"
     ],
     "bearOnlyQuests": [
         "6179b5b06e9dd54ac275e409",
         "5e381b0286f77420e3417a74",
         "5e4d4ac186f774264f758336",
-        "639136d68ba6894d155e77cf"
+        "639136d68ba6894d155e77cf",
+		"66151401efb0539ae10875ae",
+		"6615141bfda04449120269a7"
     ],
+    "profileBlacklist": {
+        "unheard_edition": ["666314a50aa5c7436c00908a"]
+    },
+    "profileWhitelist": {
+        "666314b4d7f171c4c20226c3": ["edge_of_darkness"]
+    },
     "questTemplateIds": {
         "pmc": {
             "elimination": "616052ea3054fc0e2c24ce6e",
@@ -176,7 +186,49 @@
             "startTimestamp": 1341615600000,
             "endTimestamp": "",
             "yearly": false
-        }
+        },
+        "668bcccc167d507eb01a268b": {
+            "name": "Import control",
+            "season": "None",
+            "startTimestamp": 1341615600000,
+            "endTimestamp": "",
+            "yearly": false
+        },
+        "66a74c628410476dd65543be": {
+            "name": "Gunsmith: special order",
+            "season": "None",
+            "startTimestamp": 1341615600000,
+            "endTimestamp": "",
+            "yearly": false
+        },
+        "66e01aca214f88109006a4b5": {
+            "name": "Into the Inferno",
+            "season": "None",
+            "startTimestamp": 1341615600000,
+            "endTimestamp": "",
+            "yearly": false
+        },
+		"66e3e2ee2136472d220bcb36": {
+			"name": "Night of The Cult",
+            "season": "None",
+            "startTimestamp": 1341615600000,
+            "endTimestamp": "",
+            "yearly": false
+		},
+		"670404a2ea1caa8f2e0be106": {
+			"name": "Don’t Believe Your Eyes",
+            "season": "halloween",
+            "startTimestamp": 1341615600000,
+            "endTimestamp": "",
+            "yearly": true
+		},
+		"67190f6c1b3f4964d90d71e9": {
+			"name": "Global Threat",
+            "season": "halloween",
+            "startTimestamp": 1341615600000,
+            "endTimestamp": "",
+            "yearly": true
+		}
     },
     "repeatableQuests": [
         {
@@ -361,11 +413,11 @@
             ],
             "questConfig": {
                 "Exploration": {
-                    "maxExtracts": 5,
-                    "maxExtractsWithSpecificExit": 3,
+                    "maxExtracts": 4,
+                    "maxExtractsWithSpecificExit": 2,
                     "possibleSkillRewards": ["Endurance", "Strength", "Vitality"],
                     "specificExits": {
-                        "probability": 0.25,
+                        "probability": 0.2,
                         "passageRequirementWhitelist": [
                             "None",
                             "TransferItem",
@@ -381,8 +433,8 @@
                     "minRequestedAmount": 1,
                     "maxRequestedAmount": 4,
                     "uniqueItemCount": 2,
-                    "minRequestedBulletAmount": 20,
-                    "maxRequestedBulletAmount": 60,
+                    "minRequestedBulletAmount": 15,
+                    "maxRequestedBulletAmount": 40,
                     "useWhitelist": true,
                     "useBlacklist": false
                 },
@@ -402,7 +454,7 @@
                                 }
                             }
                         ],
-                        "bodyPartProb": 0.2,
+                        "bodyPartProb": 0.15,
                         "bodyParts": [
                             {
                                 "key": "Head",
@@ -425,7 +477,7 @@
                                 "data": ["LeftLeg", "RightLeg"]
                             }
                         ],
-                        "specificLocationProb": 0.15,
+                        "specificLocationProb": 0,
                         "distLocationBlacklist": ["laboratory", "factory4_day", "factory4_night"],
                         "distProb": 0.15,
                         "maxDist": 75,
@@ -537,14 +589,14 @@
                         "targets": [
                             {
                                 "key": "Savage",
-                                "relativeProbability": 9,
+                                "relativeProbability": 15,
                                 "data": {
                                     "isBoss": false
                                 }
                             },
                             {
                                 "key": "AnyPmc",
-                                "relativeProbability": 2,
+                                "relativeProbability": 4,
                                 "data": {
                                     "isBoss": false,
                                     "isPmc": true
@@ -552,42 +604,42 @@
                             },
                             {
                                 "key": "bossBully",
-                                "relativeProbability": 0.5,
+                                "relativeProbability": 0.4,
                                 "data": {
                                     "isBoss": true
                                 }
                             },
                             {
                                 "key": "bossGluhar",
-                                "relativeProbability": 0.5,
+                                "relativeProbability": 0.4,
                                 "data": {
                                     "isBoss": true
                                 }
                             },
                             {
                                 "key": "bossKilla",
-                                "relativeProbability": 0.5,
+                                "relativeProbability": 0.4,
                                 "data": {
                                     "isBoss": true
                                 }
                             },
                             {
                                 "key": "bossSanitar",
-                                "relativeProbability": 0.5,
+                                "relativeProbability": 0.4,
                                 "data": {
                                     "isBoss": true
                                 }
                             },
                             {
                                 "key": "bossTagilla",
-                                "relativeProbability": 0.5,
+                                "relativeProbability": 0.4,
                                 "data": {
                                     "isBoss": true
                                 }
                             },
                             {
                                 "key": "bossKojaniy",
-                                "relativeProbability": 0.5,
+                                "relativeProbability": 0.4,
                                 "data": {
                                     "isBoss": true
                                 }
@@ -595,6 +647,13 @@
                             {
                                 "key": "bossKnight",
                                 "relativeProbability": 0,
+                                "data": {
+                                    "isBoss": true
+                                }
+                            },
+                            {
+                                "key": "bossKolontay",
+                                "relativeProbability": 0.4,
                                 "data": {
                                     "isBoss": true
                                 }
@@ -621,7 +680,7 @@
                                 }
                             }
                         ],
-                        "bodyPartProb": 0.2,
+                        "bodyPartProb": 0.15,
                         "bodyParts": [
                             {
                                 "key": "Head",
@@ -644,7 +703,7 @@
                                 "data": ["LeftLeg", "RightLeg"]
                             }
                         ],
-                        "specificLocationProb": 0.2,
+                        "specificLocationProb": 0.15,
                         "distLocationBlacklist": ["laboratory", "factory4_day", "factory4_night"],
                         "distProb": 0.25,
                         "maxDist": 100,
@@ -656,7 +715,7 @@
                         "maxPmcKills": 5,
                         "minPmcKills": 2,
                         "weaponRequirementProb": 0,
-                        "weaponCategoryRequirementProb": 0.2,
+                        "weaponCategoryRequirementProb": 0.15,
                         "weaponCategoryRequirements": [
                             {
                                 "key": "Shotgun",
@@ -821,6 +880,13 @@
                                 }
                             },
                             {
+                                "key": "bossKolontay",
+                                "relativeProbability": 0.4,
+                                "data": {
+                                    "isBoss": true
+                                }
+                            },
+                            {
                                 "key": "bossBoar",
                                 "relativeProbability": 0,
                                 "data": {
@@ -835,7 +901,7 @@
                                 }
                             }
                         ],
-                        "bodyPartProb": 0.3,
+                        "bodyPartProb": 0.15,
                         "bodyParts": [
                             {
                                 "key": "Head",
@@ -858,7 +924,7 @@
                                 "data": ["LeftLeg", "RightLeg"]
                             }
                         ],
-                        "specificLocationProb": 0.25,
+                        "specificLocationProb": 0.15,
                         "distLocationBlacklist": ["laboratory", "factory4_day", "factory4_night"],
                         "distProb": 0.25,
                         "maxDist": 100,
@@ -870,7 +936,7 @@
                         "maxPmcKills": 6,
                         "minPmcKills": 3,
                         "weaponRequirementProb": 0,
-                        "weaponCategoryRequirementProb": 0.3,
+                        "weaponCategoryRequirementProb": 0.15,
                         "weaponCategoryRequirements": [
                             {
                                 "key": "Shotgun",
@@ -966,7 +1032,8 @@
             "rewardBlacklist": ["627bce33f21bc425b06ab967", "59f32c3b86f77472a31742f0", "59f32bb586f774757e1e8442"],
             "rewardAmmoStackMinSize": 5,
             "freeChangesAvailable": 2,
-            "freeChanges": 2
+            "freeChanges": 2,
+            "keepDailyQuestTypeOnReplacement": false
         },
         {
             "id": "618035d38012292db3081bf0",
@@ -1136,11 +1203,11 @@
             ],
             "questConfig": {
                 "Exploration": {
-                    "maxExtracts": 25,
-                    "maxExtractsWithSpecificExit": 12,
+                    "maxExtracts": 15,
+                    "maxExtractsWithSpecificExit": 4,
                     "possibleSkillRewards": ["Endurance", "Strength", "Vitality"],
                     "specificExits": {
-                        "probability": 0.4,
+                        "probability": 0.1,
                         "passageRequirementWhitelist": [
                             "None",
                             "TransferItem",
@@ -1400,42 +1467,42 @@
                             },
                             {
                                 "key": "bossBully",
-                                "relativeProbability": 0.5,
+                                "relativeProbability": 0.4,
                                 "data": {
                                     "isBoss": true
                                 }
                             },
                             {
                                 "key": "bossGluhar",
-                                "relativeProbability": 0.5,
+                                "relativeProbability": 0.4,
                                 "data": {
                                     "isBoss": true
                                 }
                             },
                             {
                                 "key": "bossKilla",
-                                "relativeProbability": 0.5,
+                                "relativeProbability": 0.4,
                                 "data": {
                                     "isBoss": true
                                 }
                             },
                             {
                                 "key": "bossSanitar",
-                                "relativeProbability": 0.5,
+                                "relativeProbability": 0.4,
                                 "data": {
                                     "isBoss": true
                                 }
                             },
                             {
                                 "key": "bossTagilla",
-                                "relativeProbability": 0.5,
+                                "relativeProbability": 0.4,
                                 "data": {
                                     "isBoss": true
                                 }
                             },
                             {
                                 "key": "bossKojaniy",
-                                "relativeProbability": 0.5,
+                                "relativeProbability": 0.4,
                                 "data": {
                                     "isBoss": true
                                 }
@@ -1455,6 +1522,13 @@
                                 }
                             },
                             {
+                                "key": "bossKolontay",
+                                "relativeProbability": 0.4,
+                                "data": {
+                                    "isBoss": true
+                                }
+                            },
+                            {
                                 "key": "bossBoar",
                                 "relativeProbability": 0,
                                 "data": {
@@ -1469,7 +1543,7 @@
                                 }
                             }
                         ],
-                        "bodyPartProb": 0.2,
+                        "bodyPartProb": 0.15,
                         "bodyParts": [
                             {
                                 "key": "Head",
@@ -1492,9 +1566,9 @@
                                 "data": ["LeftLeg", "RightLeg"]
                             }
                         ],
-                        "specificLocationProb": 0.2,
+                        "specificLocationProb": 0.15,
                         "distLocationBlacklist": ["laboratory", "factory4_day", "factory4_night"],
-                        "distProb": 0.2,
+                        "distProb": 0.15,
                         "maxDist": 75,
                         "minDist": 10,
                         "maxKills": 40,
@@ -1504,7 +1578,7 @@
                         "maxPmcKills": 15,
                         "minPmcKills": 10,
                         "weaponRequirementProb": 0,
-                        "weaponCategoryRequirementProb": 0.25,
+                        "weaponCategoryRequirementProb": 0.15,
                         "weaponCategoryRequirements": [
                             {
                                 "key": "Shotgun",
@@ -1599,7 +1673,7 @@
                         "targets": [
                             {
                                 "key": "Savage",
-                                "relativeProbability": 7,
+                                "relativeProbability": 8,
                                 "data": {
                                     "isBoss": false
                                 }
@@ -1614,42 +1688,42 @@
                             },
                             {
                                 "key": "bossBully",
-                                "relativeProbability": 0.5,
+                                "relativeProbability": 0.4,
                                 "data": {
                                     "isBoss": true
                                 }
                             },
                             {
                                 "key": "bossGluhar",
-                                "relativeProbability": 0.5,
+                                "relativeProbability": 0.4,
                                 "data": {
                                     "isBoss": true
                                 }
                             },
                             {
                                 "key": "bossKilla",
-                                "relativeProbability": 0.5,
+                                "relativeProbability": 0.4,
                                 "data": {
                                     "isBoss": true
                                 }
                             },
                             {
                                 "key": "bossSanitar",
-                                "relativeProbability": 0.5,
+                                "relativeProbability": 0.4,
                                 "data": {
                                     "isBoss": true
                                 }
                             },
                             {
                                 "key": "bossTagilla",
-                                "relativeProbability": 0.5,
+                                "relativeProbability": 0.4,
                                 "data": {
                                     "isBoss": true
                                 }
                             },
                             {
                                 "key": "bossKojaniy",
-                                "relativeProbability": 0.5,
+                                "relativeProbability": 0.4,
                                 "data": {
                                     "isBoss": true
                                 }
@@ -1676,6 +1750,13 @@
                                 }
                             },
                             {
+                                "key": "bossKolontay",
+                                "relativeProbability": 0.4,
+                                "data": {
+                                    "isBoss": true
+                                }
+                            },
+                            {
                                 "key": "bossBoarSniper",
                                 "relativeProbability": 0,
                                 "data": {
@@ -1683,7 +1764,7 @@
                                 }
                             }
                         ],
-                        "bodyPartProb": 0.25,
+                        "bodyPartProb": 0.15,
                         "bodyParts": [
                             {
                                 "key": "Head",
@@ -1706,9 +1787,9 @@
                                 "data": ["LeftLeg", "RightLeg"]
                             }
                         ],
-                        "specificLocationProb": 0.25,
+                        "specificLocationProb": 0.15,
                         "distLocationBlacklist": ["laboratory", "factory4_day", "factory4_night"],
-                        "distProb": 0.25,
+                        "distProb": 0.15,
                         "maxDist": 100,
                         "minDist": 10,
                         "maxKills": 40,
@@ -1718,7 +1799,7 @@
                         "maxPmcKills": 25,
                         "minPmcKills": 10,
                         "weaponRequirementProb": 0,
-                        "weaponCategoryRequirementProb": 0.3,
+                        "weaponCategoryRequirementProb": 0.2,
                         "weaponCategoryRequirements": [
                             {
                                 "key": "Shotgun",
@@ -1865,10 +1946,10 @@
             "questConfig": {
                 "Exploration": {
                     "possibleSkillRewards": ["Endurance", "Strength", "Vitality"],
-                    "maxExtracts": 4,
-                    "maxExtractsWithSpecificExit": 2,
+                    "maxExtracts": 3,
+                    "maxExtractsWithSpecificExit": 1,
                     "specificExits": {
-                        "probability": 0.25,
+                        "probability": 0.2,
                         "passageRequirementWhitelist": ["None", "WorldEvent", "Train", "Reference", "Empty"]
                     }
                 },
@@ -1938,8 +2019,8 @@
                     "minRequestedAmount": 1,
                     "maxRequestedAmount": 3,
                     "uniqueItemCount": 1,
-                    "minRequestedBulletAmount": 20,
-                    "maxRequestedBulletAmount": 60,
+                    "minRequestedBulletAmount": 15,
+                    "maxRequestedBulletAmount": 40,
                     "useWhitelist": true,
                     "useBlacklist": false
                 },

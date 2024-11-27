@@ -1,10 +1,10 @@
 import { ItemHelper } from "@spt/helpers/ItemHelper";
-import { Item } from "@spt/models/eft/common/tables/IItem";
+import { IItem } from "@spt/models/eft/common/tables/IItem";
 import { inject, injectable } from "tsyringe";
 
-export interface OwnerInventoryItems {
-    from: Item[];
-    to: Item[];
+export interface IOwnerInventoryItems {
+    from: IItem[];
+    to: IItem[];
     sameInventory: boolean;
     isMail: boolean;
 }
@@ -18,7 +18,7 @@ export class SecureContainerHelper {
      * @param items Inventory items to look for secure container in
      * @returns Array of ids
      */
-    public getSecureContainerItems(items: Item[]): string[] {
+    public getSecureContainerItems(items: IItem[]): string[] {
         const secureContainer = items.find((x) => x.slotId === "SecuredContainer");
 
         // No container found, drop out

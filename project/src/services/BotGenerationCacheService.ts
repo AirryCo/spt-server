@@ -82,8 +82,8 @@ export class BotGenerationCacheService {
      * Does cache have a bot with requested key
      * @returns false if empty
      */
-    public cacheHasBotOfRole(key: string): boolean {
-        return this.storedBots.has(key) && this.storedBots.get(key).length > 0;
+    public cacheHasBotWithKey(key: string, size = 0): boolean {
+        return this.storedBots.has(key) && this.storedBots.get(key).length > size;
     }
 
     public getCachedBotCount(key: string): number {

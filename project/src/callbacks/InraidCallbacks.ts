@@ -30,7 +30,7 @@ export class InraidCallbacks {
     }
 
     /**
-     * Handle raid/profile/save
+     * Handle raid/profile/scavsave
      * @param url
      * @param info Save progress request
      * @param sessionID Session id
@@ -39,15 +39,6 @@ export class InraidCallbacks {
     public saveProgress(url: string, info: IScavSaveRequestData, sessionID: string): INullResponseData {
         this.inraidController.savePostRaidProfileForScav(info, sessionID);
         return this.httpResponse.nullResponse();
-    }
-
-    /**
-     * TODO - remove
-     * Handle singleplayer/settings/raid/endstate
-     * @returns
-     */
-    public getRaidEndState(): string {
-        return this.httpResponse.noBody(this.inraidController.getInraidConfig().MIAOnRaidEnd);
     }
 
     /**

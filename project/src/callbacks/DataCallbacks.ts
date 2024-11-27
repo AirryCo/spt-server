@@ -1,5 +1,5 @@
 import { HideoutController } from "@spt/controllers/HideoutController";
-import { RagfairController } from "@spt/controllers/RagfairController";
+import { TraderController } from "@spt/controllers/TraderController";
 import { TraderHelper } from "@spt/helpers/TraderHelper";
 import { IEmptyRequestData } from "@spt/models/eft/common/IEmptyRequestData";
 import { IGlobals } from "@spt/models/eft/common/IGlobals";
@@ -7,11 +7,9 @@ import { ICustomizationItem } from "@spt/models/eft/common/tables/ICustomization
 import { IHandbookBase } from "@spt/models/eft/common/tables/IHandbookBase";
 import { IGetItemPricesResponse } from "@spt/models/eft/game/IGetItemPricesResponse";
 import { IHideoutArea } from "@spt/models/eft/hideout/IHideoutArea";
-import { IHideoutProduction } from "@spt/models/eft/hideout/IHideoutProduction";
-import { IHideoutScavCase } from "@spt/models/eft/hideout/IHideoutScavCase";
+import { IHideoutProductionData } from "@spt/models/eft/hideout/IHideoutProduction";
 import { IHideoutSettingsBase } from "@spt/models/eft/hideout/IHideoutSettingsBase";
 import { IGetBodyResponseData } from "@spt/models/eft/httpResponse/IGetBodyResponseData";
-import { Money } from "@spt/models/enums/Money";
 import { ISettingsBase } from "@spt/models/spt/server/ISettingsBase";
 import { DatabaseService } from "@spt/services/DatabaseService";
 import { HttpResponseUtil } from "@spt/utils/HttpResponseUtil";
@@ -28,7 +26,7 @@ export class DataCallbacks {
         @inject("TimeUtil") protected timeUtil: TimeUtil,
         @inject("TraderHelper") protected traderHelper: TraderHelper,
         @inject("DatabaseService") protected databaseService: DatabaseService,
-        @inject("RagfairController") protected ragfairController: RagfairController,
+        @inject("TraderController") protected traderController: TraderController,
         @inject("HideoutController") protected hideoutController: HideoutController,
     ) {}
 
@@ -115,20 +113,12 @@ export class DataCallbacks {
         return this.httpResponse.getBody(this.databaseService.getHideout().areas);
     }
 
-    public gethideoutProduction(
+    public getHideoutProduction(
         url: string,
         info: IEmptyRequestData,
         sessionID: string,
-    ): IGetBodyResponseData<IHideoutProduction[]> {
+    ): IGetBodyResponseData<IHideoutProductionData> {
         return this.httpResponse.getBody(this.databaseService.getHideout().production);
-    }
-
-    public getHideoutScavcase(
-        url: string,
-        info: IEmptyRequestData,
-        sessionID: string,
-    ): IGetBodyResponseData<IHideoutScavCase[]> {
-        return this.httpResponse.getBody(this.databaseService.getHideout().scavcase);
     }
 
     /**
@@ -168,7 +158,7 @@ export class DataCallbacks {
         let result = locales.global[localeId];
 
         if (result === undefined) {
-            result = locales.global["en"];
+            result = locales.global.en;
         }
 
         return this.httpResponse.getUnclearedBody(result);
@@ -184,7 +174,6 @@ export class DataCallbacks {
     /**
      * Handle client/items/prices/
      * Called when viewing a traders assorts
-     * TODO -  fully implement this
      */
     public getItemPrices(
         url: string,
@@ -193,20 +182,6 @@ export class DataCallbacks {
     ): IGetBodyResponseData<IGetItemPricesResponse> {
         const traderId = url.replace("/client/items/prices/", "");
 
-        // All traders share same item prices, unknown how to tell what items are shown for each trader
-        // Shown items listed are likely linked to traders items_buy/category array
-        const handbookPrices = this.ragfairController.getStaticPrices();
-
-        const response: IGetItemPricesResponse = {
-            supplyNextTime: this.traderHelper.getNextUpdateTimestamp(traderId),
-            prices: handbookPrices,
-            currencyCourses: {
-                "5449016a4bdc2d6f028b456f": handbookPrices[Money.ROUBLES],
-                "569668774bdc2da2298b4568": handbookPrices[Money.EUROS],
-                "5696686a4bdc2da3298b456a": handbookPrices[Money.DOLLARS],
-            },
-        };
-
-        return this.httpResponse.getBody(response);
+        return this.httpResponse.getBody(this.traderController.getItemPrices(sessionID, traderId));
     }
 }

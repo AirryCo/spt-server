@@ -1,7 +1,7 @@
 import { NotificationSendHelper } from "@spt/helpers/NotificationSendHelper";
 import { WeightedRandomHelper } from "@spt/helpers/WeightedRandomHelper";
 import { IPmcData } from "@spt/models/eft/common/IPmcData";
-import { Aggressor, Victim } from "@spt/models/eft/common/tables/IBotBase";
+import { IAggressor, IVictim } from "@spt/models/eft/common/tables/IBotBase";
 import { IUserDialogInfo } from "@spt/models/eft/profile/ISptProfile";
 import { ConfigTypes } from "@spt/models/enums/ConfigTypes";
 import { MemberCategory } from "@spt/models/enums/MemberCategory";
@@ -11,6 +11,7 @@ import { IPmcChatResponse } from "@spt/models/spt/config/IPmChatResponse";
 import { ILogger } from "@spt/models/spt/utils/ILogger";
 import { ConfigServer } from "@spt/servers/ConfigServer";
 import { GiftService } from "@spt/services/GiftService";
+import { LocaleService } from "@spt/services/LocaleService";
 import { LocalisationService } from "@spt/services/LocalisationService";
 import { MatchBotDetailsCacheService } from "@spt/services/MatchBotDetailsCacheService";
 import { HashUtil } from "@spt/utils/HashUtil";
@@ -29,6 +30,7 @@ export class PmcChatResponseService {
         @inject("NotificationSendHelper") protected notificationSendHelper: NotificationSendHelper,
         @inject("MatchBotDetailsCacheService") protected matchBotDetailsCacheService: MatchBotDetailsCacheService,
         @inject("LocalisationService") protected localisationService: LocalisationService,
+        @inject("LocaleService") protected localeService: LocaleService,
         @inject("GiftService") protected giftService: GiftService,
         @inject("WeightedRandomHelper") protected weightedRandomHelper: WeightedRandomHelper,
         @inject("ConfigServer") protected configServer: ConfigServer,
@@ -43,14 +45,22 @@ export class PmcChatResponseService {
      * @param pmcVictims Array of bots killed by player
      * @param pmcData Player profile
      */
-    public sendVictimResponse(sessionId: string, pmcVictims: Victim[], pmcData: IPmcData): void {
+    public sendVictimResponse(sessionId: string, pmcVictims: IVictim[], pmcData: IPmcData): void {
         for (const victim of pmcVictims) {
             if (!this.randomUtil.getChance100(this.pmcResponsesConfig.victim.responseChancePercent)) {
                 continue;
             }
 
+            if (!victim.Name) {
+                this.logger.warning(
+                    `Victim: ${victim.ProfileId} does not have a nickname, skipping pmc response message send`,
+                );
+
+                continue;
+            }
+
             const victimDetails = this.getVictimDetails(victim);
-            const message = this.chooseMessage(true, pmcData);
+            const message = this.chooseMessage(true, pmcData, victim);
             if (message) {
                 this.notificationSendHelper.sendMessageToPlayer(
                     sessionId,
@@ -68,7 +78,7 @@ export class PmcChatResponseService {
      * @param pmcData Players profile
      * @param killer The bot who killed the player
      */
-    public sendKillerResponse(sessionId: string, pmcData: IPmcData, killer: Aggressor): void {
+    public sendKillerResponse(sessionId: string, pmcData: IPmcData, killer: IAggressor): void {
         if (!killer) {
             return;
         }
@@ -112,9 +122,10 @@ export class PmcChatResponseService {
      * Choose a localised message to send the player (different if sender was killed or killed player)
      * @param isVictim Is the message coming from a bot killed by the player
      * @param pmcData Player profile
+     * @param victimData OPTIMAL - details of the pmc killed
      * @returns Message from PMC to player
      */
-    protected chooseMessage(isVictim: boolean, pmcData: IPmcData): string | undefined {
+    protected chooseMessage(isVictim: boolean, pmcData: IPmcData, victimData?: IVictim): string | undefined {
         // Positive/negative etc
         const responseType = this.chooseResponseType(isVictim);
 
@@ -131,9 +142,10 @@ export class PmcChatResponseService {
             playerName: pmcData.Info.Nickname,
             playerLevel: pmcData.Info.Level,
             playerSide: pmcData.Info.Side,
+            victimDeathLocation: victimData ? this.getLocationName(victimData.Location) : "",
         });
 
-        // Give the player a gift code if they were killed adn response is 'pity'.
+        // Give the player a gift code if they were killed and response is 'pity'.
         if (responseType === "pity") {
             const giftKeys = this.giftService.getGiftIds();
             const randomGiftKey = this.randomUtil.getStringArrayValue(giftKeys);
@@ -158,6 +170,16 @@ export class PmcChatResponseService {
         }
 
         return responseText;
+    }
+
+    /**
+     * use map key to get a localised location name
+     * e.g. factory4_day becomes "Factory"
+     * @param locationKey location key to localise
+     * @returns Localised location name
+     */
+    protected getLocationName(locationKey: string) {
+        return this.localeService.getLocaleDb()[locationKey] ?? locationKey;
     }
 
     /**
@@ -191,7 +213,7 @@ export class PmcChatResponseService {
      * @param isVictim Was responder a victim of player
      * @returns true = should be stripped
      */
-    appendSuffixToMessageEnd(isVictim: boolean): boolean {
+    protected appendSuffixToMessageEnd(isVictim: boolean): boolean {
         const chance = isVictim
             ? this.pmcResponsesConfig.victim.appendBroToMessageEndChancePercent
             : this.pmcResponsesConfig.killer.appendBroToMessageEndChancePercent;
@@ -240,7 +262,7 @@ export class PmcChatResponseService {
      * @param pmcVictims Possible victims to choose from
      * @returns IUserDialogInfo
      */
-    protected chooseRandomVictim(pmcVictims: Victim[]): IUserDialogInfo {
+    protected chooseRandomVictim(pmcVictims: IVictim[]): IUserDialogInfo {
         const randomVictim = this.randomUtil.getArrayValue(pmcVictims);
 
         return this.getVictimDetails(randomVictim);
@@ -251,7 +273,7 @@ export class PmcChatResponseService {
      * @param pmcVictim victim to convert
      * @returns IUserDialogInfo
      */
-    protected getVictimDetails(pmcVictim: Victim): IUserDialogInfo {
+    protected getVictimDetails(pmcVictim: IVictim): IUserDialogInfo {
         const categories = [
             MemberCategory.UNIQUE_ID,
             MemberCategory.DEFAULT,
@@ -267,8 +289,8 @@ export class PmcChatResponseService {
         const chosenCategory = this.randomUtil.getArrayValue(categories);
 
         return {
-            _id: pmcVictim.Name,
-            aid: this.hashUtil.generateAccountId(), // TODO- pass correct value
+            _id: pmcVictim.ProfileId,
+            aid: Number.parseInt(pmcVictim.AccountId),
             Info: {
                 Nickname: pmcVictim.Name,
                 Level: pmcVictim.Level,

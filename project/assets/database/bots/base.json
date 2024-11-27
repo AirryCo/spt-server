@@ -3,7 +3,7 @@
     "aid": 0,
     "savage": null,
     "Info": {
-        "Nickname": "Арсен Предатель",
+        "Nickname": "BOTNAME",
         "LowerNickname": "",
         "Side": "Savage",
         "Voice": "Scav_1",
@@ -13,6 +13,7 @@
         "GameVersion": "",
         "AccountType": 0,
         "MemberCategory": 0,
+		"SelectedMemberCategory": 0,
         "lockedMoveCommands": false,
         "SavageLockTime": 0,
         "LastTimePlayedAsSavage": 0,
@@ -30,7 +31,10 @@
         "BannedState": false,
         "BannedUntil": 0,
         "IsStreamerModeAvailable": false,
-        "SquadInviteRestriction": false
+        "SquadInviteRestriction": false,
+		"HasCoopExtension": false,
+		"isMigratedSkills": false,
+		"HasPveGame": false
     },
     "Customization": {
         "Head": "5cc2e4d014c02e000d0115f8",
@@ -39,7 +43,8 @@
         "Hands": "5cc2e68f14c02e28b47de290"
     },
     "Health": {
-        "UpdateTime": 0
+        "UpdateTime": 0,
+		"Immortal": false
     },
     "Inventory": {
         "fastPanel": {},
@@ -82,5 +87,6 @@
     "TaskConditionCounters": {},
     "InsuredItems": [],
     "Hideout": null,
-    "Bonuses": []
+    "Bonuses": [],
+	"WishList": []
 }

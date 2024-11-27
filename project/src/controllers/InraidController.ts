@@ -55,16 +55,20 @@ export class InraidController {
     }
 
     /**
-     * Handle raid/profile/save
+     * Handle raid/profile/scavsave
      * Save profile state to disk
      * Handles pmc/pscav
-     * @param offraidData post-raid request data
+     * @param offraidProfileData Post-raid scav profile data
      * @param sessionID Session id
      */
-    public savePostRaidProfileForScav(offraidData: IScavSaveRequestData, sessionID: string): void {
+    public savePostRaidProfileForScav(offraidProfileData: IScavSaveRequestData, sessionID: string): void {
         const serverScavProfile = this.profileHelper.getScavProfile(sessionID);
 
-        serverScavProfile.Inventory.items = offraidData.profile.Inventory.items;
+        // If equipment match overwrite existing data from update to date raid data for scavenger screen to work correctly.
+        // otherwise Scav inventory will be overwritten and break scav regeneration breaking profile.
+        if (serverScavProfile.Inventory.equipment === offraidProfileData.Inventory.equipment) {
+            serverScavProfile.Inventory.items = offraidProfileData.Inventory.items;
+        }
     }
 
     /**

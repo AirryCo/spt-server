@@ -4,7 +4,7 @@ import {
     IStaticForcedProps,
     IStaticLootDetails,
 } from "@spt/models/eft/common/ILocation";
-import { ILooseLoot, SpawnpointTemplate } from "@spt/models/eft/common/ILooseLoot";
+import { ILooseLoot, ISpawnpointTemplate } from "@spt/models/eft/common/ILooseLoot";
 
 export interface ILocationGenerator {
     generateContainerLoot(
@@ -18,5 +18,5 @@ export interface ILocationGenerator {
         dynamicLootDist: ILooseLoot,
         staticAmmoDist: Record<string, IStaticAmmoDetails[]>,
         locationName: string,
-    ): SpawnpointTemplate[];
+    ): ISpawnpointTemplate[];
 }

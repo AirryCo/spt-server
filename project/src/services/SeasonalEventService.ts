@@ -2,15 +2,17 @@ import { BotHelper } from "@spt/helpers/BotHelper";
 import { ProfileHelper } from "@spt/helpers/ProfileHelper";
 import { IConfig } from "@spt/models/eft/common/IGlobals";
 import { ILocation } from "@spt/models/eft/common/ILocation";
-import { BossLocationSpawn } from "@spt/models/eft/common/ILocationBase";
-import { Inventory } from "@spt/models/eft/common/tables/IBotType";
+import { IAdditionalHostilitySettings, IBossLocationSpawn, IWave } from "@spt/models/eft/common/ILocationBase";
+import { IInventory } from "@spt/models/eft/common/tables/IBotType";
 import { ConfigTypes } from "@spt/models/enums/ConfigTypes";
 import { ItemTpl } from "@spt/models/enums/ItemTpl";
 import { Season } from "@spt/models/enums/Season";
 import { SeasonalEventType } from "@spt/models/enums/SeasonalEventType";
 import { IHttpConfig } from "@spt/models/spt/config/IHttpConfig";
+import { ILocationConfig } from "@spt/models/spt/config/ILocationConfig";
+import { IHostilitySettings } from "@spt/models/spt/config/IPmcConfig";
 import { IQuestConfig } from "@spt/models/spt/config/IQuestConfig";
-import { ISeasonalEvent, ISeasonalEventConfig } from "@spt/models/spt/config/ISeasonalEventConfig";
+import { ISeasonalEvent, ISeasonalEventConfig, IZombieSettings } from "@spt/models/spt/config/ISeasonalEventConfig";
 import { IWeatherConfig } from "@spt/models/spt/config/IWeatherConfig";
 import { ILogger } from "@spt/models/spt/utils/ILogger";
 import { ConfigServer } from "@spt/servers/ConfigServer";
@@ -26,12 +28,13 @@ export class SeasonalEventService {
     protected questConfig: IQuestConfig;
     protected httpConfig: IHttpConfig;
     protected weatherConfig: IWeatherConfig;
+    protected locationConfig: ILocationConfig;
 
     protected halloweenEventActive?: boolean = undefined;
     protected christmasEventActive?: boolean = undefined;
 
     /** All events active at this point in time */
-    protected currentlyActiveEvents: SeasonalEventType[] = [];
+    protected currentlyActiveEvents: ISeasonalEvent[] = [];
 
     constructor(
         @inject("PrimaryLogger") protected logger: ILogger,
@@ -47,6 +50,7 @@ export class SeasonalEventService {
         this.questConfig = this.configServer.getConfig(ConfigTypes.QUEST);
         this.httpConfig = this.configServer.getConfig(ConfigTypes.HTTP);
         this.weatherConfig = this.configServer.getConfig(ConfigTypes.WEATHER);
+        this.locationConfig = this.configServer.getConfig(ConfigTypes.LOCATION);
 
         this.cacheActiveEvents();
     }
@@ -196,18 +200,31 @@ export class SeasonalEventService {
     }
 
     /**
-     * Handle seasonal events
-     * @param sessionId Players id
+     * Handle activating seasonal events
      */
-    public enableSeasonalEvents(sessionId: string): void {
+    public enableSeasonalEvents(): void {
         if (this.currentlyActiveEvents) {
             const globalConfig = this.databaseService.getGlobals().config;
             for (const event of this.currentlyActiveEvents) {
-                this.updateGlobalEvents(sessionId, globalConfig, event);
+                this.updateGlobalEvents(globalConfig, event);
             }
         }
     }
 
+    public forceSeasonalEvent(eventType: SeasonalEventType): boolean {
+        const globalConfig = this.databaseService.getGlobals().config;
+        const event = this.seasonalEventConfig.events.find((event) => SeasonalEventType[event.type] === eventType);
+        if (!event) {
+            return false;
+        }
+        this.updateGlobalEvents(globalConfig, event);
+
+        return true;
+    }
+
+    /**
+     * Store active events inside class array property `currentlyActiveEvents` + set class properties: christmasEventActive/halloweenEventActive
+     */
     protected cacheActiveEvents(): void {
         const currentDate = new Date();
         const seasonalEvents = this.getEventDetails();
@@ -218,7 +235,10 @@ export class SeasonalEventService {
 
             // Current date is between start/end dates
             if (currentDate >= eventStartDate && currentDate <= eventEndDate) {
-                this.currentlyActiveEvents.push(SeasonalEventType[event.type]);
+                if (!event.enabled) {
+                    continue;
+                }
+                this.currentlyActiveEvents.push(event);
 
                 if (SeasonalEventType[event.type] === SeasonalEventType.CHRISTMAS) {
                     this.christmasEventActive = true;
@@ -231,7 +251,15 @@ export class SeasonalEventService {
         }
     }
 
+    /**
+     * Get the currently active weather season e.g. SUMMER/AUTUMN/WINTER
+     * @returns Season enum value
+     */
     public getActiveWeatherSeason(): Season {
+        if (this.weatherConfig.overrideSeason !== null) {
+            return this.weatherConfig.overrideSeason;
+        }
+
         const currentDate = new Date();
         for (const seasonRange of this.weatherConfig.seasonDates) {
             // Figure out start and end dates to get range of season
@@ -258,7 +286,7 @@ export class SeasonalEventService {
      * @param botInventory Bots inventory to iterate over
      * @param botRole the role of the bot being processed
      */
-    public removeChristmasItemsFromBotInventory(botInventory: Inventory, botRole: string): void {
+    public removeChristmasItemsFromBotInventory(botInventory: IInventory, botRole: string): void {
         const christmasItems = this.getChristmasEventItems();
         const equipmentSlotsToFilter = ["FaceCover", "Headwear", "Backpack", "TacticalVest"];
         const lootContainersToFilter = ["Backpack", "Pockets", "TacticalVest"];
@@ -321,76 +349,231 @@ export class SeasonalEventService {
 
     /**
      * Make adjusted to server code based on the name of the event passed in
-     * @param sessionId Player id
      * @param globalConfig globals.json
      * @param eventName Name of the event to enable. e.g. Christmas
      */
-    protected updateGlobalEvents(sessionId: string, globalConfig: IConfig, eventType: SeasonalEventType): void {
-        this.logger.success(`${eventType} event is active`);
+    protected updateGlobalEvents(globalConfig: IConfig, event: ISeasonalEvent): void {
+        this.logger.success(`event: ${event.type} is active`);
 
-        switch (eventType.toLowerCase()) {
+        switch (event.type.toLowerCase()) {
             case SeasonalEventType.HALLOWEEN.toLowerCase():
                 globalConfig.EventType = globalConfig.EventType.filter((x) => x !== "None");
                 globalConfig.EventType.push("Halloween");
                 globalConfig.EventType.push("HalloweenIllumination");
                 globalConfig.Health.ProfileHealthSettings.DefaultStimulatorBuff = "Buffs_Halloween";
-                this.addEventGearToBots(eventType);
+                this.addEventGearToBots(event.type);
                 this.adjustZryachiyMeleeChance();
-                this.enableHalloweenSummonEvent();
-                this.addEventBossesToMaps(eventType);
+                if (event.settings?.enableSummoning) {
+                    this.enableHalloweenSummonEvent();
+                    this.addEventBossesToMaps("halloweensummon");
+                }
+                if (event.settings?.zombieSettings?.enabled) {
+                    this.configureZombies(event.settings?.zombieSettings);
+                }
+                if (event.settings.removeEntryRequirement) {
+                    this.removeEntryRequirement(event.settings.removeEntryRequirement);
+                }
+                if (event.settings.replaceBotHostility) {
+                    this.replaceBotHostility(this.seasonalEventConfig.hostilitySettingsForEvent.zombies);
+                }
                 this.addPumpkinsToScavBackpacks();
-                this.adjustTraderIcons(eventType);
+                this.adjustTraderIcons(event.type);
                 break;
             case SeasonalEventType.CHRISTMAS.toLowerCase():
                 globalConfig.EventType = globalConfig.EventType.filter((x) => x !== "None");
                 globalConfig.EventType.push("Christmas");
-                this.addEventGearToBots(eventType);
-                this.addGifterBotToMaps();
-                this.addLootItemsToGifterDropItemsList();
+                this.addEventGearToBots(event.type);
+                if (event.settings?.enableSanta) {
+                    this.addGifterBotToMaps();
+                    this.addLootItemsToGifterDropItemsList();
+                }
                 this.enableDancingTree();
-                this.giveGift(sessionId, "Christmas2022");
-                this.enableSnow();
                 break;
             case SeasonalEventType.NEW_YEARS.toLowerCase():
-                this.giveGift(sessionId, "NewYear2023");
-                this.enableSnow();
                 break;
-            case SeasonalEventType.SNOW.toLowerCase():
+            case SeasonalEventType.APRIL_FOOLS.toLowerCase():
+                this.addGifterBotToMaps();
+                this.addLootItemsToGifterDropItemsList();
+                this.addEventGearToBots(SeasonalEventType.HALLOWEEN);
+                this.addEventGearToBots(SeasonalEventType.CHRISTMAS);
+                this.addEventBossesToMaps(SeasonalEventType.HALLOWEEN);
+                this.enableHalloweenSummonEvent();
+                this.addPumpkinsToScavBackpacks();
+                this.renameBitcoin();
                 this.enableSnow();
                 break;
             default:
                 // Likely a mod event
-                this.addEventGearToBots(eventType);
+                this.handleModEvent(event);
+                if (event.settings?.enableSummoning) {
+                    this.enableHalloweenSummonEvent();
+                    this.addEventBossesToMaps("halloweensummon");
+                }
+                if (event.settings?.zombieSettings?.enabled) {
+                    this.configureZombies(event.settings?.zombieSettings);
+                }
                 break;
         }
     }
 
+    protected replaceBotHostility(hostilitySettings: Record<string, IAdditionalHostilitySettings[]>) {
+        const locations = this.databaseService.getLocations();
+        const ignoreList = this.locationConfig.nonMaps;
+        const useDefault = hostilitySettings.default;
+
+        for (const locationKey in locations) {
+            if (ignoreList.includes(locationKey)) {
+                continue;
+            }
+
+            const location: ILocation = locations[locationKey];
+            if (!location?.base?.BotLocationModifier?.AdditionalHostilitySettings) {
+                continue;
+            }
+
+            const newHostilitySettings = useDefault ? hostilitySettings.default : hostilitySettings[locationKey];
+            if (!newHostilitySettings) {
+                continue;
+            }
+
+            location.base.BotLocationModifier.AdditionalHostilitySettings = hostilitySettings.default;
+        }
+    }
+
+    protected removeEntryRequirement(locationIds: string[]) {
+        for (const locationId of locationIds) {
+            const location = this.databaseService.getLocation(locationId);
+            location.base.AccessKeys = [];
+            location.base.AccessKeysPvE = [];
+        }
+    }
+
+    public givePlayerSeasonalGifts(sessionId: string): void {
+        if (this.currentlyActiveEvents) {
+            const globalConfig = this.databaseService.getGlobals().config;
+            for (const event of this.currentlyActiveEvents) {
+                switch (event.type.toLowerCase()) {
+                    case SeasonalEventType.CHRISTMAS.toLowerCase():
+                        this.giveGift(sessionId, "Christmas2022");
+                        break;
+                    case SeasonalEventType.NEW_YEARS.toLowerCase():
+                        this.giveGift(sessionId, "NewYear2023");
+                        break;
+                }
+            }
+        }
+    }
+
+    /**
+     * Force zryachiy to always have a melee weapon
+     */
     protected adjustZryachiyMeleeChance(): void {
         this.databaseService.getBots().types.bosszryachiy.chances.equipment.Scabbard = 100;
     }
 
+    /**
+     * Enable the halloween zryachiy summon event
+     */
     protected enableHalloweenSummonEvent(): void {
         this.databaseService.getGlobals().config.EventSettings.EventActive = true;
     }
 
-    protected addEventBossesToMaps(eventType: SeasonalEventType): void {
+    protected configureZombies(zombieSettings: IZombieSettings) {
+        const infectionHalloween = this.databaseService.getGlobals().config.SeasonActivity.InfectionHalloween;
+        infectionHalloween.DisplayUIEnabled = true;
+        infectionHalloween.Enabled = true;
+
+        for (const infectedLocationKey in zombieSettings.mapInfectionAmount) {
+            const mappedLocations = this.getLocationFromInfectedLocation(infectedLocationKey);
+
+            for (const locationKey of mappedLocations) {
+                this.databaseService.getLocation(
+                    locationKey.toLowerCase(),
+                ).base.Events.Halloween2024.InfectionPercentage =
+                    zombieSettings.mapInfectionAmount[infectedLocationKey];
+            }
+
+            this.databaseService.getGlobals().LocationInfection[infectedLocationKey] =
+                zombieSettings.mapInfectionAmount[infectedLocationKey];
+        }
+
+        for (const locationId of zombieSettings.disableBosses) {
+            this.databaseService.getLocation(locationId).base.BossLocationSpawn = [];
+        }
+
+        for (const locationId of zombieSettings.disableWaves) {
+            this.databaseService.getLocation(locationId).base.waves = [];
+        }
+
+        const activeMaps = Object.keys(zombieSettings.mapInfectionAmount).filter(
+            (locationId) => zombieSettings.mapInfectionAmount[locationId] > 0,
+        );
+        this.addEventBossesToMaps("halloweenzombies", activeMaps);
+    }
+
+    /**
+     * BSG store the location ids differently inside `LocationInfection`, need to convert to matching location IDs
+     * @param infectedLocationKey Key to convert
+     * @returns Array of locations
+     */
+    protected getLocationFromInfectedLocation(infectedLocationKey: string): string[] {
+        if (infectedLocationKey === "factory4") {
+            return ["factory4_day", "factory4_night"];
+        }
+
+        if (infectedLocationKey === "Sandbox") {
+            return ["sandbox", "sandbox_high"];
+        }
+
+        return [infectedLocationKey];
+    }
+
+    protected addEventWavesToMaps(eventType: string): void {
+        const wavesToAddByMap = this.seasonalEventConfig.eventWaves[eventType.toLowerCase()];
+
+        if (!wavesToAddByMap) {
+            this.logger.warning(`Unable to add: ${eventType} waves, eventWaves is missing`);
+            return;
+        }
+        const mapKeys = Object.keys(wavesToAddByMap) ?? [];
+        const locations = this.databaseService.getLocations();
+        for (const mapKey of mapKeys) {
+            const wavesToAdd = mapKeys[mapKey];
+            if (!wavesToAdd) {
+                this.logger.warning(`Unable to add: ${eventType} wave to: ${mapKey}`);
+                continue;
+            }
+            locations[mapKey].base.waves = [];
+            locations[mapKey].base.waves.push(...wavesToAdd);
+        }
+    }
+
+    /**
+     * Add event bosses to maps
+     * @param eventType Seasonal event, e.g. HALLOWEEN/CHRISTMAS
+     * @param mapWhitelist OPTIONAL - Maps to add bosses to
+     */
+    protected addEventBossesToMaps(eventType: string, mapIdWhitelist?: string[]): void {
         const botsToAddPerMap = this.seasonalEventConfig.eventBossSpawns[eventType.toLowerCase()];
         if (!botsToAddPerMap) {
             this.logger.warning(`Unable to add: ${eventType} bosses, eventBossSpawns is missing`);
             return;
         }
         const mapKeys = Object.keys(botsToAddPerMap) ?? [];
-
+        const locations = this.databaseService.getLocations();
         for (const mapKey of mapKeys) {
             const bossesToAdd = botsToAddPerMap[mapKey];
             if (!bossesToAdd) {
                 this.logger.warning(`Unable to add: ${eventType} bosses to: ${mapKey}`);
                 continue;
             }
-            for (const boss of bossesToAdd) {
-                const locations = this.databaseService.getLocations();
 
-                const mapBosses: BossLocationSpawn[] = locations[mapKey].base.BossLocationSpawn;
+            if (mapIdWhitelist && !mapIdWhitelist.includes(mapKey)) {
+                continue;
+            }
+
+            for (const boss of bossesToAdd) {
+                const mapBosses: IBossLocationSpawn[] = locations[mapKey].base.BossLocationSpawn;
                 if (!mapBosses.some((bossSpawn) => bossSpawn.BossName === boss.BossName)) {
                     locations[mapKey].base.BossLocationSpawn.push(...bossesToAdd);
                 }
@@ -484,10 +667,19 @@ export class SeasonalEventService {
         }
     }
 
+    /**
+     * Add pumpkin loot boxes to scavs
+     */
     protected addPumpkinsToScavBackpacks(): void {
         this.databaseService.getBots().types.assault.inventory.items.Backpack[
             ItemTpl.RANDOMLOOTCONTAINER_PUMPKIN_RAND_LOOT_CONTAINER
         ] = 400;
+    }
+
+    protected renameBitcoin(): void {
+        const enLocale = this.databaseService.getLocales().global.en;
+        enLocale[`${ItemTpl.BARTER_PHYSICAL_BITCOIN} Name`] = "Physical SPT Coin";
+        enLocale[`${ItemTpl.BARTER_PHYSICAL_BITCOIN} ShortName`] = "0.2SPT";
     }
 
     /**
@@ -541,6 +733,10 @@ export class SeasonalEventService {
         }
     }
 
+    protected handleModEvent(event: ISeasonalEvent) {
+        this.addEventGearToBots(event.type);
+    }
+
     /**
      * Send gift to player if they'e not already received it
      * @param playerId Player to send gift to
@@ -562,6 +758,9 @@ export class SeasonalEventService {
         return this.seasonalEventConfig.eventBotMapping[eventBotRole];
     }
 
+    /**
+     * Force the weather to be snow
+     */
     public enableSnow(): void {
         this.weatherConfig.overrideSeason = Season.WINTER;
     }

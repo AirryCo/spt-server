@@ -1,4 +1,4 @@
-import { IncomingMessage } from "http";
+import { IncomingMessage } from "node:http";
 import { ProfileHelper } from "@spt/helpers/ProfileHelper";
 import { IWsNotificationEvent } from "@spt/models/eft/ws/IWsNotificationEvent";
 import { ConfigTypes } from "@spt/models/enums/ConfigTypes";

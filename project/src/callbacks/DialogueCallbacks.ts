@@ -31,7 +31,7 @@ import { ISendMessageRequest } from "@spt/models/eft/dialog/ISendMessageRequest"
 import { ISetDialogReadRequestData } from "@spt/models/eft/dialog/ISetDialogReadRequestData";
 import { IGetBodyResponseData } from "@spt/models/eft/httpResponse/IGetBodyResponseData";
 import { INullResponseData } from "@spt/models/eft/httpResponse/INullResponseData";
-import { DialogueInfo } from "@spt/models/eft/profile/ISptProfile";
+import { IDialogueInfo } from "@spt/models/eft/profile/ISptProfile";
 import { HashUtil } from "@spt/utils/HashUtil";
 import { HttpResponseUtil } from "@spt/utils/HttpResponseUtil";
 import { TimeUtil } from "@spt/utils/TimeUtil";
@@ -87,7 +87,7 @@ export class DialogueCallbacks implements OnUpdate {
         url: string,
         info: IGetMailDialogListRequestData,
         sessionID: string,
-    ): IGetBodyResponseData<DialogueInfo[]> {
+    ): IGetBodyResponseData<IDialogueInfo[]> {
         return this.httpResponse.getBody(this.dialogueController.generateDialogueList(sessionID), 0, undefined, false);
     }
 
@@ -110,7 +110,7 @@ export class DialogueCallbacks implements OnUpdate {
         url: string,
         info: IGetMailDialogInfoRequestData,
         sessionID: string,
-    ): IGetBodyResponseData<DialogueInfo> {
+    ): IGetBodyResponseData<IDialogueInfo> {
         return this.httpResponse.getBody(this.dialogueController.getDialogueInfo(info.dialogId, sessionID));
     }
 

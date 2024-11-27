@@ -4,7 +4,7 @@ import { AssortHelper } from "@spt/helpers/AssortHelper";
 import { PaymentHelper } from "@spt/helpers/PaymentHelper";
 import { ProfileHelper } from "@spt/helpers/ProfileHelper";
 import { TraderHelper } from "@spt/helpers/TraderHelper";
-import { Item } from "@spt/models/eft/common/tables/IItem";
+import { IItem } from "@spt/models/eft/common/tables/IItem";
 import { ITrader, ITraderAssort } from "@spt/models/eft/common/tables/ITrader";
 import { ConfigTypes } from "@spt/models/enums/ConfigTypes";
 import { Traders } from "@spt/models/enums/Traders";
@@ -141,7 +141,7 @@ export class TraderAssortHelper {
      * @param itemsTplsToRemove Item TPLs the assort should not have
      */
     protected removeItemsFromAssort(assortToFilter: ITraderAssort, itemsTplsToRemove: string[]): void {
-        function isValid(item: Item, blacklist: string[]): boolean {
+        function isValid(item: IItem, blacklist: string[]): boolean {
             // Is root item + blacklisted
             if (item.parentId === "hideout" && blacklist.includes(item._tpl)) {
                 // We want it gone
@@ -158,7 +158,7 @@ export class TraderAssortHelper {
      * Reset every traders root item `BuyRestrictionCurrent` property to 0
      * @param assortItems Items to adjust
      */
-    protected resetBuyRestrictionCurrentValue(assortItems: Item[]): void {
+    protected resetBuyRestrictionCurrentValue(assortItems: IItem[]): void {
         // iterate over root items
         for (const assort of assortItems.filter((item) => item.slotId === "hideout")) {
             // no value to adjust
@@ -218,7 +218,7 @@ export class TraderAssortHelper {
      */
     public traderAssortsHaveExpired(traderID: string): boolean {
         const time = this.timeUtil.getTimestamp();
-        const trader = this.databaseService.getTables().traders![traderID];
+        const trader = this.databaseService.getTables().traders[traderID];
 
         return trader.base.nextResupply <= time;
     }
@@ -246,7 +246,7 @@ export class TraderAssortHelper {
      * @param traderId trader id
      * @returns array of Items
      */
-    protected getPristineTraderAssorts(traderId: string): Item[] {
+    protected getPristineTraderAssorts(traderId: string): IItem[] {
         return this.cloner.clone(this.traderAssortService.getPristineTraderAssort(traderId).items);
     }
 

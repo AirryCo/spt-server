@@ -14,12 +14,6 @@ export class InraidStaticRouter extends StaticRouter {
                 },
             ),
             new RouteAction(
-                "/singleplayer/settings/raid/endstate",
-                async (url: string, info: any, sessionID: string, output: string): Promise<string> => {
-                    return this.inraidCallbacks.getRaidEndState();
-                },
-            ),
-            new RouteAction(
                 "/singleplayer/settings/raid/menu",
                 async (url: string, info: any, sessionID: string, output: string): Promise<string> => {
                     return this.inraidCallbacks.getRaidMenuSettings();

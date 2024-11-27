@@ -1,10 +1,10 @@
-import { Item, Location } from "@spt/models/eft/common/tables/IItem";
+import { IItem, IItemLocation } from "@spt/models/eft/common/tables/IItem";
 
 export interface IAddItemTempObject {
-    itemRef: Item;
+    itemRef: IItem;
     count: number;
     isPreset: boolean;
-    location?: Location;
+    location?: IItemLocation;
     // Container item will be placed in - stash or sorting table
     containerId?: string;
 }

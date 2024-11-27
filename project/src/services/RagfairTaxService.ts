@@ -1,12 +1,14 @@
 import { ItemHelper } from "@spt/helpers/ItemHelper";
+import { ProfileHelper } from "@spt/helpers/ProfileHelper";
 import { IPmcData } from "@spt/models/eft/common/IPmcData";
-import { Item } from "@spt/models/eft/common/tables/IItem";
+import { IItem } from "@spt/models/eft/common/tables/IItem";
 import { ITemplateItem } from "@spt/models/eft/common/tables/ITemplateItem";
 import { IStorePlayerOfferTaxAmountRequestData } from "@spt/models/eft/ragfair/IStorePlayerOfferTaxAmountRequestData";
 import { BonusType } from "@spt/models/enums/BonusType";
 import { ILogger } from "@spt/models/spt/utils/ILogger";
 import { DatabaseService } from "@spt/services/DatabaseService";
 import { RagfairPriceService } from "@spt/services/RagfairPriceService";
+import { ICloner } from "@spt/utils/cloners/ICloner";
 import { inject, injectable } from "tsyringe";
 
 @injectable()
@@ -18,6 +20,8 @@ export class RagfairTaxService {
         @inject("DatabaseService") protected databaseService: DatabaseService,
         @inject("RagfairPriceService") protected ragfairPriceService: RagfairPriceService,
         @inject("ItemHelper") protected itemHelper: ItemHelper,
+        @inject("ProfileHelper") protected profileHelper: ProfileHelper,
+        @inject("PrimaryCloner") protected cloner: ICloner,
     ) {}
 
     public storeClientOfferTaxValue(sessionId: string, offer: IStorePlayerOfferTaxAmountRequestData): void {
@@ -43,7 +47,7 @@ export class RagfairTaxService {
      * @returns Tax in roubles
      */
     public calculateTax(
-        item: Item,
+        item: IItem,
         pmcData: IPmcData,
         requirementsValue: number,
         offerItemCount: number,
@@ -78,12 +82,16 @@ export class RagfairTaxService {
         itemPriceMult = 4 ** itemPriceMult;
         requirementPriceMult = 4 ** requirementPriceMult;
 
-        const hideoutFleaTaxDiscountBonus = pmcData.Bonuses.find((b) => b.type === BonusType.RAGFAIR_COMMISSION);
-        const taxDiscountPercent = hideoutFleaTaxDiscountBonus ? Math.abs(hideoutFleaTaxDiscountBonus!.value ?? 0) : 0;
+        const hideoutFleaTaxDiscountBonusSum = this.profileHelper.getBonusValueFromProfile(
+            pmcData,
+            BonusType.RAGFAIR_COMMISSION,
+        );
+        // A negative bonus implies a lower discount, since we subtract later, invert the value here
+        const taxDiscountPercent = -(hideoutFleaTaxDiscountBonusSum / 100.0);
 
         const tax =
             itemWorth * itemTaxMult * itemPriceMult + requirementsPrice * requirementTaxMult * requirementPriceMult;
-        const discountedTax = tax * (1.0 - taxDiscountPercent / 100.0);
+        const discountedTax = tax * (1.0 - taxDiscountPercent);
         const itemComissionMult = itemTemplate._props.RagFairCommissionModifier
             ? itemTemplate._props.RagFairCommissionModifier
             : 1;
@@ -102,7 +110,7 @@ export class RagfairTaxService {
     // This method is trying to replicate the item worth calculation method found in the client code.
     // Any inefficiencies or style issues are intentional and should not be fixed, to preserve the client-side code mirroring.
     protected calculateItemWorth(
-        item: Item,
+        item: IItem,
         itemTemplate: ITemplateItem,
         itemCount: number,
         pmcData: IPmcData,
@@ -115,15 +123,20 @@ export class RagfairTaxService {
             // Since we get a flat list of all child items, we only want to recurse from parent item
             const itemChildren = this.itemHelper.findAndReturnChildrenAsItems(pmcData.Inventory.items, item._id);
             if (itemChildren.length > 1) {
-                for (const child of itemChildren) {
+                const itemChildrenClone = this.cloner.clone(itemChildren); // Clone is expensive, only run if necessary
+                for (const child of itemChildrenClone) {
                     if (child._id === item._id) {
                         continue;
+                    }
+
+                    if (!child.upd) {
+                        child.upd = {};
                     }
 
                     worth += this.calculateItemWorth(
                         child,
                         this.itemHelper.getItem(child._tpl)[1],
-                        child.upd!.StackObjectsCount!,
+                        child.upd.StackObjectsCount ?? 1,
                         pmcData,
                         false,
                     );

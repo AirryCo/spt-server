@@ -1,7 +1,7 @@
 import { ItemHelper } from "@spt/helpers/ItemHelper";
 import { ProfileHelper } from "@spt/helpers/ProfileHelper";
 import { TraderHelper } from "@spt/helpers/TraderHelper";
-import { Item } from "@spt/models/eft/common/tables/IItem";
+import { IItem } from "@spt/models/eft/common/tables/IItem";
 import { ITemplateItem } from "@spt/models/eft/common/tables/ITemplateItem";
 import { BaseClasses } from "@spt/models/enums/BaseClasses";
 import { ConfigTypes } from "@spt/models/enums/ConfigTypes";
@@ -62,8 +62,7 @@ export class RagfairServerHelper {
             return false;
         }
 
-        // Skip blacklisted items
-        if (this.itemFilterService.isItemBlacklisted(itemDetails[1]._id)) {
+        if (!this.itemHelper.isValidItem(itemDetails[1]._id)) {
             return false;
         }
 
@@ -72,8 +71,10 @@ export class RagfairServerHelper {
             return false;
         }
 
-        // Skip custom blacklisted items
+        // Skip custom blacklisted items and flag as unsellable by players
         if (this.isItemOnCustomFleaBlacklist(itemDetails[1]._id)) {
+            itemDetails[1]._props.CanSellOnRagfair = false;
+
             return false;
         }
 
@@ -108,10 +109,6 @@ export class RagfairServerHelper {
      * @returns True if its blacklsited
      */
     protected isItemOnCustomFleaBlacklist(itemTemplateId: string): boolean {
-        if (!this.itemHelper.isValidItem(itemTemplateId)) {
-            return true;
-        }
-
         return this.ragfairConfig.dynamic.blacklist.custom.includes(itemTemplateId);
     }
 
@@ -138,7 +135,7 @@ export class RagfairServerHelper {
      * @param sessionID Player to send items to
      * @param returnedItems Items to send to player
      */
-    public returnItems(sessionID: string, returnedItems: Item[]): void {
+    public returnItems(sessionID: string, returnedItems: IItem[]): void {
         this.mailSendService.sendLocalisedNpcMessageToPlayer(
             sessionID,
             this.traderHelper.getTraderById(Traders.RAGMAN),
@@ -210,7 +207,7 @@ export class RagfairServerHelper {
      * @param item Preset item
      * @returns Array of weapon and its children
      */
-    public getPresetItems(item: Item): Item[] {
+    public getPresetItems(item: IItem): IItem[] {
         const preset = this.cloner.clone(this.databaseService.getGlobals().ItemPresets[item._id]._items);
         return this.itemHelper.reparentItemAndChildren(item, preset);
     }
@@ -220,7 +217,7 @@ export class RagfairServerHelper {
      * @param item Preset item
      * @returns
      */
-    public getPresetItemsByTpl(item: Item): Item[] {
+    public getPresetItemsByTpl(item: IItem): IItem[] {
         const presets = [];
         for (const itemId in this.databaseService.getGlobals().ItemPresets) {
             if (this.databaseService.getGlobals().ItemPresets[itemId]._items[0]._tpl === item._tpl) {

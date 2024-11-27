@@ -1,6 +1,6 @@
-import { Insurance } from "@spt/models/eft/profile/ISptProfile";
+import { IInsurance } from "@spt/models/eft/profile/ISptProfile";
 
-export const profileInsuranceFixture: Insurance[] = [
+export const profileInsuranceFixture: IInsurance[] = [
     {
         scheduledTime: 1712950044.4,
         traderId: "54cb50c76803fa8b248b4571",

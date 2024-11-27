@@ -363,11 +363,15 @@
             "5fc22d7c187fea44d52eda44",
             "646372518610c40fc20204e8",
             "65ddcc9cfa85b9f17d0dfb07",
-            "660312cc4d6cdfa6f500c703"
+            "660312cc4d6cdfa6f500c703",
+			"6655e35b6bc645cb7b059912"
         ],
         "coopExtractGift": {
             "sendGift": true,
-            "messageLocaleIds": ["5da89b1886f77439d7741002 0", "5da89b3a86f7742f9026cb83 0"],
+            "messageLocaleIds": [
+                "5da89b1886f77439d7741002 0",
+                "5da89b3a86f7742f9026cb83 0"
+            ],
             "giftExpiryHours": 168,
             "weaponPresetCount": {
                 "min": 0,
@@ -441,8 +445,14 @@
                     "max": 150
                 }
             },
-            "allowBossItems": false
+            "allowBossItems": false,
+			"useRewarditemBlacklist": true
         },
-        "btrDeliveryExpireHours": 240
+        "btrDeliveryExpireHours": 240,
+		"playerRepMin": -7,
+		"playerRepMax": 15
+    },
+    "moddedTraders": {
+        "clothingService": []
     }
 }

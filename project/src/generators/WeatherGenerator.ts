@@ -1,7 +1,9 @@
 import { ApplicationContext } from "@spt/context/ApplicationContext";
+import { WeatherHelper } from "@spt/helpers/WeatherHelper";
 import { WeightedRandomHelper } from "@spt/helpers/WeightedRandomHelper";
 import { IWeather, IWeatherData } from "@spt/models/eft/weather/IWeatherData";
 import { ConfigTypes } from "@spt/models/enums/ConfigTypes";
+import { Season } from "@spt/models/enums/Season";
 import { WindDirection } from "@spt/models/enums/WindDirection";
 import { IWeatherConfig } from "@spt/models/spt/config/IWeatherConfig";
 import { ILogger } from "@spt/models/spt/utils/ILogger";
@@ -21,6 +23,7 @@ export class WeatherGenerator {
 
     constructor(
         @inject("WeightedRandomHelper") protected weightedRandomHelper: WeightedRandomHelper,
+        @inject("WeatherHelper") protected weatherHelper: WeatherHelper,
         @inject("PrimaryLogger") protected logger: ILogger,
         @inject("RandomUtil") protected randomUtil: RandomUtil,
         @inject("TimeUtil") protected timeUtil: TimeUtil,
@@ -44,9 +47,7 @@ export class WeatherGenerator {
         data.time = this.getBsgFormattedInRaidTime();
         data.acceleration = this.weatherConfig.acceleration;
 
-        data.season = this.weatherConfig.overrideSeason
-            ? this.weatherConfig.overrideSeason
-            : this.seasonalEventService.getActiveWeatherSeason();
+        data.season = this.seasonalEventService.getActiveWeatherSeason();
 
         return data;
     }
@@ -58,23 +59,9 @@ export class WeatherGenerator {
      * @returns formatted time
      */
     protected getBsgFormattedInRaidTime(): string {
-        const clientAcceleratedDate = this.getInRaidTime();
+        const clientAcceleratedDate = this.weatherHelper.getInRaidTime();
 
         return this.getBSGFormattedTime(clientAcceleratedDate);
-    }
-
-    /**
-     * Get the current in-raid time
-     * @param currentDate (new Date())
-     * @returns Date object of current in-raid time
-     */
-    public getInRaidTime(): Date {
-        // tarkov time = (real time * 7 % 24 hr) + 3 hour
-        const russiaOffset = this.timeUtil.getHoursAsSeconds(3) * 1000;
-        return new Date(
-            (russiaOffset + new Date().getTime() * this.weatherConfig.acceleration) %
-                (this.timeUtil.getHoursAsSeconds(24) * 1000),
-        );
     }
 
     /**
@@ -88,44 +75,71 @@ export class WeatherGenerator {
 
     /**
      * Return randomised Weather data with help of config/weather.json
+     * @param currentSeason the currently active season
+     * @param timestamp OPTIONAL what timestamp to generate the weather data at, defaults to now when not supplied
      * @returns Randomised weather data
      */
-    public generateWeather(): IWeather {
-        const rain = this.getWeightedRain();
+    public generateWeather(currentSeason: Season, timestamp?: number): IWeather {
+        const clouds = this.getWeightedClouds();
+
+        // Force rain to off if no clouds
+        const rain = clouds <= 0.6 ? 0 : this.getWeightedRain();
 
         const result: IWeather = {
-            cloud: this.getWeightedClouds(),
+            cloud: clouds,
             wind_speed: this.getWeightedWindSpeed(),
             wind_direction: this.getWeightedWindDirection(),
-            wind_gustiness: this.getRandomFloat("windGustiness"),
+            wind_gustiness: this.getRandomFloat("windGustiness", 2),
             rain: rain,
             rain_intensity: rain > 1 ? this.getRandomFloat("rainIntensity") : 0,
             fog: this.getWeightedFog(),
-            temp: this.getRandomFloat("temp"),
+            temp: 0,
             pressure: this.getRandomFloat("pressure"),
             time: "",
             date: "",
-            timestamp: 0,
+            timestamp: 0, // Added below
+            sptInRaidTimestamp: 0, // Added below
         };
 
-        this.setCurrentDateTime(result);
+        this.setCurrentDateTime(result, timestamp);
+
+        result.temp = this.getRaidTemperature(currentSeason, result.sptInRaidTimestamp);
 
         return result;
     }
 
     /**
+     * Choose a temprature for the raid based on time of day and current season
+     * @param currentSeason What season tarkov is currently in
+     * @param inRaidTimestamp What time is the raid running at
+     * @returns Timestamp
+     */
+    protected getRaidTemperature(currentSeason: Season, inRaidTimestamp: number): number {
+        // Convert timestamp to date so we can get current hour and check if its day or night
+        const currentRaidTime = new Date(inRaidTimestamp);
+        const seasonDayNightTempValues = this.weatherConfig.weather.temp[currentSeason];
+        const minMax = this.weatherHelper.isHourAtNightTime(currentRaidTime.getHours())
+            ? seasonDayNightTempValues.night
+            : seasonDayNightTempValues.day;
+
+        return Number.parseFloat(this.randomUtil.getFloat(minMax.min, minMax.max).toPrecision(2));
+    }
+
+    /**
      * Set IWeather date/time/timestamp values to now
      * @param weather Object to update
+     * @param timestamp OPTIONAL, define timestamp used
      */
-    protected setCurrentDateTime(weather: IWeather): void {
-        const currentDate = this.getInRaidTime();
-        const normalTime = this.getBSGFormattedTime(currentDate);
-        const formattedDate = this.timeUtil.formatDate(currentDate);
-        const datetime = `${formattedDate} ${normalTime}`;
+    protected setCurrentDateTime(weather: IWeather, timestamp?: number): void {
+        const inRaidTime = this.weatherHelper.getInRaidTime(timestamp);
+        const normalTime = this.getBSGFormattedTime(inRaidTime);
+        const formattedDate = this.timeUtil.formatDate(timestamp ? new Date(timestamp) : new Date());
+        const datetimeBsgFormat = `${formattedDate} ${normalTime}`;
 
-        weather.timestamp = Math.floor(currentDate.getTime() / 1000); // matches weather.date
+        weather.timestamp = Math.floor(timestamp ? timestamp : inRaidTime.getTime() / 1000); // matches weather.date
         weather.date = formattedDate; // matches weather.timestamp
-        weather.time = datetime; // matches weather.timestamp
+        weather.time = datetimeBsgFormat; // matches weather.timestamp
+        weather.sptInRaidTimestamp = inRaidTime.getTime();
     }
 
     protected getWeightedWindDirection(): WindDirection {
@@ -163,11 +177,11 @@ export class WeatherGenerator {
         ).item;
     }
 
-    protected getRandomFloat(node: string): number {
+    protected getRandomFloat(node: string, precision = 3): number {
         return Number.parseFloat(
             this.randomUtil
                 .getFloat(this.weatherConfig.weather[node].min, this.weatherConfig.weather[node].max)
-                .toPrecision(3),
+                .toPrecision(precision),
         );
     }
 }

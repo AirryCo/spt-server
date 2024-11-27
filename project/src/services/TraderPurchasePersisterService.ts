@@ -1,5 +1,5 @@
 import { ProfileHelper } from "@spt/helpers/ProfileHelper";
-import { TraderPurchaseData } from "@spt/models/eft/profile/ISptProfile";
+import { ITraderPurchaseData } from "@spt/models/eft/profile/ISptProfile";
 import { ConfigTypes } from "@spt/models/enums/ConfigTypes";
 import { ITraderConfig } from "@spt/models/spt/config/ITraderConfig";
 import { ILogger } from "@spt/models/spt/utils/ILogger";
@@ -36,7 +36,7 @@ export class TraderPurchasePersisterService {
     public getProfileTraderPurchases(
         sessionId: string,
         traderId: string,
-    ): Record<string, TraderPurchaseData> | undefined {
+    ): Record<string, ITraderPurchaseData> | undefined {
         const profile = this.profileHelper.getFullProfile(sessionId);
 
         if (!profile.traderPurchases) {
@@ -57,7 +57,7 @@ export class TraderPurchasePersisterService {
         sessionId: string,
         traderId: string,
         assortId: string,
-    ): TraderPurchaseData | undefined {
+    ): ITraderPurchaseData | undefined {
         const profile = this.profileHelper.getFullProfile(sessionId);
 
         if (!profile.traderPurchases) {

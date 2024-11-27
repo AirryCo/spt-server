@@ -3,20 +3,6 @@ import { injectable } from "tsyringe";
 @injectable()
 export class WeightedRandomHelper {
     /**
-     * @deprecated USE getWeightedValue() WHERE POSSIBLE
-     * Gets a tplId from a weighted dictionary
-     * @param {tplId: weighting[]} itemArray
-     * @returns tplId
-     */
-    public getWeightedInventoryItem(itemArray: { [tplId: string]: unknown } | ArrayLike<unknown>): string {
-        const itemKeys = Object.keys(itemArray);
-        const weights = Object.values(itemArray);
-        const chosenItem = this.weightedRandom(itemKeys, weights);
-
-        return chosenItem.item;
-    }
-
-    /**
      * Choos an item from the passed in array based on the weightings of each
      * @param itemArray Items and weights to use
      * @returns Chosen item from array

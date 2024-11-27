@@ -1,5 +1,5 @@
 import { IPmcData } from "@spt/models/eft/common/IPmcData";
-import { Item } from "@spt/models/eft/common/tables/IItem";
+import { IItem } from "@spt/models/eft/common/tables/IItem";
 import { IInventoryCreateMarkerRequestData } from "@spt/models/eft/inventory/IInventoryCreateMarkerRequestData";
 import { IInventoryDeleteMarkerRequestData } from "@spt/models/eft/inventory/IInventoryDeleteMarkerRequestData";
 import { IInventoryEditMarkerRequestData } from "@spt/models/eft/inventory/IInventoryEditMarkerRequestData";
@@ -16,7 +16,7 @@ export class MapMarkerService {
      * @param request Add marker request
      * @returns Item
      */
-    public createMarkerOnMap(pmcData: IPmcData, request: IInventoryCreateMarkerRequestData): Item {
+    public createMarkerOnMap(pmcData: IPmcData, request: IInventoryCreateMarkerRequestData): IItem {
         // Get map from inventory
         const mapItem = pmcData.Inventory.items.find((i) => i._id === request.item);
 
@@ -36,7 +36,7 @@ export class MapMarkerService {
      * @param request Delete marker request
      * @returns Item
      */
-    public deleteMarkerFromMap(pmcData: IPmcData, request: IInventoryDeleteMarkerRequestData): Item {
+    public deleteMarkerFromMap(pmcData: IPmcData, request: IInventoryDeleteMarkerRequestData): IItem {
         // Get map from inventory
         const mapItem = pmcData.Inventory.items.find((item) => item._id === request.item);
 
@@ -55,7 +55,7 @@ export class MapMarkerService {
      * @param request Edit marker request
      * @returns Item
      */
-    public editMarkerOnMap(pmcData: IPmcData, request: IInventoryEditMarkerRequestData): Item {
+    public editMarkerOnMap(pmcData: IPmcData, request: IInventoryEditMarkerRequestData): IItem {
         // Get map from inventory
         const mapItem = pmcData.Inventory.items.find((item) => item._id === request.item);
 

@@ -6,11 +6,14 @@ import { ConfigTypes } from "@spt/models/enums/ConfigTypes";
 import { GiftSentResult } from "@spt/models/enums/GiftSentResult";
 import { MemberCategory } from "@spt/models/enums/MemberCategory";
 import { Season } from "@spt/models/enums/Season";
+import { SeasonalEventType } from "@spt/models/enums/SeasonalEventType";
 import { ICoreConfig } from "@spt/models/spt/config/ICoreConfig";
 import { IWeatherConfig } from "@spt/models/spt/config/IWeatherConfig";
 import { ConfigServer } from "@spt/servers/ConfigServer";
 import { GiftService } from "@spt/services/GiftService";
+import { LocalisationService } from "@spt/services/LocalisationService";
 import { MailSendService } from "@spt/services/MailSendService";
+import { SeasonalEventService } from "@spt/services/SeasonalEventService";
 import { RandomUtil } from "@spt/utils/RandomUtil";
 import { inject, injectable } from "tsyringe";
 
@@ -23,6 +26,8 @@ export class SptDialogueChatBot implements IDialogueChatBot {
         @inject("ProfileHelper") protected profileHelper: ProfileHelper,
         @inject("RandomUtil") protected randomUtil: RandomUtil,
         @inject("MailSendService") protected mailSendService: MailSendService,
+        @inject("SeasonalEventService") protected seasonalEventService: SeasonalEventService,
+        @inject("LocalisationService") protected localisationService: LocalisationService,
         @inject("GiftService") protected giftService: GiftService,
         @inject("ConfigServer") protected configServer: ConfigServer,
     ) {
@@ -32,7 +37,7 @@ export class SptDialogueChatBot implements IDialogueChatBot {
 
     public getChatBot(): IUserDialogInfo {
         return {
-            _id: "sptFriend",
+            _id: this.coreConfig.features.chatbotFeatures.ids.spt,
             aid: 1234566,
             Info: {
                 Level: 1,
@@ -53,33 +58,36 @@ export class SptDialogueChatBot implements IDialogueChatBot {
         const sender = this.profileHelper.getPmcProfile(sessionId);
 
         const sptFriendUser = this.getChatBot();
-
-        const giftSent = this.giftService.sendGiftToPlayer(sessionId, request.text);
-
         const requestInput = request.text.toLowerCase();
 
-        if (giftSent === GiftSentResult.SUCCESS) {
-            this.mailSendService.sendUserMessageToPlayer(
-                sessionId,
-                sptFriendUser,
-                this.randomUtil.getArrayValue([
-                    "Hey! you got the right code!",
-                    "A secret code, how exciting!",
-                    "You found a gift code!",
-                ]),
-            );
+        // only check if entered text is gift code when feature enabled
+        if (this.coreConfig.features.chatbotFeatures.sptFriendGiftsEnabled) {
+            const giftSent = this.giftService.sendGiftToPlayer(sessionId, request.text);
+            if (giftSent === GiftSentResult.SUCCESS) {
+                this.mailSendService.sendUserMessageToPlayer(
+                    sessionId,
+                    sptFriendUser,
+                    this.randomUtil.getArrayValue([
+                        "Hey! you got the right code!",
+                        "A secret code, how exciting!",
+                        "You found a gift code!",
+                        "A gift code! incredible",
+                        "A gift! what could it be!",
+                    ]),
+                );
 
-            return;
-        }
+                return;
+            }
 
-        if (giftSent === GiftSentResult.FAILED_GIFT_ALREADY_RECEIVED) {
-            this.mailSendService.sendUserMessageToPlayer(
-                sessionId,
-                sptFriendUser,
-                this.randomUtil.getArrayValue(["Looks like you already used that code", "You already have that!!"]),
-            );
+            if (giftSent === GiftSentResult.FAILED_GIFT_ALREADY_RECEIVED) {
+                this.mailSendService.sendUserMessageToPlayer(
+                    sessionId,
+                    sptFriendUser,
+                    this.randomUtil.getArrayValue(["Looks like you already used that code", "You already have that!!"]),
+                );
 
-            return;
+                return;
+            }
         }
 
         if (requestInput.includes("love you")) {
@@ -100,6 +108,14 @@ export class SptDialogueChatBot implements IDialogueChatBot {
                 sessionId,
                 sptFriendUser,
                 this.randomUtil.getArrayValue(["Its me!!", "spt? i've heard of that project"]),
+            );
+        }
+
+        if (requestInput === "fish") {
+            this.mailSendService.sendUserMessageToPlayer(
+                sessionId,
+                sptFriendUser,
+                this.randomUtil.getArrayValue(["blub"]),
             );
         }
 
@@ -149,8 +165,21 @@ export class SptDialogueChatBot implements IDialogueChatBot {
             this.mailSendService.sendUserMessageToPlayer(
                 sessionId,
                 sptFriendUser,
-                this.randomUtil.getArrayValue(["Snow will be enabled after your next raid"]),
+                this.randomUtil.getArrayValue([this.localisationService.getText("chatbot-snow_enabled")]),
             );
+        }
+
+        if (requestInput === "veryspooky") {
+            const enableEventResult = this.seasonalEventService.forceSeasonalEvent(SeasonalEventType.HALLOWEEN);
+            if (enableEventResult) {
+                this.mailSendService.sendUserMessageToPlayer(
+                    sessionId,
+                    sptFriendUser,
+                    this.randomUtil.getArrayValue([
+                        this.localisationService.getText("chatbot-halloween_event_enabled"),
+                    ]),
+                );
+            }
         }
 
         if (requestInput === "givemespace") {
@@ -160,7 +189,7 @@ export class SptDialogueChatBot implements IDialogueChatBot {
                 this.mailSendService.sendUserMessageToPlayer(
                     sessionId,
                     sptFriendUser,
-                    "You cannot accept any more of this gift",
+                    this.localisationService.getText("chatbot-cannot_accept_any_more_of_gift"),
                 );
             } else {
                 this.profileHelper.addStashRowsBonusToProfile(sessionId, 2);
@@ -168,7 +197,9 @@ export class SptDialogueChatBot implements IDialogueChatBot {
                 this.mailSendService.sendUserMessageToPlayer(
                     sessionId,
                     sptFriendUser,
-                    this.randomUtil.getArrayValue(["Added 2 rows to stash, please restart your game to see them"]),
+                    this.randomUtil.getArrayValue([
+                        this.localisationService.getText("chatbot-added_stash_rows_please_restart"),
+                    ]),
                 );
 
                 this.profileHelper.flagGiftReceivedInProfile(sessionId, stashRowGiftId, maxGiftsToSendCount);

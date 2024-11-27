@@ -41,10 +41,21 @@ export class ConfigServer {
             if (this.acceptableFileExtensions.includes(this.vfs.getFileExtension(file.toLowerCase()))) {
                 const fileName = this.vfs.stripExtension(file);
                 const filePathAndName = `${filepath}${file}`;
-                this.configs[`spt-${fileName}`] = this.jsonUtil.deserializeJsonC<any>(
+                const deserialsiedJson = this.jsonUtil.deserializeJsonC<any>(
                     this.vfs.readFile(filePathAndName),
                     filePathAndName,
                 );
+
+                if (!deserialsiedJson) {
+                    this.logger.error(
+                        `Config file: ${filePathAndName} is corrupt. Use a site like: https://jsonlint.com to find the issue.`,
+                    );
+                    throw new Error(
+                        `Server will not run until the: ${filePathAndName} config error mentioned above is fixed`,
+                    );
+                }
+
+                this.configs[`spt-${fileName}`] = deserialsiedJson;
             }
         }
 

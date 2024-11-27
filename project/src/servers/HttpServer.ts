@@ -6,7 +6,6 @@ import { ConfigTypes } from "@spt/models/enums/ConfigTypes";
 import { IHttpConfig } from "@spt/models/spt/config/IHttpConfig";
 import { ILogger } from "@spt/models/spt/utils/ILogger";
 import { ConfigServer } from "@spt/servers/ConfigServer";
-import { DatabaseServer } from "@spt/servers/DatabaseServer";
 import { WebSocketServer } from "@spt/servers/WebSocketServer";
 import { IHttpListener } from "@spt/servers/http/IHttpListener";
 import { LocalisationService } from "@spt/services/LocalisationService";
@@ -19,7 +18,6 @@ export class HttpServer {
 
     constructor(
         @inject("PrimaryLogger") protected logger: ILogger,
-        @inject("DatabaseServer") protected databaseServer: DatabaseServer,
         @inject("HttpServerHelper") protected httpServerHelper: HttpServerHelper,
         @inject("LocalisationService") protected localisationService: LocalisationService,
         @injectAll("HttpListener") protected httpListeners: IHttpListener[],
@@ -39,8 +37,8 @@ export class HttpServer {
         /* create server */
         const httpServer: Server = http.createServer();
 
-        httpServer.on("request", (req, res) => {
-            this.handleRequest(req, res);
+        httpServer.on("request", async (req, res) => {
+            await this.handleRequest(req, res);
         });
 
         /* Config server to listen on a port */
@@ -65,7 +63,7 @@ export class HttpServer {
         this.webSocketServer.setupWebSocket(httpServer);
     }
 
-    protected handleRequest(req: IncomingMessage, resp: ServerResponse): void {
+    protected async handleRequest(req: IncomingMessage, resp: ServerResponse): Promise<void> {
         // Pull sessionId out of cookies and store inside app context
         const sessionId = this.getCookies(req).PHPSESSID;
         this.applicationContext.addValue(ContextVariableType.SESSION_ID, sessionId);
@@ -93,7 +91,7 @@ export class HttpServer {
 
         for (const listener of this.httpListeners) {
             if (listener.canHandle(sessionId, req)) {
-                listener.handle(sessionId, req, resp);
+                await listener.handle(sessionId, req, resp);
                 break;
             }
         }

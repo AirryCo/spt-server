@@ -4,8 +4,7 @@ import { IGlobals } from "@spt/models/eft/common/IGlobals";
 import { ICustomizationItem } from "@spt/models/eft/common/tables/ICustomizationItem";
 import { IHandbookBase } from "@spt/models/eft/common/tables/IHandbookBase";
 import { IHideoutArea } from "@spt/models/eft/hideout/IHideoutArea";
-import { IHideoutProduction } from "@spt/models/eft/hideout/IHideoutProduction";
-import { IHideoutScavCase } from "@spt/models/eft/hideout/IHideoutScavCase";
+import { IHideoutProductionData } from "@spt/models/eft/hideout/IHideoutProduction";
 import { IHideoutSettingsBase } from "@spt/models/eft/hideout/IHideoutSettingsBase";
 import { IGetBodyResponseData } from "@spt/models/eft/httpResponse/IGetBodyResponseData";
 import { ISettingsBase } from "@spt/models/spt/server/ISettingsBase";
@@ -83,8 +82,8 @@ export class DataStaticRouter extends StaticRouter {
                     info: any,
                     sessionID: string,
                     output: string,
-                ): Promise<IGetBodyResponseData<IHideoutProduction[]>> => {
-                    return this.dataCallbacks.gethideoutProduction(url, info, sessionID);
+                ): Promise<IGetBodyResponseData<IHideoutProductionData>> => {
+                    return this.dataCallbacks.getHideoutProduction(url, info, sessionID);
                 },
             ),
             new RouteAction(
@@ -107,17 +106,6 @@ export class DataStaticRouter extends StaticRouter {
                     output: string,
                 ): Promise<IGetBodyResponseData<IHideoutArea[]>> => {
                     return this.dataCallbacks.getHideoutAreas(url, info, sessionID);
-                },
-            ),
-            new RouteAction(
-                "/client/hideout/production/scavcase/recipes",
-                async (
-                    url: string,
-                    info: any,
-                    sessionID: string,
-                    output: string,
-                ): Promise<IGetBodyResponseData<IHideoutScavCase[]>> => {
-                    return this.dataCallbacks.getHideoutScavcase(url, info, sessionID);
                 },
             ),
             new RouteAction(

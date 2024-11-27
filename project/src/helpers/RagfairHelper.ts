@@ -2,7 +2,7 @@ import { HandbookHelper } from "@spt/helpers/HandbookHelper";
 import { ItemHelper } from "@spt/helpers/ItemHelper";
 import { TraderAssortHelper } from "@spt/helpers/TraderAssortHelper";
 import { UtilityHelper } from "@spt/helpers/UtilityHelper";
-import { Item } from "@spt/models/eft/common/tables/IItem";
+import { IItem } from "@spt/models/eft/common/tables/IItem";
 import { ITraderAssort } from "@spt/models/eft/common/tables/ITrader";
 import { ISearchRequestData } from "@spt/models/eft/ragfair/ISearchRequestData";
 import { ConfigTypes } from "@spt/models/enums/ConfigTypes";
@@ -130,7 +130,7 @@ export class RagfairHelper {
      * Iterate over array of identical items and merge stack count
      * Ragfair allows abnormally large stacks.
      */
-    public mergeStackable(items: Item[]): Item[] {
+    public mergeStackable(items: IItem[]): IItem[] {
         const list = [];
         let rootItem = undefined;
 

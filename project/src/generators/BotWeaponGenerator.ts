@@ -6,14 +6,14 @@ import { BotWeaponGeneratorHelper } from "@spt/helpers/BotWeaponGeneratorHelper"
 import { ItemHelper } from "@spt/helpers/ItemHelper";
 import { WeightedRandomHelper } from "@spt/helpers/WeightedRandomHelper";
 import { IPreset } from "@spt/models/eft/common/IGlobals";
-import { Inventory as PmcInventory } from "@spt/models/eft/common/tables/IBotBase";
-import { GenerationData, Inventory, ModsChances } from "@spt/models/eft/common/tables/IBotType";
-import { Item } from "@spt/models/eft/common/tables/IItem";
+import { IInventory as PmcInventory } from "@spt/models/eft/common/tables/IBotBase";
+import { IGenerationData, IInventory, IModsChances } from "@spt/models/eft/common/tables/IBotType";
+import { IItem } from "@spt/models/eft/common/tables/IItem";
 import { ITemplateItem } from "@spt/models/eft/common/tables/ITemplateItem";
 import { ConfigTypes } from "@spt/models/enums/ConfigTypes";
 import { EquipmentSlots } from "@spt/models/enums/EquipmentSlots";
-import { GenerateWeaponResult } from "@spt/models/spt/bots/GenerateWeaponResult";
 import { IGenerateWeaponRequest } from "@spt/models/spt/bots/IGenerateWeaponRequest";
+import { IGenerateWeaponResult } from "@spt/models/spt/bots/IGenerateWeaponResult";
 import { IBotConfig } from "@spt/models/spt/config/IBotConfig";
 import { IPmcConfig } from "@spt/models/spt/config/IPmcConfig";
 import { IRepairConfig } from "@spt/models/spt/config/IRepairConfig";
@@ -71,13 +71,13 @@ export class BotWeaponGenerator {
     public generateRandomWeapon(
         sessionId: string,
         equipmentSlot: string,
-        botTemplateInventory: Inventory,
+        botTemplateInventory: IInventory,
         weaponParentId: string,
-        modChances: ModsChances,
+        modChances: IModsChances,
         botRole: string,
         isPmc: boolean,
         botLevel: number,
-    ): GenerateWeaponResult {
+    ): IGenerateWeaponResult {
         const weaponTpl = this.pickWeightedWeaponTplFromPool(equipmentSlot, botTemplateInventory);
         return this.generateWeaponByTpl(
             sessionId,
@@ -98,15 +98,15 @@ export class BotWeaponGenerator {
      * @param botTemplateInventory e.g. assault.json
      * @returns weapon tpl
      */
-    public pickWeightedWeaponTplFromPool(equipmentSlot: string, botTemplateInventory: Inventory): string {
+    public pickWeightedWeaponTplFromPool(equipmentSlot: string, botTemplateInventory: IInventory): string {
         const weaponPool = botTemplateInventory.equipment[equipmentSlot];
         return this.weightedRandomHelper.getWeightedValue<string>(weaponPool);
     }
 
     /**
      * Generated a weapon based on the supplied weapon tpl
-     * @param weaponTpl weapon tpl to generate (use pickWeightedWeaponTplFromPool())
-     * @param equipmentSlot slot to fit into, primary/secondary/holster
+     * @param weaponTpl Weapon tpl to generate (use pickWeightedWeaponTplFromPool())
+     * @param slotName Slot to fit into, primary/secondary/holster
      * @param botTemplateInventory e.g. assault.json
      * @param weaponParentId ParentId of the weapon being generated
      * @param modChances Dictionary of item types and % chance weapon will have that mod
@@ -117,20 +117,20 @@ export class BotWeaponGenerator {
     public generateWeaponByTpl(
         sessionId: string,
         weaponTpl: string,
-        equipmentSlot: string,
-        botTemplateInventory: Inventory,
+        slotName: string,
+        botTemplateInventory: IInventory,
         weaponParentId: string,
-        modChances: ModsChances,
+        modChances: IModsChances,
         botRole: string,
         isPmc: boolean,
         botLevel: number,
-    ): GenerateWeaponResult {
+    ): IGenerateWeaponResult {
         const modPool = botTemplateInventory.mods;
         const weaponItemTemplate = this.itemHelper.getItem(weaponTpl)[1];
 
         if (!weaponItemTemplate) {
             this.logger.error(this.localisationService.getText("bot-missing_item_template", weaponTpl));
-            this.logger.error(`WeaponSlot -> ${equipmentSlot}`);
+            this.logger.error(`WeaponSlot -> ${slotName}`);
 
             return;
         }
@@ -147,20 +147,23 @@ export class BotWeaponGenerator {
         let weaponWithModsArray = this.constructWeaponBaseArray(
             weaponTpl,
             weaponParentId,
-            equipmentSlot,
+            slotName,
             weaponItemTemplate,
             botRole,
         );
 
         // Chance to add randomised weapon enhancement
         if (isPmc && this.randomUtil.getChance100(this.pmcConfig.weaponHasEnhancementChancePercent)) {
-            const weaponConfig = this.repairConfig.repairKit.weapon;
-            this.repairService.addBuff(weaponConfig, weaponWithModsArray[0]);
+            // Add buff to weapon root
+            this.repairService.addBuff(this.repairConfig.repairKit.weapon, weaponWithModsArray[0]);
         }
 
         // Add mods to weapon base
         if (Object.keys(modPool).includes(weaponTpl)) {
+            // Role to treat bot as e.g. pmc/scav/boss
             const botEquipmentRole = this.botGeneratorHelper.getBotEquipmentRole(botRole);
+
+            // Different limits if bot is boss vs scav
             const modLimits = this.botWeaponModLimitService.getWeaponModLimits(botEquipmentRole);
 
             const generateWeaponModsRequest: IGenerateWeaponRequest = {
@@ -173,6 +176,7 @@ export class BotWeaponGenerator {
                 botData: { role: botRole, level: botLevel, equipmentRole: botEquipmentRole },
                 modLimits: modLimits,
                 weaponStats: {},
+                conflictingItemTpls: new Set(),
             };
             weaponWithModsArray = this.botEquipmentModGenerator.generateModsForWeapon(
                 sessionId,
@@ -185,7 +189,7 @@ export class BotWeaponGenerator {
             // Weapon is bad, fall back to weapons preset
             weaponWithModsArray = this.getPresetWeaponMods(
                 weaponTpl,
-                equipmentSlot,
+                slotName,
                 weaponParentId,
                 weaponItemTemplate,
                 botRole,
@@ -203,7 +207,7 @@ export class BotWeaponGenerator {
             weaponItemTemplate._props.Chambers[0]?._props?.filters[0]?.Filter?.includes(ammoTpl)
         ) {
             // Guns have variety of possible Chamber ids, patron_in_weapon/patron_in_weapon_000/patron_in_weapon_001
-            const chamberSlotNames = weaponItemTemplate._props.Chambers.map((x) => x._name);
+            const chamberSlotNames = weaponItemTemplate._props.Chambers.map((chamberSlot) => chamberSlot._name);
             this.addCartridgeToChamber(weaponWithModsArray, ammoTpl, chamberSlotNames);
         }
 
@@ -232,7 +236,7 @@ export class BotWeaponGenerator {
      * @param ammoTpl Cartridge to add to weapon
      * @param chamberSlotIds name of slots to create or add ammo to
      */
-    protected addCartridgeToChamber(weaponWithModsArray: Item[], ammoTpl: string, chamberSlotIds: string[]): void {
+    protected addCartridgeToChamber(weaponWithModsArray: IItem[], ammoTpl: string, chamberSlotIds: string[]): void {
         for (const slotId of chamberSlotIds) {
             const existingItemWithSlot = weaponWithModsArray.find((x) => x.slotId === slotId);
             if (!existingItemWithSlot) {
@@ -268,7 +272,7 @@ export class BotWeaponGenerator {
         equipmentSlot: string,
         weaponItemTemplate: ITemplateItem,
         botRole: string,
-    ): Item[] {
+    ): IItem[] {
         return [
             {
                 _id: this.hashUtil.generate(),
@@ -293,7 +297,7 @@ export class BotWeaponGenerator {
         weaponParentId: string,
         itemTemplate: ITemplateItem,
         botRole: string,
-    ): Item[] {
+    ): IItem[] {
         // Invalid weapon generated, fallback to preset
         this.logger.warning(
             this.localisationService.getText(
@@ -336,7 +340,7 @@ export class BotWeaponGenerator {
      * @param botRole role of bot weapon is for
      * @returns true if valid
      */
-    protected isWeaponValid(weaponItemArray: Item[], botRole: string): boolean {
+    protected isWeaponValid(weaponItemArray: IItem[], botRole: string): boolean {
         for (const mod of weaponItemArray) {
             const modTemplate = this.itemHelper.getItem(mod._tpl)[1];
             if (!modTemplate._props.Slots?.length) {
@@ -376,8 +380,8 @@ export class BotWeaponGenerator {
      * @param botRole The bot type we're getting generating extra mags for
      */
     public addExtraMagazinesToInventory(
-        generatedWeaponResult: GenerateWeaponResult,
-        magWeights: GenerationData,
+        generatedWeaponResult: IGenerateWeaponResult,
+        magWeights: IGenerationData,
         inventory: PmcInventory,
         botRole: string,
     ): void {
@@ -433,8 +437,8 @@ export class BotWeaponGenerator {
      * @param inventory bot inventory to add grenades to
      */
     protected addUbglGrenadesToBotInventory(
-        weaponMods: Item[],
-        generatedWeaponResult: GenerateWeaponResult,
+        weaponMods: IItem[],
+        generatedWeaponResult: IGenerateWeaponResult,
         inventory: PmcInventory,
     ): void {
         // Find ubgl mod item + get details of it from db
@@ -442,7 +446,7 @@ export class BotWeaponGenerator {
         const ubglDbTemplate = this.itemHelper.getItem(ubglMod._tpl)[1];
 
         // Define min/max of how many grenades bot will have
-        const ubglMinMax: GenerationData = {
+        const ubglMinMax: IGenerationData = {
             weights: { 1: 1, 2: 1 },
             whitelist: {},
         };
@@ -499,7 +503,7 @@ export class BotWeaponGenerator {
      * @returns magazine tpl string
      */
     protected getMagazineTplFromWeaponTemplate(
-        weaponMods: Item[],
+        weaponMods: IItem[],
         weaponTemplate: ITemplateItem,
         botRole: string,
     ): string {
@@ -535,18 +539,18 @@ export class BotWeaponGenerator {
 
     /**
      * Finds and return a compatible ammo tpl based on the bots ammo weightings (x.json/inventory/equipment/ammo)
-     * @param ammo a list of ammo tpls the weapon can use
-     * @param weaponTemplate the weapon we want to pick ammo for
-     * @returns an ammo tpl that works with the desired gun
+     * @param cartridgePool Dict of all cartridges keyed by type e.g. Caliber556x45NATO
+     * @param weaponTemplate Weapon details from db we want to pick ammo for
+     * @returns Ammo tpl that works with the desired gun
      */
     protected getWeightedCompatibleAmmo(
-        ammo: Record<string, Record<string, number>>,
+        cartridgePool: Record<string, Record<string, number>>,
         weaponTemplate: ITemplateItem,
     ): string {
         const desiredCaliber = this.getWeaponCaliber(weaponTemplate);
 
-        const compatibleCartridges = this.cloner.clone(ammo[desiredCaliber]);
-        if (!compatibleCartridges || compatibleCartridges?.length === 0) {
+        const cartridgePoolForWeapon = cartridgePool[desiredCaliber];
+        if (!cartridgePoolForWeapon || cartridgePoolForWeapon?.length === 0) {
             this.logger.debug(
                 this.localisationService.getText("bot-no_caliber_data_for_weapon_falling_back_to_default", {
                     weaponId: weaponTemplate._id,
@@ -555,45 +559,53 @@ export class BotWeaponGenerator {
                 }),
             );
 
-            // Immediately returns, as default ammo is guaranteed to be compatible
+            // Immediately returns, default ammo is guaranteed to be compatible
             return weaponTemplate._props.defAmmo;
         }
 
-        let chosenAmmoTpl: string;
-        while (!chosenAmmoTpl) {
-            const possibleAmmo = this.weightedRandomHelper.getWeightedValue<string>(compatibleCartridges);
+        // Get cartridges the weapons first chamber allow
+        const compatibleCartridgesInTemplate = this.getCompatibleCartridgesFromWeaponTemplate(weaponTemplate);
+        if (!compatibleCartridgesInTemplate) {
+            // No chamber data found in weapon, send default
+            return weaponTemplate._props.defAmmo;
+        }
 
-            // Weapon has chamber but does not support cartridge
-            if (
-                weaponTemplate._props.Chambers[0] &&
-                !weaponTemplate._props.Chambers[0]._props.filters[0].Filter.includes(possibleAmmo)
-            ) {
-                // Ran out of possible choices, use default ammo
-                if (Object.keys(compatibleCartridges).length === 0) {
-                    this.logger.debug(
-                        this.localisationService.getText("bot-incompatible_ammo_for_weapon_falling_back_to_default", {
-                            chosenAmmo: chosenAmmoTpl,
-                            weaponId: weaponTemplate._id,
-                            weaponName: weaponTemplate._name,
-                            defaultAmmo: weaponTemplate._props.defAmmo,
-                        }),
-                    );
+        // Inner join the weapons allowed + passed in cartridge pool to get compatible cartridges
+        const compatibleCartridges = Object.keys(cartridgePoolForWeapon)
+            .filter((cartridge) => compatibleCartridgesInTemplate.includes(cartridge))
+            .reduce((acc, key) => ({ ...acc, [key]: cartridgePoolForWeapon[key] }), {});
 
-                    // Set ammo to default and exit
-                    chosenAmmoTpl = weaponTemplate._props.defAmmo;
-                    break;
-                }
+        if (!compatibleCartridges) {
+            // No compatible cartridges, use default
+            return weaponTemplate._props.defAmmo;
+        }
 
-                // Not compatible, remove item from possible list and try again
-                delete compatibleCartridges[possibleAmmo];
-            } else {
-                // Compatible ammo found
-                chosenAmmoTpl = possibleAmmo;
-                break;
+        return this.weightedRandomHelper.getWeightedValue<string>(compatibleCartridges);
+    }
+
+    /**
+     * Get the cartridge ids from a weapon template that work with the weapon
+     * @param weaponTemplate Weapon db template to get cartridges for
+     * @returns Array of cartridge tpls
+     */
+    protected getCompatibleCartridgesFromWeaponTemplate(weaponTemplate: ITemplateItem): string[] {
+        let cartridges = weaponTemplate._props.Chambers[0]?._props?.filters[0]?.Filter;
+        if (!cartridges) {
+            // Fallback to the magazine if possible, e.g. for revolvers
+            //  Grab the magazines template
+            const firstMagazine = weaponTemplate._props.Slots.find((slot) => slot._name === "mod_magazine");
+            const magazineTemplate = this.itemHelper.getItem(firstMagazine._props.filters[0].Filter[0]);
+
+            // Get the first slots array of cartridges
+            cartridges = magazineTemplate[1]._props.Slots[0]?._props.filters[0].Filter;
+            if (!cartridges) {
+                // Normal magazines
+                // None found, try the cartridges array
+                cartridges = magazineTemplate[1]._props.Cartridges[0]?._props.filters[0].Filter;
             }
         }
 
-        return chosenAmmoTpl;
+        return cartridges;
     }
 
     /**
@@ -631,7 +643,7 @@ export class BotWeaponGenerator {
      * @param magazine Magazine item
      * @param cartridgeTpl Cartridge to insert into magazine
      */
-    protected fillExistingMagazines(weaponMods: Item[], magazine: Item, cartridgeTpl: string): void {
+    protected fillExistingMagazines(weaponMods: IItem[], magazine: IItem, cartridgeTpl: string): void {
         const magazineTemplate = this.itemHelper.getItem(magazine._tpl)[1];
         if (!magazineTemplate) {
             this.logger.error(this.localisationService.getText("bot-unable_to_find_magazine_item", magazine._tpl));
@@ -657,7 +669,7 @@ export class BotWeaponGenerator {
      * @param ubglMod UBGL item
      * @param ubglAmmoTpl Grenade ammo tpl
      */
-    protected fillUbgl(weaponMods: Item[], ubglMod: Item, ubglAmmoTpl: string): void {
+    protected fillUbgl(weaponMods: IItem[], ubglMod: IItem, ubglAmmoTpl: string): void {
         weaponMods.push({
             _id: this.hashUtil.generate(),
             _tpl: ubglAmmoTpl,
@@ -676,8 +688,8 @@ export class BotWeaponGenerator {
      * @param magazineTemplate magazines db template
      */
     protected addOrUpdateMagazinesChildWithAmmo(
-        weaponWithMods: Item[],
-        magazine: Item,
+        weaponWithMods: IItem[],
+        magazine: IItem,
         chosenAmmoTpl: string,
         magazineTemplate: ITemplateItem,
     ): void {
@@ -705,7 +717,7 @@ export class BotWeaponGenerator {
      * @param magazineId magazine id to find and add to
      * @param ammoTpl ammo template id to hydate with
      */
-    protected fillCamorasWithAmmo(weaponMods: Item[], magazineId: string, ammoTpl: string): void {
+    protected fillCamorasWithAmmo(weaponMods: IItem[], magazineId: string, ammoTpl: string): void {
         // for CylinderMagazine we exchange the ammo in the "camoras".
         // This might not be necessary since we already filled the camoras with a random whitelisted and compatible ammo type,
         // but I'm not sure whether this is also used elsewhere

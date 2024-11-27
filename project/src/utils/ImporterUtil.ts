@@ -46,7 +46,7 @@ export class ImporterUtil {
         }
 
         // set all loadRecursive to be executed asynchronously
-        const resEntries = Object.entries(result!);
+        const resEntries = Object.entries(result);
         const resResolved = await Promise.all(resEntries.map((ent) => ent[1]));
         for (let resIdx = 0; resIdx < resResolved.length; resIdx++) {
             resEntries[resIdx][1] = resResolved[resIdx];

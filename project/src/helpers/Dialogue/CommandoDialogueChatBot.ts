@@ -18,7 +18,7 @@ export class CommandoDialogueChatBot extends AbstractDialogueChatBot {
 
     public getChatBot(): IUserDialogInfo {
         return {
-            _id: "sptCommando",
+            _id: "6723fd51c5924c57ce0ca01e",
             aid: 1234567,
             Info: {
                 Level: 1,

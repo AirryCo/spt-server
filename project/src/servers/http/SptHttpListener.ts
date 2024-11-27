@@ -8,6 +8,10 @@ import { LocalisationService } from "@spt/services/LocalisationService";
 import { HttpResponseUtil } from "@spt/utils/HttpResponseUtil";
 import { JsonUtil } from "@spt/utils/JsonUtil";
 import { inject, injectAll, injectable } from "tsyringe";
+import util from "node:util";
+
+const zlibInflate = util.promisify(zlib.inflate);
+const zlibDeflate = util.promisify(zlib.deflate);
 
 @injectable()
 export class SptHttpListener implements IHttpListener {
@@ -29,7 +33,7 @@ export class SptHttpListener implements IHttpListener {
         switch (req.method) {
             case "GET": {
                 const response = await this.getResponse(sessionId, req, undefined);
-                this.sendResponse(sessionId, req, resp, undefined, response);
+                await this.sendResponse(sessionId, req, resp, undefined, response);
                 break;
             }
             // these are handled almost identically.
@@ -56,13 +60,13 @@ export class SptHttpListener implements IHttpListener {
                     const requestIsCompressed = req.headers.requestcompressed !== "0";
                     const requestCompressed = req.method === "PUT" || requestIsCompressed;
 
-                    const value = requestCompressed ? zlib.inflateSync(buffer) : buffer;
+                    const value = requestCompressed ? await zlibInflate(buffer) : buffer;
                     if (!requestIsCompressed) {
                         this.logger.debug(value.toString(), true);
                     }
 
                     const response = await this.getResponse(sessionId, req, value);
-                    this.sendResponse(sessionId, req, resp, value, response);
+                    await this.sendResponse(sessionId, req, resp, value, response);
                 });
 
                 break;
@@ -76,41 +80,58 @@ export class SptHttpListener implements IHttpListener {
     }
 
     /**
-     * Send http response to the client
-     * @param sessionID Player id
+     * Send HTTP response back to sender
+     * @param sessionID Player id making request
      * @param req Incoming request
      * @param resp Outgoing response
      * @param body Buffer
      * @param output Server generated response data
      */
-    public sendResponse(
+    public async sendResponse(
         sessionID: string,
         req: IncomingMessage,
         resp: ServerResponse,
         body: Buffer,
         output: string,
-    ): void {
-        const info = this.getBodyInfo(body);
-        let handled = false;
+    ): Promise<void> {
+        const bodyInfo = this.getBodyInfo(body);
 
-        // Check if this is a debug request, if so just send the raw response without transformation
-        if (req.headers.responsecompressed === "0") {
+        if (this.isDebugRequest(req)) {
+            // Send only raw response without transformation
             this.sendJson(resp, output, sessionID);
+            this.logRequest(req, output);
+
+            return;
         }
 
-        // Attempt to use one of our serializers to do the job
-        for (const serializer of this.serializers) {
-            if (serializer.canHandle(output)) {
-                serializer.serialize(sessionID, req, resp, info);
-                handled = true;
-                break;
-            }
-        }
-        // If no serializer can handle the request we zlib the output and send it
-        if (!handled) {
-            this.sendZlibJson(resp, output, sessionID);
+        // Not debug, minority of requests need a serializer to do the job (IMAGE/BUNDLE/NOTIFY)
+        const serialiser = this.serializers.find((x) => x.canHandle(output));
+        if (serialiser) {
+            await serialiser.serialize(sessionID, req, resp, bodyInfo);
+        } else {
+            // No serializer can handle the request (majority of requests dont), zlib the output and send response back
+            await this.sendZlibJson(resp, output, sessionID);
         }
 
+        this.logRequest(req, output);
+    }
+
+    /**
+     * Is request flagged as debug enabled
+     * @param req Incoming request
+     * @returns True if request is flagged as debug
+     */
+    protected isDebugRequest(req: IncomingMessage): boolean {
+        return req.headers.responsecompressed === "0";
+    }
+
+    /**
+     * Log request if enabled
+     * @param req Incoming message request
+     * @param output Output string
+     */
+    protected logRequest(req: IncomingMessage, output: string): void {
+        //
         if (globalThis.G_LOG_REQUESTS) {
             const log = new Response(req.method, output);
             this.requestsLogger.info(`RESPONSE=${this.jsonUtil.serialize(log)}`);
@@ -148,8 +169,9 @@ export class SptHttpListener implements IHttpListener {
         resp.end(output);
     }
 
-    public sendZlibJson(resp: ServerResponse, output: string, sessionID: string): void {
-        zlib.deflate(output, (_, buf) => resp.end(buf));
+    public async sendZlibJson(resp: ServerResponse, output: string, sessionID: string): Promise<void> {
+        const buf = await zlibDeflate(output);
+        resp.end(buf);
     }
 }
 

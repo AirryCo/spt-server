@@ -7,7 +7,7 @@ import { InRaidHelper } from "@spt/helpers/InRaidHelper";
 import { ProfileHelper } from "@spt/helpers/ProfileHelper";
 import { TraderHelper } from "@spt/helpers/TraderHelper";
 import { IPmcData } from "@spt/models/eft/common/IPmcData";
-import { Item } from "@spt/models/eft/common/tables/IItem";
+import { IItem } from "@spt/models/eft/common/tables/IItem";
 import { IEndOfflineRaidRequestData } from "@spt/models/eft/match/IEndOfflineRaidRequestData";
 import { ConfigTypes } from "@spt/models/enums/ConfigTypes";
 import { MessageType } from "@spt/models/enums/MessageType";
@@ -237,7 +237,7 @@ export class LegacyLocationLifecycleService {
     protected sendCoopTakenFenceMessage(sessionId: string): void {
         // Generate reward for taking coop extract
         const loot = this.lootGenerator.createRandomLoot(this.traderConfig.fence.coopExtractGift);
-        const mailableLoot: Item[] = [];
+        const mailableLoot: IItem[] = [];
 
         const parentId = this.hashUtil.generate();
         for (const item of loot) {

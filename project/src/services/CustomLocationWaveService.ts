@@ -1,4 +1,4 @@
-import { BossLocationSpawn, Wave } from "@spt/models/eft/common/ILocationBase";
+import { IBossLocationSpawn, IWave } from "@spt/models/eft/common/ILocationBase";
 import { ConfigTypes } from "@spt/models/enums/ConfigTypes";
 import { ILocationConfig } from "@spt/models/spt/config/ILocationConfig";
 import { ILogger } from "@spt/models/spt/utils/ILogger";
@@ -25,7 +25,7 @@ export class CustomLocationWaveService {
      * @param locationId e.g. factory4_day, bigmap
      * @param waveToAdd Boss wave to add to map
      */
-    public addBossWaveToMap(locationId: string, waveToAdd: BossLocationSpawn): void {
+    public addBossWaveToMap(locationId: string, waveToAdd: IBossLocationSpawn): void {
         this.locationConfig.customWaves.boss[locationId].push(waveToAdd);
     }
 
@@ -34,7 +34,7 @@ export class CustomLocationWaveService {
      * @param locationId e.g. factory4_day, bigmap
      * @param waveToAdd Wave to add to map
      */
-    public addNormalWaveToMap(locationId: string, waveToAdd: Wave): void {
+    public addNormalWaveToMap(locationId: string, waveToAdd: IWave): void {
         this.locationConfig.customWaves.normal[locationId].push(waveToAdd);
     }
 

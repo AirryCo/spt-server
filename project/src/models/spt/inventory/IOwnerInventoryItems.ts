@@ -1,10 +1,10 @@
-import { Item } from "@spt/models/eft/common/tables/IItem";
+import { IItem } from "@spt/models/eft/common/tables/IItem";
 
 export interface IOwnerInventoryItems {
     /** Inventory items from source */
-    from: Item[];
+    from: IItem[];
     /** Inventory items at destination */
-    to: Item[];
+    to: IItem[];
     sameInventory: boolean;
     isMail: boolean;
 }

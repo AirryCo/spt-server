@@ -1,6 +1,6 @@
-import { Item } from "@spt/models/eft/common/tables/IItem";
+import { IItem } from "@spt/models/eft/common/tables/IItem";
 
 export interface IItemDeliveryRequestData {
-    items: Item[];
+    items: IItem[];
     traderId: string;
 }

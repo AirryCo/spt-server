@@ -12,7 +12,7 @@ export interface IRepairConfig extends IBaseConfig {
     // ** How much INT can be given to player per repair action */
     maxIntellectGainPerRepair: IMaxIntellectGainValues;
     weaponTreatment: IWeaponTreatmentRepairValues;
-    repairKit: RepairKit;
+    repairKit: IRepairKit;
 }
 
 export interface IIntellectGainValues {
@@ -36,19 +36,19 @@ export interface IWeaponTreatmentRepairValues {
     pointGainMultiplier: number;
 }
 
-export interface RepairKit {
-    armor: BonusSettings;
-    weapon: BonusSettings;
+export interface IRepairKit {
+    armor: IBonusSettings;
+    weapon: IBonusSettings;
 }
 
-export interface BonusSettings {
+export interface IBonusSettings {
     rarityWeight: Record<string, number>;
     bonusTypeWeight: Record<string, number>;
-    common: Record<string, BonusValues>;
-    rare: Record<string, BonusValues>;
+    common: Record<string, IBonusValues>;
+    rare: Record<string, IBonusValues>;
 }
 
-export interface BonusValues {
+export interface IBonusValues {
     valuesMinMax: MinMax;
     /** What dura is buff active between (min max of current max) */
     activeDurabilityPercentMinMax: MinMax;

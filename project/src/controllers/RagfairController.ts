@@ -10,11 +10,11 @@ import { RagfairSellHelper } from "@spt/helpers/RagfairSellHelper";
 import { RagfairSortHelper } from "@spt/helpers/RagfairSortHelper";
 import { TraderHelper } from "@spt/helpers/TraderHelper";
 import { IPmcData } from "@spt/models/eft/common/IPmcData";
-import { Item } from "@spt/models/eft/common/tables/IItem";
+import { IItem } from "@spt/models/eft/common/tables/IItem";
 import { IBarterScheme, ITraderAssort } from "@spt/models/eft/common/tables/ITrader";
 import { IItemEventRouterResponse } from "@spt/models/eft/itemEvent/IItemEventRouterResponse";
 import { ISptProfile } from "@spt/models/eft/profile/ISptProfile";
-import { IAddOfferRequestData, Requirement } from "@spt/models/eft/ragfair/IAddOfferRequestData";
+import { IAddOfferRequestData, IRequirement } from "@spt/models/eft/ragfair/IAddOfferRequestData";
 import { IExtendOfferRequestData } from "@spt/models/eft/ragfair/IExtendOfferRequestData";
 import { IGetItemPriceResult } from "@spt/models/eft/ragfair/IGetItemPriceResult";
 import { IGetMarketPriceRequestData } from "@spt/models/eft/ragfair/IGetMarketPriceRequestData";
@@ -220,7 +220,6 @@ export class RagfairController {
 
         for (const offer of offers) {
             offer.intId = ++counter;
-            offer.items[0].parentId = ""; // Without this it causes error: "Item deserialization error: No parent with id hideout found for item x"
         }
     }
 
@@ -305,10 +304,14 @@ export class RagfairController {
 
     /**
      * Called when creating an offer on flea, fills values in top right corner
-     * @param getPriceRequest
+     * @param getPriceRequest Client request object
+     * @param ignoreTraderOffers Should trader offers be ignored in the calcualtion
      * @returns min/avg/max values for an item based on flea offers available
      */
-    public getItemMinAvgMaxFleaPriceValues(getPriceRequest: IGetMarketPriceRequestData): IGetItemPriceResult {
+    public getItemMinAvgMaxFleaPriceValues(
+        getPriceRequest: IGetMarketPriceRequestData,
+        ignoreTraderOffers = true,
+    ): IGetItemPriceResult {
         // Get all items of tpl
         const offers = this.ragfairOfferService.getOffersOfType(getPriceRequest.templateId);
 
@@ -324,6 +327,10 @@ export class RagfairController {
                 offers.reduce((sum, offer) => {
                     // Exclude barter items, they tend to have outrageous equivalent prices
                     if (offer.requirements.some((req) => !this.paymentHelper.isMoneyTpl(req._tpl))) {
+                        return sum;
+                    }
+
+                    if (ignoreTraderOffers && offer.user.memberType === MemberCategory.TRADER) {
                         return sum;
                     }
 
@@ -439,7 +446,8 @@ export class RagfairController {
         const qualityMultiplier = this.itemHelper.getItemQualityModifierForItems(offer.items, true);
 
         // Average offer price for single item (or whole weapon)
-        let averageOfferPriceSingleItem = this.ragfairPriceService.getFleaPriceForOfferItems(offer.items);
+        const averages = this.getItemMinAvgMaxFleaPriceValues({ templateId: offer.items[0]._tpl });
+        let averageOfferPriceSingleItem = averages.avg;
 
         // Check for and apply item price modifer if it exists in config
         const itemPriceModifer = this.ragfairConfig.dynamic.itemPriceMultiplier[rootItem._tpl];
@@ -536,7 +544,8 @@ export class RagfairController {
         const newRootOfferItem = offer.items[0];
 
         // Average offer price for single item (or whole weapon)
-        let averageOfferPrice = this.ragfairPriceService.getFleaPriceForOfferItems(offer.items);
+        const averages = this.getItemMinAvgMaxFleaPriceValues({ templateId: offer.items[0]._tpl });
+        let averageOfferPrice = averages.avg;
 
         // Check for and apply item price modifer if it exists in config
         const itemPriceModifer = this.ragfairConfig.dynamic.itemPriceMultiplier[newRootOfferItem._tpl];
@@ -641,7 +650,8 @@ export class RagfairController {
         const newRootOfferItem = offer.items[0];
 
         // Single price for an item
-        let singleItemPrice = this.ragfairPriceService.getFleaPriceForItem(firstListingAndChidren[0]._tpl);
+        const averages = this.getItemMinAvgMaxFleaPriceValues({ templateId: firstListingAndChidren[0]._tpl });
+        let singleItemPrice = averages.avg;
 
         // Check for and apply item price modifer if it exists in config
         const itemPriceModifer = this.ragfairConfig.dynamic.itemPriceMultiplier[newRootOfferItem._tpl];
@@ -703,11 +713,13 @@ export class RagfairController {
      * @returns FleaOfferType
      */
     protected getOfferType(offerRequest: IAddOfferRequestData): FleaOfferType {
-        if (offerRequest.items.length == 1 && !offerRequest.sellInOnePiece) {
+        if (offerRequest.items.length === 1 && !offerRequest.sellInOnePiece) {
             return FleaOfferType.SINGLE;
-        } else if (offerRequest.items.length > 1 && !offerRequest.sellInOnePiece) {
+        }
+        if (offerRequest.items.length > 1 && !offerRequest.sellInOnePiece) {
             return FleaOfferType.MULTI;
-        } else if (offerRequest.sellInOnePiece) {
+        }
+        if (offerRequest.sellInOnePiece) {
             return FleaOfferType.PACK;
         }
 
@@ -727,7 +739,7 @@ export class RagfairController {
      */
     protected chargePlayerTaxFee(
         sessionID: string,
-        rootItem: Item,
+        rootItem: IItem,
         pmcData: IPmcData,
         requirementsPriceInRub: number,
         itemStackCount: number,
@@ -791,7 +803,7 @@ export class RagfairController {
      * @param requirements
      * @returns Rouble price
      */
-    protected calculateRequirementsPriceInRub(requirements: Requirement[]): number {
+    protected calculateRequirementsPriceInRub(requirements: IRequirement[]): number {
         let requirementsPriceInRub = 0;
         for (const item of requirements) {
             const requestedItemTpl = item._tpl;
@@ -816,8 +828,8 @@ export class RagfairController {
     protected getItemsToListOnFleaFromInventory(
         pmcData: IPmcData,
         itemIdsFromFleaOfferRequest: string[],
-    ): { items: Item[][] | undefined; errorMessage: string | undefined } {
-        const itemsToReturn: Item[][] = [];
+    ): { items: IItem[][] | undefined; errorMessage: string | undefined } {
+        const itemsToReturn: IItem[][] = [];
         let errorMessage: string | undefined = undefined;
 
         // Count how many items are being sold and multiply the requested amount accordingly
@@ -848,12 +860,12 @@ export class RagfairController {
 
     public createPlayerOffer(
         sessionId: string,
-        requirements: Requirement[],
-        items: Item[],
+        requirements: IRequirement[],
+        items: IItem[],
         sellInOnePiece: boolean,
     ): IRagfairOffer {
         const loyalLevel = 1;
-        const formattedItems: Item[] = items.map((item) => {
+        const formattedItems: IItem[] = items.map((item) => {
             const isChild = items.some((subItem) => subItem._id === item.parentId);
 
             return {

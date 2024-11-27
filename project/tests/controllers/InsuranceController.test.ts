@@ -1,8 +1,8 @@
 import "reflect-metadata";
 
 import { InsuranceController } from "@spt/controllers/InsuranceController";
-import { Item } from "@spt/models/eft/common/tables/IItem";
-import { Insurance } from "@spt/models/eft/profile/ISptProfile";
+import { IItem } from "@spt/models/eft/common/tables/IItem";
+import { IInsurance } from "@spt/models/eft/profile/ISptProfile";
 import { MessageType } from "@spt/models/enums/MessageType";
 import { ProfileInsuranceFactory } from "@tests/__factories__/ProfileInsurance.factory";
 import { container } from "tsyringe";
@@ -10,7 +10,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 describe("InsuranceController", () => {
     let insuranceController: any; // Using "any" to access private/protected methods without type errors.
-    let insuranceFixture: Insurance[];
+    let insuranceFixture: IInsurance[];
 
     beforeEach(() => {
         insuranceController = container.resolve<InsuranceController>("InsuranceController");
@@ -434,7 +434,7 @@ describe("InsuranceController", () => {
 
             // Since no parent attachments exist, the map should be empty.
             const mockPopulateParentAttachmentsMap = vi.fn(() => {
-                return new Map<string, Item[]>();
+                return new Map<string, IItem[]>();
             });
             vi.spyOn(insuranceController, "populateParentAttachmentsMap").mockImplementation(
                 mockPopulateParentAttachmentsMap,

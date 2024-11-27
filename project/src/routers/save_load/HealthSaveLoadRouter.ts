@@ -11,7 +11,7 @@ export class HealthSaveLoadRouter extends SaveLoadRouter {
     public override handleLoad(profile: ISptProfile): ISptProfile {
         if (!profile.vitality) {
             // Occurs on newly created profiles
-            profile.vitality = { health: undefined!, effects: undefined! };
+            profile.vitality = { health: undefined, effects: undefined };
         }
         profile.vitality.health = {
             Hydration: 0,

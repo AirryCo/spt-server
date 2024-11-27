@@ -1,6 +1,6 @@
 import { BotCallbacks } from "@spt/callbacks/BotCallbacks";
 import { DynamicRouter, RouteAction } from "@spt/di/Router";
-import { Difficulties } from "@spt/models/eft/common/tables/IBotType";
+import { IDifficulties } from "@spt/models/eft/common/tables/IBotType";
 import { inject, injectable } from "tsyringe";
 
 @injectable()
@@ -26,7 +26,7 @@ export class BotDynamicRouter extends DynamicRouter {
                     info: any,
                     sessionID: string,
                     output: string,
-                ): Promise<Record<string, Difficulties>> => {
+                ): Promise<Record<string, IDifficulties>> => {
                     return this.botCallbacks.getAllBotDifficulties(url, info, sessionID);
                 },
             ),

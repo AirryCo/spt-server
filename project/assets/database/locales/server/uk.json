@@ -64,6 +64,7 @@
     "customisation-unable_to_find_suit_by_id": "Не вдалося пропозиції торговця з id: %s",
     "customisation-unable_to_find_suit_with_id": "Не вдається знайти костюм з ідентифікатором пропозиції: %s",
     "customisation-unable_to_get_trader_suits": "Не вдалося отримати костюми від торговця: %s",
+    "database-invalid_data": "Невірну дату знайдено у базі даних, будь ласка видалите усі старі моди. Погляньте на попередню помилку з невірної датою. Сервер зупинено.",
     "database-no_trader_found_with_id": "Не вдалося знайти трейдера: %s у базі даних",
     "dialog-missing_item_template": "Не вдалося знайти предмет із tpl {{tpl}} в базі даних, не вдалося надіслати повідомлення типу {{type}}, пропускаю",
     "dialogue-unable_to_find_dialogs_in_profile": "Немає об’єкта діалогового вікна в профілі: {{sessionId}}",

@@ -1,4 +1,4 @@
-import { Skills } from "@spt/models/eft/common/tables/IBotBase";
+import { ISkills } from "@spt/models/eft/common/tables/IBotBase";
 
 export interface IPlayerIncrementSkillLevelRequestData {
     _id: string;
@@ -8,7 +8,7 @@ export interface IPlayerIncrementSkillLevelRequestData {
     builds: any[];
     items: Items;
     production: Production;
-    skills: Skills;
+    skills: ISkills;
     traderRelations: TraderRelations;
 }
 

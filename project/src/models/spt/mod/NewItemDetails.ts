@@ -1,4 +1,4 @@
-import { ITemplateItem, Props } from "@spt/models/eft/common/tables/ITemplateItem";
+import { IProps, ITemplateItem } from "@spt/models/eft/common/tables/ITemplateItem";
 
 export abstract class NewItemDetailsBase {
     /** Price of the item on flea market */
@@ -22,7 +22,7 @@ export class NewItemFromCloneDetails extends NewItemDetailsBase {
     itemTplToClone: string;
 
     /** Item properties that should be applied over the top of the cloned base */
-    overrideProperties: Props;
+    overrideProperties: IProps;
 
     /** ParentId for the new item (item type) */
     parentId: string;

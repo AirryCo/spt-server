@@ -29,7 +29,7 @@ export class ApplicationContext {
         if (this.variables.has(type)) {
             const res: ContextVariable[] = [];
 
-            for (const value of this.variables.get(type)!.values()) {
+            for (const value of this.variables.get(type).values()) {
                 res.push(value);
             }
 
@@ -41,7 +41,7 @@ export class ApplicationContext {
     public addValue(type: ContextVariableType, value: any): void {
         let list: LinkedList<ContextVariable>;
         if (this.variables.has(type)) {
-            list = this.variables.get(type)!;
+            list = this.variables.get(type);
         } else {
             list = new LinkedList<ContextVariable>();
         }

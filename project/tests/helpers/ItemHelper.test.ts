@@ -1,7 +1,7 @@
 import "reflect-metadata";
 
 import { ItemHelper } from "@spt/helpers/ItemHelper";
-import { Item, Repairable } from "@spt/models/eft/common/tables/IItem";
+import { IItem, IUpdRepairable } from "@spt/models/eft/common/tables/IItem";
 import { ITemplateItem } from "@spt/models/eft/common/tables/ITemplateItem";
 import { DatabaseServer } from "@spt/servers/DatabaseServer";
 import { HashUtil } from "@spt/utils/HashUtil";
@@ -216,7 +216,7 @@ describe("ItemHelper", () => {
 
     describe("fixItemStackCount", () => {
         it("should set upd.StackObjectsCount to 1 if upd is undefined", () => {
-            const initialItem: Item = { _id: "", _tpl: "" };
+            const initialItem: IItem = { _id: "", _tpl: "" };
             const fixedItem = itemHelper.fixItemStackCount(initialItem);
 
             expect(fixedItem.upd).toBeDefined();
@@ -224,7 +224,7 @@ describe("ItemHelper", () => {
         });
 
         it("should set upd.StackObjectsCount to 1 if upd.StackObjectsCount is undefined", () => {
-            const initialItem: Item = { _id: "", _tpl: "", upd: {} };
+            const initialItem: IItem = { _id: "", _tpl: "", upd: {} };
             const fixedItem = itemHelper.fixItemStackCount(initialItem);
 
             expect(fixedItem.upd).toBeDefined();
@@ -232,7 +232,7 @@ describe("ItemHelper", () => {
         });
 
         it("should not change upd.StackObjectsCount if it is already defined", () => {
-            const initialItem: Item = { _id: "", _tpl: "", upd: { StackObjectsCount: 5 } };
+            const initialItem: IItem = { _id: "", _tpl: "", upd: { StackObjectsCount: 5 } };
             const fixedItem = itemHelper.fixItemStackCount(initialItem);
 
             expect(fixedItem.upd).toBeDefined();
@@ -319,7 +319,7 @@ describe("ItemHelper", () => {
     describe("getItemQualityModifier", () => {
         it("should return 1 for an item with no upd", () => {
             const itemId = container.resolve<HashUtil>("HashUtil").generate();
-            const item: Item = {
+            const item: IItem = {
                 _id: itemId,
                 _tpl: "590c657e86f77412b013051d", // "Grizzly medical kit"
             };
@@ -331,7 +331,7 @@ describe("ItemHelper", () => {
 
         it("should return 1 for an item with upd but no relevant fields", () => {
             const itemId = container.resolve<HashUtil>("HashUtil").generate();
-            const item: Item = {
+            const item: IItem = {
                 _id: itemId,
                 _tpl: "590c657e86f77412b013051d", // "Grizzly medical kit"
                 upd: {},
@@ -344,7 +344,7 @@ describe("ItemHelper", () => {
 
         it("should return correct value for a medkit", () => {
             const itemId = container.resolve<HashUtil>("HashUtil").generate();
-            const item: Item = {
+            const item: IItem = {
                 _id: itemId,
                 _tpl: "590c657e86f77412b013051d", // "Grizzly medical kit"
                 upd: {
@@ -361,7 +361,7 @@ describe("ItemHelper", () => {
 
         it("should return correct value for a repairable helmet", () => {
             const itemId = container.resolve<HashUtil>("HashUtil").generate();
-            const item: Item = {
+            const item: IItem = {
                 _id: itemId,
                 _tpl: "5b40e1525acfc4771e1c6611",
                 upd: { Repairable: { Durability: 19, MaxDurability: 38 } },
@@ -379,7 +379,7 @@ describe("ItemHelper", () => {
 
         it("should return correct value for a reparable weapon", () => {
             const itemId = container.resolve<HashUtil>("HashUtil").generate();
-            const item: Item = {
+            const item: IItem = {
                 _id: itemId,
                 _tpl: "5a38e6bac4a2826c6e06d79b", // "TOZ-106 20ga bolt-action shotgun"
                 upd: { Repairable: { Durability: 20, MaxDurability: 100 } },
@@ -392,7 +392,7 @@ describe("ItemHelper", () => {
 
         it("should return correct value for a food or drink item", () => {
             const itemId = container.resolve<HashUtil>("HashUtil").generate();
-            const item: Item = {
+            const item: IItem = {
                 _id: itemId,
                 _tpl: "5448fee04bdc2dbc018b4567", // "Bottle of water (0.6L)"
                 upd: {
@@ -409,7 +409,7 @@ describe("ItemHelper", () => {
 
         it("should return correct value for a key item", () => {
             const itemId = container.resolve<HashUtil>("HashUtil").generate();
-            const item: Item = {
+            const item: IItem = {
                 _id: itemId,
                 _tpl: "5780cf7f2459777de4559322", // "Dorm room 314 marked key"
                 upd: { Key: { NumberOfUsages: 5 } },
@@ -422,7 +422,7 @@ describe("ItemHelper", () => {
 
         it("should return correct value for a resource item", () => {
             const itemId = container.resolve<HashUtil>("HashUtil").generate();
-            const item: Item = {
+            const item: IItem = {
                 _id: itemId,
                 _tpl: "5d1b36a186f7742523398433", // "Metal fuel tank"
                 upd: {
@@ -440,7 +440,7 @@ describe("ItemHelper", () => {
 
         it("should return correct value for a repair kit item", () => {
             const itemId = container.resolve<HashUtil>("HashUtil").generate();
-            const item: Item = {
+            const item: IItem = {
                 _id: itemId,
                 _tpl: "591094e086f7747caa7bb2ef", // "Body armor repair kit"
                 upd: { RepairKit: { Resource: 600 } },
@@ -453,7 +453,7 @@ describe("ItemHelper", () => {
 
         it("should return 0.01 for an item with upd but all relevant fields are 0", () => {
             const itemId = container.resolve<HashUtil>("HashUtil").generate();
-            const item: Item = {
+            const item: IItem = {
                 _id: itemId,
                 _tpl: "591094e086f7747caa7bb2ef", // "Body armor repair kit"
                 upd: { RepairKit: { Resource: 0 } },
@@ -468,8 +468,8 @@ describe("ItemHelper", () => {
     describe("getRepairableItemQualityValue", () => {
         it("should return the correct quality value", () => {
             const weapon = itemHelper.getItem("5a38e6bac4a2826c6e06d79b")[1]; // "TOZ-106 20ga bolt-action shotgun"
-            const repairable: Repairable = { Durability: 50, MaxDurability: 100 };
-            const item: Item = { _id: "", _tpl: "" };
+            const repairable: IUpdRepairable = { Durability: 50, MaxDurability: 100 };
+            const item: IItem = { _id: "", _tpl: "" };
 
             // Cast the method to any to allow access to private/protected method.
             const result = (itemHelper as any).getRepairableItemQualityValue(weapon, repairable, item);
@@ -480,11 +480,11 @@ describe("ItemHelper", () => {
         it("should fall back to using Repairable MaxDurability", () => {
             const weapon = itemHelper.getItem("5a38e6bac4a2826c6e06d79b")[1]; // "TOZ-106 20ga bolt-action shotgun"
             weapon._props.MaxDurability = undefined; // Remove the MaxDurability property.
-            const repairable: Repairable = {
+            const repairable: IUpdRepairable = {
                 Durability: 50,
                 MaxDurability: 200, // This should be used now.
             };
-            const item: Item = { _id: "", _tpl: "" };
+            const item: IItem = { _id: "", _tpl: "" };
 
             // Cast the method to any to allow access to private/protected method.
             const result = (itemHelper as any).getRepairableItemQualityValue(weapon, repairable, item);
@@ -495,11 +495,11 @@ describe("ItemHelper", () => {
         it("should return 1 if durability value is invalid", () => {
             const weapon = itemHelper.getItem("5a38e6bac4a2826c6e06d79b")[1]; // "TOZ-106 20ga bolt-action shotgun"
             weapon._props.MaxDurability = undefined; // Remove the MaxDurability property.
-            const repairable: Repairable = {
+            const repairable: IUpdRepairable = {
                 Durability: 50,
                 MaxDurability: undefined, // Remove the MaxDurability property value... Technically an invalid Type.
             };
-            const item: Item = { _id: "", _tpl: "" };
+            const item: IItem = { _id: "", _tpl: "" };
 
             // Mock the logger's error method to prevent it from being actually called.
             const loggerErrorSpy = vi.spyOn((itemHelper as any).logger, "error").mockImplementation(() => {});
@@ -514,11 +514,11 @@ describe("ItemHelper", () => {
         it("should not divide by zero", () => {
             const weapon = itemHelper.getItem("5a38e6bac4a2826c6e06d79b")[1]; // "TOZ-106 20ga bolt-action shotgun"
             weapon._props.MaxDurability = undefined; // Remove the MaxDurability property.
-            const repairable: Repairable = {
+            const repairable: IUpdRepairable = {
                 Durability: 50,
                 MaxDurability: 0, // This is a problem.
             };
-            const item: Item = { _id: "", _tpl: "" };
+            const item: IItem = { _id: "", _tpl: "" };
 
             // Cast the method to any to allow access to private/protected method.
             const result = (itemHelper as any).getRepairableItemQualityValue(weapon, repairable, item);
@@ -529,11 +529,11 @@ describe("ItemHelper", () => {
         it("should log an error if durability is invalid", () => {
             const weapon = itemHelper.getItem("5a38e6bac4a2826c6e06d79b")[1]; // "TOZ-106 20ga bolt-action shotgun"
             weapon._props.MaxDurability = undefined; // Remove the MaxDurability property.
-            const repairable: Repairable = {
+            const repairable: IUpdRepairable = {
                 Durability: 50,
                 MaxDurability: undefined, // Remove the MaxDurability property value... Technically an invalid Type.
             };
-            const item: Item = { _id: "", _tpl: "" };
+            const item: IItem = { _id: "", _tpl: "" };
 
             const loggerErrorSpy = vi.spyOn((itemHelper as any).logger, "error");
 
@@ -546,7 +546,7 @@ describe("ItemHelper", () => {
 
     describe("findAndReturnChildrenByItems", () => {
         it("should return an array containing only the parent ID when no children are found", () => {
-            const items: Item[] = [
+            const items: IItem[] = [
                 { _id: "1", _tpl: "", parentId: null },
                 { _id: "2", _tpl: "", parentId: null },
                 {
@@ -560,7 +560,7 @@ describe("ItemHelper", () => {
         });
 
         it("should return array of child IDs when single-level children are found", () => {
-            const items: Item[] = [
+            const items: IItem[] = [
                 { _id: "1", _tpl: "", parentId: null },
                 { _id: "2", _tpl: "", parentId: "1" },
                 {
@@ -574,7 +574,7 @@ describe("ItemHelper", () => {
         });
 
         it("should return array of child IDs when multi-level children are found", () => {
-            const items: Item[] = [
+            const items: IItem[] = [
                 { _id: "1", _tpl: "", parentId: null },
                 { _id: "2", _tpl: "", parentId: "1" },
                 {
@@ -589,7 +589,7 @@ describe("ItemHelper", () => {
         });
 
         it("should return an array containing only the parent ID when parent ID does not exist in items", () => {
-            const items: Item[] = [
+            const items: IItem[] = [
                 { _id: "1", _tpl: "", parentId: null },
                 { _id: "2", _tpl: "", parentId: "1" },
             ];
@@ -601,7 +601,7 @@ describe("ItemHelper", () => {
     describe("getItemStackSize", () => {
         it("should return 1 when item has no existing stack size", () => {
             const itemId = container.resolve<HashUtil>("HashUtil").generate();
-            const item: Item = {
+            const item: IItem = {
                 _id: itemId,
                 _tpl: "591094e086f7747caa7bb2ef", // "Body armor repair kit"
                 upd: {},
@@ -612,7 +612,7 @@ describe("ItemHelper", () => {
 
         it("should return 1 when item has no upd property", () => {
             const itemId = container.resolve<HashUtil>("HashUtil").generate();
-            const item: Item = {
+            const item: IItem = {
                 _id: itemId,
                 _tpl: "591094e086f7747caa7bb2ef", // "Body armor repair kit"
             };
@@ -622,7 +622,7 @@ describe("ItemHelper", () => {
 
         it("should return 5 when item has existing stack size of 5", () => {
             const itemId = container.resolve<HashUtil>("HashUtil").generate();
-            const item: Item = {
+            const item: IItem = {
                 _id: itemId,
                 _tpl: "591094e086f7747caa7bb2ef", // "Body armor repair kit"
                 upd: { StackObjectsCount: 5 },
@@ -635,7 +635,7 @@ describe("ItemHelper", () => {
     describe("hasBuyRestrictions", () => {
         it("should return true when item has buy restriction current and max properties", () => {
             const itemId = container.resolve<HashUtil>("HashUtil").generate();
-            const item: Item = {
+            const item: IItem = {
                 _id: itemId,
                 _tpl: "591094e086f7747caa7bb2ef", // "Body armor repair kit"
                 upd: { BuyRestrictionCurrent: 0, BuyRestrictionMax: 1 },
@@ -646,7 +646,7 @@ describe("ItemHelper", () => {
 
         it("should return false when item has no buy restriction current or max properties but does have upd property", () => {
             const itemId = container.resolve<HashUtil>("HashUtil").generate();
-            const item: Item = {
+            const item: IItem = {
                 _id: itemId,
                 _tpl: "591094e086f7747caa7bb2ef", // "Body armor repair kit"
                 upd: {},
@@ -657,7 +657,7 @@ describe("ItemHelper", () => {
 
         it("should return false when item has no buy restriction current, max or upd properties", () => {
             const itemId = container.resolve<HashUtil>("HashUtil").generate();
-            const item: Item = {
+            const item: IItem = {
                 _id: itemId,
                 _tpl: "591094e086f7747caa7bb2ef", // "Body armor repair kit"
             };
@@ -686,7 +686,7 @@ describe("ItemHelper", () => {
     describe("addCartridgesToAmmoBox", () => {
         it("should return an array with 1x ammoBox and 1x cartridge item", () => {
             const itemId = container.resolve<HashUtil>("HashUtil").generate();
-            const ammoBox: Item[] = [
+            const ammoBox: IItem[] = [
                 {
                     _id: itemId,
                     _tpl: "5c12619186f7743f871c8a32", // "9x39mm SPP gs ammo pack (8 pcs)"
@@ -703,7 +703,7 @@ describe("ItemHelper", () => {
 
         it("should return an array with 1x ammoBox and 2x cartridge items", () => {
             const itemId = container.resolve<HashUtil>("HashUtil").generate();
-            const ammoBox: Item[] = [
+            const ammoBox: IItem[] = [
                 {
                     _id: itemId,
                     _tpl: "5737292724597765e5728562", // "5.45x39mm BP gs ammo pack (120 pcs)""
@@ -721,7 +721,7 @@ describe("ItemHelper", () => {
 
         it("should keep original ammo box provided", () => {
             const itemId = container.resolve<HashUtil>("HashUtil").generate();
-            const ammoBox: Item[] = [
+            const ammoBox: IItem[] = [
                 {
                     _id: itemId,
                     _tpl: "5737292724597765e5728562", // "5.45x39mm BP gs ammo pack (120 pcs)""
@@ -737,7 +737,7 @@ describe("ItemHelper", () => {
 
         it("should return specific cartridge type for the given ammo box provided", () => {
             const itemId = container.resolve<HashUtil>("HashUtil").generate();
-            const ammoBox: Item[] = [
+            const ammoBox: IItem[] = [
                 {
                     _id: itemId,
                     _tpl: "5737292724597765e5728562", // "5.45x39mm BP gs ammo pack (120 pcs)""
@@ -886,7 +886,7 @@ describe("ItemHelper", () => {
 
     describe("splitStack", () => {
         it("should return array of two items when provided item over its natural stack size limit", () => {
-            const stackableItem: Item = {
+            const stackableItem: IItem = {
                 _id: container.resolve<HashUtil>("HashUtil").generate(),
                 _tpl: "59e690b686f7746c9f75e848", // m995
                 upd: {
@@ -899,7 +899,7 @@ describe("ItemHelper", () => {
         });
 
         it("should return same count of items passed in when provided is natural stack size limit", () => {
-            const stackableItem: Item = {
+            const stackableItem: IItem = {
                 _id: container.resolve<HashUtil>("HashUtil").generate(),
                 _tpl: "59e690b686f7746c9f75e848", // m995
                 upd: {
@@ -912,7 +912,7 @@ describe("ItemHelper", () => {
         });
 
         it("should return same item if below max stack size", () => {
-            const stackableItem: Item = {
+            const stackableItem: IItem = {
                 _id: container.resolve<HashUtil>("HashUtil").generate(),
                 _tpl: "59e690b686f7746c9f75e848", // m995
                 upd: {
@@ -926,7 +926,7 @@ describe("ItemHelper", () => {
         });
 
         it("should return same item if item has no StackObjectsCount property", () => {
-            const stackableItem: Item = {
+            const stackableItem: IItem = {
                 _id: container.resolve<HashUtil>("HashUtil").generate(),
                 _tpl: "59e690b686f7746c9f75e848", // m995
                 upd: {},
@@ -936,7 +936,7 @@ describe("ItemHelper", () => {
         });
 
         it("should return same item if item has no upd object", () => {
-            const stackableItem: Item = {
+            const stackableItem: IItem = {
                 _id: container.resolve<HashUtil>("HashUtil").generate(),
                 _tpl: "59e690b686f7746c9f75e848", // m995
             };

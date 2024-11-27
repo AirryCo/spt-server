@@ -1,7 +1,7 @@
 import "reflect-metadata";
 
 import { ItemHelper } from "@spt/helpers/ItemHelper";
-import { Insurance } from "@spt/models/eft/profile/ISptProfile";
+import { IInsurance } from "@spt/models/eft/profile/ISptProfile";
 import { profileInsuranceFixture } from "@tests/__fixture__/profileInsurance.fixture";
 import { format } from "date-fns";
 import { container } from "tsyringe";
@@ -9,7 +9,7 @@ import { container } from "tsyringe";
 type DateInput = number | number[] | { [index: number]: number };
 
 export class ProfileInsuranceFactory {
-    private profileInsuranceFixture: Insurance[];
+    private profileInsuranceFixture: IInsurance[];
 
     constructor() {
         this.init();
@@ -74,7 +74,7 @@ export class ProfileInsuranceFactory {
         return this;
     }
 
-    public get(): Insurance[] {
+    public get(): IInsurance[] {
         return this.profileInsuranceFixture;
     }
 }

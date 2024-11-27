@@ -1,15 +1,15 @@
 import { ItemHelper } from "@spt/helpers/ItemHelper";
 import { PresetHelper } from "@spt/helpers/PresetHelper";
-import { Item } from "@spt/models/eft/common/tables/IItem";
+import { IItem } from "@spt/models/eft/common/tables/IItem";
 import { ITemplateItem } from "@spt/models/eft/common/tables/ITemplateItem";
-import { IHideoutScavCase } from "@spt/models/eft/hideout/IHideoutScavCase";
+import { IScavRecipe } from "@spt/models/eft/hideout/IHideoutProduction";
 import { BaseClasses } from "@spt/models/enums/BaseClasses";
 import { ConfigTypes } from "@spt/models/enums/ConfigTypes";
 import { Money } from "@spt/models/enums/Money";
 import { IScavCaseConfig } from "@spt/models/spt/config/IScavCaseConfig";
 import {
-    RewardCountAndPriceDetails,
-    ScavCaseRewardCountsAndPrices,
+    IRewardCountAndPriceDetails,
+    IScavCaseRewardCountsAndPrices,
 } from "@spt/models/spt/hideout/ScavCaseRewardCountsAndPrices";
 import { ILogger } from "@spt/models/spt/utils/ILogger";
 import { ConfigServer } from "@spt/servers/ConfigServer";
@@ -50,11 +50,13 @@ export class ScavCaseRewardGenerator {
      * @param recipeId recipe of the scav case craft
      * @returns Product array
      */
-    public generate(recipeId: string): Item[][] {
+    public generate(recipeId: string): IItem[][] {
         this.cacheDbItems();
 
         // Get scavcase details from hideout/scavcase.json
-        const scavCaseDetails = this.databaseService.getHideout().scavcase.find((r) => r._id === recipeId);
+        const scavCaseDetails = this.databaseService
+            .getHideout()
+            .production.scavRecipes.find((r) => r._id === recipeId);
         const rewardItemCounts = this.getScavCaseRewardCountsAndPrices(scavCaseDetails);
 
         // Get items that fit the price criteria as set by the scavCase config
@@ -194,7 +196,7 @@ export class ScavCaseRewardGenerator {
      */
     protected pickRandomRewards(
         items: ITemplateItem[],
-        itemFilters: RewardCountAndPriceDetails,
+        itemFilters: IRewardCountAndPriceDetails,
         rarity: string,
     ): ITemplateItem[] {
         const result: ITemplateItem[] = [];
@@ -286,11 +288,11 @@ export class ScavCaseRewardGenerator {
      * @param rewardItems items to convert
      * @returns Product array
      */
-    protected randomiseContainerItemRewards(rewardItems: ITemplateItem[], rarity: string): Item[][] {
+    protected randomiseContainerItemRewards(rewardItems: ITemplateItem[], rarity: string): IItem[][] {
         /** Each array is an item + children */
-        const result: Item[][] = [];
+        const result: IItem[][] = [];
         for (const rewardItemDb of rewardItems) {
-            let resultItem: Item[] = [{ _id: this.hashUtil.generate(), _tpl: rewardItemDb._id, upd: undefined }];
+            let resultItem: IItem[] = [{ _id: this.hashUtil.generate(), _tpl: rewardItemDb._id, upd: undefined }];
             const rootItem = resultItem[0];
 
             if (this.itemHelper.isOfBaseclass(rewardItemDb._id, BaseClasses.AMMO_BOX)) {
@@ -309,7 +311,7 @@ export class ScavCaseRewardGenerator {
                 }
 
                 // Ensure preset has unique ids and is cloned so we don't alter the preset data stored in memory
-                const presetAndMods: Item[] = this.itemHelper.replaceIDs(preset._items);
+                const presetAndMods: IItem[] = this.itemHelper.replaceIDs(preset._items);
                 this.itemHelper.remapRootItemId(presetAndMods);
 
                 resultItem = presetAndMods;
@@ -335,7 +337,7 @@ export class ScavCaseRewardGenerator {
      */
     protected getFilteredItemsByPrice(
         dbItems: ITemplateItem[],
-        itemFilters: RewardCountAndPriceDetails,
+        itemFilters: IRewardCountAndPriceDetails,
     ): ITemplateItem[] {
         return dbItems.filter((item) => {
             const handbookPrice = this.ragfairPriceService.getStaticPriceForItem(item._id);
@@ -347,24 +349,24 @@ export class ScavCaseRewardGenerator {
 
     /**
      * Gathers the reward min and max count params for each reward quality level from config and scavcase.json into a single object
-     * @param scavCaseDetails scavcase.json values
+     * @param scavCaseDetails production.json/scavRecipes object
      * @returns ScavCaseRewardCountsAndPrices object
      */
-    protected getScavCaseRewardCountsAndPrices(scavCaseDetails: IHideoutScavCase): ScavCaseRewardCountsAndPrices {
-        const rewardTypes = Object.keys(scavCaseDetails.EndProducts) as Array<keyof ScavCaseRewardCountsAndPrices>; // Default is ["Common", "Rare", "Superrare"];
-        const result: Partial<ScavCaseRewardCountsAndPrices> = {}; // Make partial object as we're going to add all the data immediately after
+    protected getScavCaseRewardCountsAndPrices(scavCaseDetails: IScavRecipe): IScavCaseRewardCountsAndPrices {
+        const rewardTypes = Object.keys(scavCaseDetails.endProducts) as Array<keyof IScavCaseRewardCountsAndPrices>; // Default is ["Common", "Rare", "Superrare"];
+        const result: Partial<IScavCaseRewardCountsAndPrices> = {}; // Make partial object as we're going to add all the data immediately after
 
         // Create reward min/max counts for each type
         for (const rewardType of rewardTypes) {
             result[rewardType] = {
-                minCount: scavCaseDetails.EndProducts[rewardType].min,
-                maxCount: scavCaseDetails.EndProducts[rewardType].max,
+                minCount: scavCaseDetails.endProducts[rewardType].min,
+                maxCount: scavCaseDetails.endProducts[rewardType].max,
                 minPriceRub: this.scavCaseConfig.rewardItemValueRangeRub[rewardType.toLowerCase()].min,
                 maxPriceRub: this.scavCaseConfig.rewardItemValueRangeRub[rewardType.toLowerCase()].max,
             };
         }
 
-        return result as ScavCaseRewardCountsAndPrices;
+        return result as IScavCaseRewardCountsAndPrices;
     }
 
     /**

@@ -3,14 +3,14 @@ import { ItemHelper } from "@spt/helpers/ItemHelper";
 import { NotificationSendHelper } from "@spt/helpers/NotificationSendHelper";
 import { NotifierHelper } from "@spt/helpers/NotifierHelper";
 import { TraderHelper } from "@spt/helpers/TraderHelper";
-import { Item } from "@spt/models/eft/common/tables/IItem";
+import { IItem } from "@spt/models/eft/common/tables/IItem";
 import {
-    Dialogue,
+    IDialogue,
+    IMessage,
+    IMessageContentRagfair,
+    IMessageItems,
     ISystemData,
     IUserDialogInfo,
-    Message,
-    MessageContentRagfair,
-    MessageItems,
 } from "@spt/models/eft/profile/ISptProfile";
 import { BaseClasses } from "@spt/models/enums/BaseClasses";
 import { MessageType } from "@spt/models/enums/MessageType";
@@ -56,10 +56,10 @@ export class MailSendService {
         trader: Traders,
         messageType: MessageType,
         message: string,
-        items: Item[] = [],
+        items: IItem[] = [],
         maxStorageTimeSeconds?: number,
         systemData?: ISystemData,
-        ragfair?: MessageContentRagfair,
+        ragfair?: IMessageContentRagfair,
     ): void {
         if (!trader) {
             this.logger.error(
@@ -111,10 +111,10 @@ export class MailSendService {
         trader: Traders,
         messageType: MessageType,
         messageLocaleId: string,
-        items: Item[] = [],
+        items: IItem[] = [],
         maxStorageTimeSeconds?: number,
         systemData?: ISystemData,
-        ragfair?: MessageContentRagfair,
+        ragfair?: IMessageContentRagfair,
     ): void {
         if (!trader) {
             this.logger.error(
@@ -162,7 +162,7 @@ export class MailSendService {
     public sendSystemMessageToPlayer(
         sessionId: string,
         message: string,
-        items: Item[] = [],
+        items: IItem[] = [],
         maxStorageTimeSeconds?: number,
         profileChangeEvents?: IProfileChangeEvent[],
     ): void {
@@ -195,7 +195,7 @@ export class MailSendService {
     public sendLocalisedSystemMessageToPlayer(
         sessionId: string,
         messageLocaleId: string,
-        items: Item[] = [],
+        items: IItem[] = [],
         profileChangeEvents?: IProfileChangeEvent[],
         maxStorageTimeSeconds?: number,
     ): void {
@@ -230,7 +230,7 @@ export class MailSendService {
         sessionId: string,
         senderDetails: IUserDialogInfo,
         message: string,
-        items: Item[] = [],
+        items: IItem[] = [],
         maxStorageTimeSeconds?: number,
     ): void {
         const details: ISendMessageDetails = {
@@ -334,8 +334,8 @@ export class MailSendService {
      * @param messageDetails Various details on what the message must contain/do
      * @returns Message
      */
-    protected createDialogMessage(dialogId: string, messageDetails: ISendMessageDetails): Message {
-        const message: Message = {
+    protected createDialogMessage(dialogId: string, messageDetails: ISendMessageDetails): IMessage {
+        const message: IMessage = {
             _id: this.hashUtil.generate(),
             uid: dialogId, // must match the dialog id
             type: messageDetails.sender, // Same enum is used for defining dialog type + message type, thanks bsg
@@ -369,8 +369,8 @@ export class MailSendService {
      * @param maxStorageTimeSeconds total time items are stored in mail before being deleted
      */
     protected addRewardItemsToMessage(
-        message: Message,
-        itemsToSendToPlayer: MessageItems | undefined,
+        message: IMessage,
+        itemsToSendToPlayer: IMessageItems | undefined,
         maxStorageTimeSeconds: number | undefined,
     ): void {
         if ((itemsToSendToPlayer?.data?.length ?? 0) > 0) {
@@ -390,13 +390,13 @@ export class MailSendService {
     protected processItemsBeforeAddingToMail(
         dialogType: MessageType,
         messageDetails: ISendMessageDetails,
-    ): MessageItems {
+    ): IMessageItems {
         const items = this.databaseService.getItems();
 
-        let itemsToSendToPlayer: MessageItems = {};
+        let itemsToSendToPlayer: IMessageItems = {};
         if ((messageDetails.items?.length ?? 0) > 0) {
             // Find base item that should be the 'primary' + have its parent id be used as the dialogs 'stash' value
-            const parentItem = this.getBaseItemFromRewards(messageDetails.items!);
+            const parentItem = this.getBaseItemFromRewards(messageDetails.items);
             if (!parentItem) {
                 this.localisationService.getText("mailsend-missing_parent", {
                     traderId: messageDetails.trader,
@@ -414,7 +414,7 @@ export class MailSendService {
             itemsToSendToPlayer = { stash: parentItem.parentId, data: [] };
 
             // Ensure Ids are unique and cont collide with items in player inventory later
-            messageDetails.items = this.itemHelper.replaceIDs(messageDetails.items!);
+            messageDetails.items = this.itemHelper.replaceIDs(messageDetails.items);
 
             for (const reward of messageDetails.items) {
                 // Ensure item exists in items db
@@ -440,11 +440,11 @@ export class MailSendService {
 
                 // Boxes can contain sub-items
                 if (this.itemHelper.isOfBaseclass(itemTemplate._id, BaseClasses.AMMO_BOX)) {
-                    const boxAndCartridges: Item[] = [reward];
+                    const boxAndCartridges: IItem[] = [reward];
                     this.itemHelper.addCartridgesToAmmoBox(boxAndCartridges, itemTemplate);
 
                     // Push box + cartridge children into array
-                    itemsToSendToPlayer.data!.push(...boxAndCartridges);
+                    itemsToSendToPlayer.data.push(...boxAndCartridges);
                 } else {
                     if ("StackSlots" in itemTemplate._props) {
                         this.logger.error(
@@ -453,12 +453,12 @@ export class MailSendService {
                     }
 
                     // Item is sanitised and ready to be pushed into holding array
-                    itemsToSendToPlayer.data!.push(reward);
+                    itemsToSendToPlayer.data.push(reward);
                 }
             }
 
             // Remove empty data property if no rewards
-            if (itemsToSendToPlayer.data!.length === 0) {
+            if (itemsToSendToPlayer.data.length === 0) {
                 delete itemsToSendToPlayer.data;
             }
         }
@@ -471,7 +471,7 @@ export class MailSendService {
      * @param items Possible items to choose from
      * @returns Chosen 'primary' item
      */
-    protected getBaseItemFromRewards(items: Item[]): Item {
+    protected getBaseItemFromRewards(items: IItem[]): IItem {
         // Only one item in reward, return it
         if (items?.length === 1) {
             return items[0];
@@ -500,7 +500,7 @@ export class MailSendService {
      * @param messageDetails Data on what message should do
      * @returns Relevant Dialogue
      */
-    protected getDialog(messageDetails: ISendMessageDetails): Dialogue {
+    protected getDialog(messageDetails: ISendMessageDetails): IDialogue {
         const dialogsInProfile = this.dialogueHelper.getDialogsForProfile(messageDetails.recipientId);
         const senderId = this.getMessageSenderIdByType(messageDetails);
         if (!senderId) {
