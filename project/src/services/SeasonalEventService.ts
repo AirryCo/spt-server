@@ -64,6 +64,9 @@ export class SeasonalEventService {
             ItemTpl.HEADWEAR_DED_MOROZ_HAT,
             ItemTpl.HEADWEAR_SANTA_HAT,
             ItemTpl.BACKPACK_SANTAS_BAG,
+            ItemTpl.RANDOMLOOTCONTAINER_NEW_YEAR_GIFT_BIG,
+            ItemTpl.RANDOMLOOTCONTAINER_NEW_YEAR_GIFT_MEDIUM,
+            ItemTpl.RANDOMLOOTCONTAINER_NEW_YEAR_GIFT_SMALL,
         ];
     }
 
@@ -405,13 +408,6 @@ export class SeasonalEventService {
             default:
                 // Likely a mod event
                 this.handleModEvent(event);
-                if (event.settings?.enableSummoning) {
-                    this.enableHalloweenSummonEvent();
-                    this.addEventBossesToMaps("halloweensummon");
-                }
-                if (event.settings?.zombieSettings?.enabled) {
-                    this.configureZombies(event.settings?.zombieSettings);
-                }
                 break;
         }
     }
@@ -735,6 +731,17 @@ export class SeasonalEventService {
 
     protected handleModEvent(event: ISeasonalEvent) {
         this.addEventGearToBots(event.type);
+
+        if (event.settings?.enableSummoning) {
+            this.enableHalloweenSummonEvent();
+            this.addEventBossesToMaps("halloweensummon");
+        }
+        if (event.settings?.zombieSettings?.enabled) {
+            this.configureZombies(event.settings?.zombieSettings);
+        }
+        if (event.settings?.forceSnow) {
+            this.enableSnow();
+        }
     }
 
     /**

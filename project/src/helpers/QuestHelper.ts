@@ -10,6 +10,7 @@ import { IPmcData } from "@spt/models/eft/common/IPmcData";
 import { Common, IQuestStatus } from "@spt/models/eft/common/tables/IBotBase";
 import { IItem } from "@spt/models/eft/common/tables/IItem";
 import { IQuest, IQuestCondition, IQuestReward } from "@spt/models/eft/common/tables/IQuest";
+import { IHideoutProduction } from "@spt/models/eft/hideout/IHideoutProduction";
 import { IItemEventRouterResponse } from "@spt/models/eft/itemEvent/IItemEventRouterResponse";
 import { IAcceptQuestRequestData } from "@spt/models/eft/quests/IAcceptQuestRequestData";
 import { ICompleteQuestRequestData } from "@spt/models/eft/quests/ICompleteQuestRequestData";
@@ -1034,6 +1035,34 @@ export class QuestHelper {
         sessionID: string,
         response: IItemEventRouterResponse,
     ): void {
+        const matchingProductions = this.getRewardProductionMatch(craftUnlockReward, questDetails);
+        if (matchingProductions.length !== 1) {
+            this.logger.error(
+                this.localisationService.getText("quest-unable_to_find_matching_hideout_production", {
+                    questName: questDetails.QuestName,
+                    matchCount: matchingProductions.length,
+                }),
+            );
+
+            return;
+        }
+
+        // Add above match to pmc profile + client response
+        const matchingCraftId = matchingProductions[0]._id;
+        pmcData.UnlockedInfo.unlockedProductionRecipe.push(matchingCraftId);
+        response.profileChanges[sessionID].recipeUnlocked[matchingCraftId] = true;
+    }
+
+    /**
+     * Find hideout craft id for the specified quest reward
+     * @param craftUnlockReward 
+     * @param questDetails 
+     * @returns 
+     */
+    public getRewardProductionMatch(
+        craftUnlockReward: IQuestReward,
+        questDetails: IQuest,
+    ): IHideoutProduction[] {
         // Get hideout crafts and find those that match by areatype/required level/end product tpl - hope for just one match
         const craftingRecipes = this.databaseService.getHideout().production.recipes;
 
@@ -1055,23 +1084,9 @@ export class QuestHelper {
             matchingProductions = matchingProductions.filter((prod) =>
                 prod.requirements.some((requirement) => requirement.questId === questDetails._id),
             );
-
-            if (matchingProductions.length !== 1) {
-                this.logger.error(
-                    this.localisationService.getText("quest-unable_to_find_matching_hideout_production", {
-                        questName: questDetails.QuestName,
-                        matchCount: matchingProductions.length,
-                    }),
-                );
-
-                return;
-            }
         }
 
-        // Add above match to pmc profile + client response
-        const matchingCraftId = matchingProductions[0]._id;
-        pmcData.UnlockedInfo.unlockedProductionRecipe.push(matchingCraftId);
-        response.profileChanges[sessionID].recipeUnlocked[matchingCraftId] = true;
+        return matchingProductions;
     }
 
     /**
