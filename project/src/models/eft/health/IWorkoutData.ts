@@ -2,7 +2,6 @@
 
 export interface IWorkoutData extends Record<string, any> {
     skills: IWorkoutSkills;
-    effects: IWorkoutEffects;
 }
 
 export interface IWorkoutSkills {

@@ -64,6 +64,9 @@ export class SeasonalEventService {
             ItemTpl.HEADWEAR_DED_MOROZ_HAT,
             ItemTpl.HEADWEAR_SANTA_HAT,
             ItemTpl.BACKPACK_SANTAS_BAG,
+            ItemTpl.RANDOMLOOTCONTAINER_NEW_YEAR_GIFT_BIG,
+            ItemTpl.RANDOMLOOTCONTAINER_NEW_YEAR_GIFT_MEDIUM,
+            ItemTpl.RANDOMLOOTCONTAINER_NEW_YEAR_GIFT_SMALL,
         ];
     }
 
@@ -405,13 +408,6 @@ export class SeasonalEventService {
             default:
                 // Likely a mod event
                 this.handleModEvent(event);
-                if (event.settings?.enableSummoning) {
-                    this.enableHalloweenSummonEvent();
-                    this.addEventBossesToMaps("halloweensummon");
-                }
-                if (event.settings?.zombieSettings?.enabled) {
-                    this.configureZombies(event.settings?.zombieSettings);
-                }
                 break;
         }
     }
@@ -505,10 +501,29 @@ export class SeasonalEventService {
             this.databaseService.getLocation(locationId).base.waves = [];
         }
 
-        const activeMaps = Object.keys(zombieSettings.mapInfectionAmount).filter(
-            (locationId) => zombieSettings.mapInfectionAmount[locationId] > 0,
+        const locationsWithActiveInfection = this.getLocationsWithZombies(zombieSettings.mapInfectionAmount);
+        this.addEventBossesToMaps("halloweenzombies", locationsWithActiveInfection);
+    }
+
+    /**
+     * Get location ids of maps with an infection above 0
+     * @param locationInfections Dict of locations with their infection percentage
+     * @returns Array of location ids
+     */
+    protected getLocationsWithZombies(locationInfections: Record<string, number>): string[] {
+        const result: string[] = [];
+
+        // Get only the locations with an infection above 0
+        const infectionKeys = Object.keys(locationInfections).filter(
+            (locationId) => locationInfections[locationId] > 0,
         );
-        this.addEventBossesToMaps("halloweenzombies", activeMaps);
+
+        // Convert the infected location id into its generic location id
+        for (const locationkey of infectionKeys) {
+            result.push(...this.getLocationFromInfectedLocation(locationkey));
+        }
+
+        return result;
     }
 
     /**
@@ -735,6 +750,17 @@ export class SeasonalEventService {
 
     protected handleModEvent(event: ISeasonalEvent) {
         this.addEventGearToBots(event.type);
+
+        if (event.settings?.enableSummoning) {
+            this.enableHalloweenSummonEvent();
+            this.addEventBossesToMaps("halloweensummon");
+        }
+        if (event.settings?.zombieSettings?.enabled) {
+            this.configureZombies(event.settings?.zombieSettings);
+        }
+        if (event.settings?.forceSnow) {
+            this.enableSnow();
+        }
     }
 
     /**

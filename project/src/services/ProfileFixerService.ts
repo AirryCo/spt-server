@@ -2,9 +2,11 @@ import { HideoutHelper } from "@spt/helpers/HideoutHelper";
 import { InventoryHelper } from "@spt/helpers/InventoryHelper";
 import { ItemHelper } from "@spt/helpers/ItemHelper";
 import { ProfileHelper } from "@spt/helpers/ProfileHelper";
+import { QuestHelper } from "@spt/helpers/QuestHelper";
 import { TraderHelper } from "@spt/helpers/TraderHelper";
 import { IPmcData } from "@spt/models/eft/common/IPmcData";
 import { IBonus, IHideoutSlot } from "@spt/models/eft/common/tables/IBotBase";
+import { IQuest, IQuestReward } from "@spt/models/eft/common/tables/IQuest";
 import { IPmcDataRepeatableQuest, IRepeatableQuest } from "@spt/models/eft/common/tables/IRepeatableQuests";
 import { ITemplateItem } from "@spt/models/eft/common/tables/ITemplateItem";
 import { IStageBonus } from "@spt/models/eft/hideout/IHideoutArea";
@@ -12,6 +14,8 @@ import { IEquipmentBuild, IMagazineBuild, ISptProfile, IWeaponBuild } from "@spt
 import { BonusType } from "@spt/models/enums/BonusType";
 import { ConfigTypes } from "@spt/models/enums/ConfigTypes";
 import { HideoutAreas } from "@spt/models/enums/HideoutAreas";
+import { QuestRewardType } from "@spt/models/enums/QuestRewardType";
+import { QuestStatus } from "@spt/models/enums/QuestStatus";
 import { ICoreConfig } from "@spt/models/spt/config/ICoreConfig";
 import { IRagfairConfig } from "@spt/models/spt/config/IRagfairConfig";
 import { ILogger } from "@spt/models/spt/utils/ILogger";
@@ -45,6 +49,7 @@ export class ProfileFixerService {
         @inject("HashUtil") protected hashUtil: HashUtil,
         @inject("ConfigServer") protected configServer: ConfigServer,
         @inject("PrimaryCloner") protected cloner: ICloner,
+        @inject("QuestHelper") protected questHelper: QuestHelper,
     ) {
         this.coreConfig = this.configServer.getConfig(ConfigTypes.CORE);
         this.ragfairConfig = this.configServer.getConfig(ConfigTypes.RAGFAIR);
@@ -58,6 +63,7 @@ export class ProfileFixerService {
         this.removeDanglingConditionCounters(pmcProfile);
         this.removeDanglingTaskConditionCounters(pmcProfile);
         this.removeOrphanedQuests(pmcProfile);
+        this.verifyQuestProductionUnlocks(pmcProfile);
 
         if (pmcProfile.Hideout) {
             this.addHideoutEliteSlots(pmcProfile);
@@ -261,6 +267,77 @@ export class ProfileFixerService {
                 profileQuests.splice(i, 1);
                 this.logger.success("Successfully removed orphaned quest that doesnt exist in our quest data");
             }
+        }
+    }
+
+    /**
+     * Verify that all quest production unlocks have been applied to the PMC Profile
+     * @param pmcProfile The profile to validate quest productions for
+     */
+    protected verifyQuestProductionUnlocks(pmcProfile: IPmcData): void {
+        const start = performance.now();
+
+        const quests = this.databaseService.getQuests();
+        const profileQuests = pmcProfile.Quests;
+
+        for (const profileQuest of profileQuests) {
+            const quest = quests[profileQuest.qid];
+            if (!quest) {
+                continue;
+            }
+
+            // For started or successful quests, check for unlocks in the `Started` rewards
+            if (profileQuest.status === QuestStatus.Started || profileQuest.status === QuestStatus.Success) {
+                const productionRewards = quest.rewards.Started?.filter(
+                    (reward) => reward.type === QuestRewardType.PRODUCTIONS_SCHEME,
+                );
+                productionRewards?.forEach((reward) => this.verifyQuestProductionUnlock(pmcProfile, reward, quest));
+            }
+
+            // For successful quests, check for unlocks in the `Success` rewards
+            if (profileQuest.status == QuestStatus.Success) {
+                const productionRewards = quest.rewards.Success?.filter(
+                    (reward) => reward.type === QuestRewardType.PRODUCTIONS_SCHEME,
+                );
+                productionRewards?.forEach((reward) => this.verifyQuestProductionUnlock(pmcProfile, reward, quest));
+            }
+        }
+
+        const validateTime = performance.now() - start;
+        this.logger.debug(`Quest Production Unlock validation took: ${validateTime.toFixed(2)}ms`);
+    }
+
+    /**
+     * Validate that the given profile has the given quest reward production scheme unlocked, and add it if not
+     * @param pmcProfile Profile to check
+     * @param productionUnlockReward The quest reward to validate
+     * @param questDetails The quest the reward belongs to
+     * @returns
+     */
+    protected verifyQuestProductionUnlock(
+        pmcProfile: IPmcData,
+        productionUnlockReward: IQuestReward,
+        questDetails: IQuest,
+    ): void {
+        const matchingProductions = this.questHelper.getRewardProductionMatch(productionUnlockReward, questDetails);
+        if (matchingProductions.length !== 1) {
+            this.logger.error(
+                this.localisationService.getText("quest-unable_to_find_matching_hideout_production", {
+                    questName: questDetails.QuestName,
+                    matchCount: matchingProductions.length,
+                }),
+            );
+
+            return;
+        }
+
+        // Add above match to pmc profile
+        const matchingProductionId = matchingProductions[0]._id;
+        if (!pmcProfile.UnlockedInfo.unlockedProductionRecipe.includes(matchingProductionId)) {
+            pmcProfile.UnlockedInfo.unlockedProductionRecipe.push(matchingProductionId);
+            this.logger.debug(
+                `Added production ${matchingProductionId} to unlocked production recipes for ${questDetails.QuestName}`,
+            );
         }
     }
 
