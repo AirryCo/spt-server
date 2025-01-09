@@ -22,7 +22,7 @@ export class WinstonMainLogger extends AbstractWinstonLogger {
     }
 
     protected getFilePath(): string {
-        return path.join("user" ,"logs");
+        return path.join("user", "logs");
     }
 
     protected getFileName(): string {

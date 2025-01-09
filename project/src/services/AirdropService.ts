@@ -157,17 +157,25 @@ export class AirdropService {
             lootSettingsByType = this.airdropConfig.loot[AirdropTypeEnum.COMMON];
         }
 
+        // Get all items that match the blacklisted types and fold into item blacklist
+        const itemTypeBlacklist = this.itemFilterService.getItemRewardBaseTypeBlacklist();
+        const itemsMatchingTypeBlacklist = Object.values(this.itemHelper.getItems())
+            .filter((templateItem) => this.itemHelper.isOfBaseclasses(templateItem._parent, itemTypeBlacklist))
+            .map((templateItem) => templateItem._id);
+        const itemBlacklist = new Set([
+            ...lootSettingsByType.itemBlacklist,
+            ...this.itemFilterService.getItemRewardBlacklist(),
+            ...this.itemFilterService.getBossItems(),
+            ...itemsMatchingTypeBlacklist,
+        ]);
+
         return {
             icon: lootSettingsByType.icon,
             weaponPresetCount: lootSettingsByType.weaponPresetCount,
             armorPresetCount: lootSettingsByType.armorPresetCount,
             itemCount: lootSettingsByType.itemCount,
             weaponCrateCount: lootSettingsByType.weaponCrateCount,
-            itemBlacklist: [
-                ...lootSettingsByType.itemBlacklist,
-                ...this.itemFilterService.getItemRewardBlacklist(),
-                ...this.itemFilterService.getBossItems(),
-            ],
+            itemBlacklist: Array.from(itemBlacklist),
             itemTypeWhitelist: lootSettingsByType.itemTypeWhitelist,
             itemLimits: lootSettingsByType.itemLimits,
             itemStackLimits: lootSettingsByType.itemStackLimits,

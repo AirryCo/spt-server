@@ -66,6 +66,7 @@
     "customisation-unable_to_find_suit_with_id": "No se pudo encontrar el traje con el ID del vendedor: %s.",
     "customisation-unable_to_get_trader_suits": "No se pudieron obtener los trajes del comerciante.",
     "database-data_at_path_missing": "La base de datos no pudo recuperar datos de: [%s]. Por favor, asegúrate de que tu configuración sea válida y que los datos existan en la ubicación indicada.",
+    "database-invalid_data": "Datos no válidos detectados en la base de datos. Por favor, elimina los mods desactualizados. Puede ver los datos inválidos en el error anterior. El servidor se detuvo.",
     "database-no_location_found_with_id": "No se encontró una ubicación con el ID: %s en la base de datos.",
     "database-no_trader_found_with_id": "No se pudo encontrar al comerciante: %s en la base de datos.",
     "dialog-chatbot_id_already_exists": "El bot de chat: %s que se está registrando ya existe, no se puede registrar el bot.",

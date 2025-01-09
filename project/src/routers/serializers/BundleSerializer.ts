@@ -15,7 +15,12 @@ export class BundleSerializer extends Serializer {
         super();
     }
 
-    public override async serialize(sessionID: string, req: IncomingMessage, resp: ServerResponse, body: any): Promise<void> {
+    public override async serialize(
+        sessionID: string,
+        req: IncomingMessage,
+        resp: ServerResponse,
+        body: any,
+    ): Promise<void> {
         const key = decodeURI(req.url.split("/bundle/")[1]);
         const bundle = this.bundleLoader.getBundle(key);
         if (!bundle) {

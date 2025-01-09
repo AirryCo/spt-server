@@ -2,7 +2,7 @@ import fs from "node:fs";
 import { ServerResponse } from "node:http";
 import { HttpServerHelper } from "@spt/helpers/HttpServerHelper";
 import { inject, injectable } from "tsyringe";
-import { pipeline } from 'stream/promises';
+import { pipeline } from "stream/promises";
 
 @injectable()
 export class HttpFileUtil {

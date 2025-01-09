@@ -711,7 +711,11 @@ export class LocationLootGenerator {
 
             // Draw a random item from spawn points possible items
             const chosenComposedKey = itemArray.draw(1)[0];
-            const createItemResult = this.createDynamicLootItem(chosenComposedKey, spawnPoint.template.Items, staticAmmoDist);
+            const createItemResult = this.createDynamicLootItem(
+                chosenComposedKey,
+                spawnPoint.template.Items,
+                staticAmmoDist,
+            );
 
             // Root id can change when generating a weapon, ensure ids match
             spawnPoint.template.Root = createItemResult.items[0]._id;
@@ -776,9 +780,9 @@ export class LocationLootGenerator {
                     const createItemResult = this.createDynamicLootItem(
                         lootItem.Items[0]._id,
                         lootItem.Items,
-                        staticAmmoDist
+                        staticAmmoDist,
                     );
-        
+
                     // Update root ID with the dynamically generated ID
                     lootItem.Root = createItemResult.items[0]._id;
                     lootItem.Items = createItemResult.items;
@@ -808,7 +812,7 @@ export class LocationLootGenerator {
             const createItemResult = this.createDynamicLootItem(
                 locationTemplateToAdd.Items[0]._id,
                 forcedLootLocation.template.Items,
-                staticAmmoDist
+                staticAmmoDist,
             );
 
             // Update root ID with the dynamically generated ID
@@ -847,6 +851,9 @@ export class LocationLootGenerator {
             throw new Error(`Item for tpl ${chosenComposedKey} was not found in the spawn point`);
         }
         const itemTemplate = this.itemHelper.getItem(chosenTpl)[1];
+        if (!itemTemplate) {
+            this.logger.error(`Item tpl: ${chosenTpl} cannot be found in database`);
+        }
 
         // Item array to return
         const itemWithMods: IItem[] = [];
@@ -887,10 +894,7 @@ export class LocationLootGenerator {
         } else {
             // Also used by armors to get child mods
             // Get item + children and add into array we return
-            let itemWithChildren = this.itemHelper.findAndReturnChildrenAsItems(
-                items,
-                chosenItem._id,
-            );
+            let itemWithChildren = this.itemHelper.findAndReturnChildrenAsItems(items, chosenItem._id);
 
             // Ensure all IDs are unique
             itemWithChildren = this.itemHelper.replaceIDs(itemWithChildren);

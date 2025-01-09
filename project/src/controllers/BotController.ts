@@ -25,6 +25,7 @@ import { DatabaseService } from "@spt/services/DatabaseService";
 import { LocalisationService } from "@spt/services/LocalisationService";
 import { MatchBotDetailsCacheService } from "@spt/services/MatchBotDetailsCacheService";
 import { SeasonalEventService } from "@spt/services/SeasonalEventService";
+import { ProgressWriter } from "@spt/utils/ProgressWriter";
 import { RandomUtil } from "@spt/utils/RandomUtil";
 import { ICloner } from "@spt/utils/cloners/ICloner";
 import { inject, injectable } from "tsyringe";
@@ -306,15 +307,17 @@ export class BotController {
         }
 
         // We're below desired count, add bots to cache
+        const progressWriter = new ProgressWriter(botGenerationDetails.botCountToGenerate);
         for (let i = 0; i < botGenerationDetails.botCountToGenerate; i++) {
             const detailsClone = this.cloner.clone(botGenerationDetails);
             botPromises.push(this.generateSingleBotAndStoreInCache(detailsClone, sessionId, cacheKey));
+            progressWriter.increment();
         }
 
-        return Promise.all(botPromises).then(() => {
+        return await Promise.all(botPromises).then(() => {
             this.logger.debug(
                 `Generated ${botGenerationDetails.botCountToGenerate} ${botGenerationDetails.role} (${
-                    botGenerationDetails.eventRole ?? ""
+                    botGenerationDetails.eventRole ?? botGenerationDetails.role ?? ""
                 }) ${botGenerationDetails.botDifficulty} bots`,
             );
         });

@@ -117,6 +117,16 @@ export class GameController {
                 fullProfile.spt.migrations = {};
             }
 
+            // Track one time use cultist rewards
+            if (typeof fullProfile.spt.cultistRewards === "undefined") {
+                fullProfile.spt.cultistRewards = new Map();
+            }
+
+            // Make sure we have a friends list array
+            if (typeof fullProfile.friends === "undefined") {
+                fullProfile.friends = [];
+            }
+
             //3.9 migrations
             if (fullProfile.spt.version.includes("3.9.") && !fullProfile.spt.migrations["39x"]) {
                 // Check every item has a valid mongoid
@@ -136,6 +146,10 @@ export class GameController {
 
             if (Array.isArray(fullProfile.characters.scav.WishList)) {
                 fullProfile.characters.scav.WishList = {};
+            }
+
+            if (fullProfile.dialogues) {
+                this.profileFixerService.checkForAndFixDialogueAttachments(fullProfile);
             }
 
             this.logger.debug(`Started game with sessionId: ${sessionID} ${fullProfile.info.username}`);

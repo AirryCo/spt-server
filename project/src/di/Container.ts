@@ -198,6 +198,7 @@ import { SptWebSocketConnectionHandler } from "@spt/servers/ws/SptWebSocketConne
 import { DefaultSptWebSocketMessageHandler } from "@spt/servers/ws/message/DefaultSptWebSocketMessageHandler";
 import { ISptWebSocketMessageHandler } from "@spt/servers/ws/message/ISptWebSocketMessageHandler";
 import { AirdropService } from "@spt/services/AirdropService";
+import { BackupService } from "@spt/services/BackupService";
 import { BotEquipmentFilterService } from "@spt/services/BotEquipmentFilterService";
 import { BotEquipmentModPoolService } from "@spt/services/BotEquipmentModPoolService";
 import { BotGenerationCacheService } from "@spt/services/BotGenerationCacheService";
@@ -253,7 +254,6 @@ import { StaticRouterModService } from "@spt/services/mod/staticRouter/StaticRou
 import { App } from "@spt/utils/App";
 import { AsyncQueue } from "@spt/utils/AsyncQueue";
 import { CompareUtil } from "@spt/utils/CompareUtil";
-import { DatabaseDecompressionUtil } from "@spt/utils/DatabaseDecompressionUtil";
 import { DatabaseImporter } from "@spt/utils/DatabaseImporter";
 import { EncodingUtil } from "@spt/utils/EncodingUtil";
 import { HashUtil } from "@spt/utils/HashUtil";
@@ -420,9 +420,6 @@ export class Container {
     private static registerUtils(depContainer: DependencyContainer): void {
         // Utils
         depContainer.register<App>("App", App, { lifecycle: Lifecycle.Singleton });
-        depContainer.register<DatabaseDecompressionUtil>("DatabaseDecompressionUtil", DatabaseDecompressionUtil, {
-            lifecycle: Lifecycle.Singleton,
-        });
         depContainer.register<DatabaseImporter>("DatabaseImporter", DatabaseImporter, {
             lifecycle: Lifecycle.Singleton,
         });
@@ -699,6 +696,7 @@ export class Container {
 
     private static registerServices(depContainer: DependencyContainer): void {
         // Services
+        depContainer.register<BackupService>("BackupService", BackupService, { lifecycle: Lifecycle.Singleton });
         depContainer.register<DatabaseService>("DatabaseService", DatabaseService, { lifecycle: Lifecycle.Singleton });
         depContainer.register<ImageRouteService>("ImageRouteService", ImageRouteService, {
             lifecycle: Lifecycle.Singleton,

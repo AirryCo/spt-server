@@ -174,6 +174,7 @@ export class QuestController {
     }
 
     /**
+     * TODO - Move this code into RepeatableQuestController
      * Handle the client accepting a repeatable quest and starting it
      * Send starting rewards if any to player and
      * Send start notification if any to player
@@ -221,48 +222,9 @@ export class QuestController {
             fullProfile.characters.scav.Quests.push(newRepeatableQuest);
         }
 
-        const response = this.createAcceptedQuestClientResponse(sessionID, pmcData, repeatableQuestProfile);
+        const response = this.eventOutputHolder.getOutput(sessionID);
 
         return response;
-    }
-
-    protected createAcceptedQuestClientResponse(
-        sessionID: string,
-        pmcData: IPmcData,
-        repeatableQuestProfile: IRepeatableQuest,
-    ): IItemEventRouterResponse {
-        const repeatableSettings = pmcData.RepeatableQuests.find(
-            (quest) => quest.name === repeatableQuestProfile.sptRepatableGroupName,
-        );
-
-        const change = {};
-        change[repeatableQuestProfile._id] = repeatableSettings.changeRequirement[repeatableQuestProfile._id];
-
-        const repeatableData: IPmcDataRepeatableQuest = {
-            id:
-                repeatableSettings.id ??
-                this.questConfig.repeatableQuests.find(
-                    (repeatableQuest) => repeatableQuest.name === repeatableQuestProfile.sptRepatableGroupName,
-                ).id,
-            name: repeatableSettings.name,
-            endTime: repeatableSettings.endTime,
-            changeRequirement: change,
-            activeQuests: [repeatableQuestProfile],
-            inactiveQuests: [],
-            freeChanges: repeatableSettings.freeChanges,
-            freeChangesAvailable: repeatableSettings.freeChangesAvailable,
-        };
-
-        // Nullguard
-        const acceptQuestResponse = this.eventOutputHolder.getOutput(sessionID);
-        if (!acceptQuestResponse.profileChanges[sessionID].repeatableQuests) {
-            acceptQuestResponse.profileChanges[sessionID].repeatableQuests = [];
-        }
-
-        // Add constructed objet into response
-        acceptQuestResponse.profileChanges[sessionID].repeatableQuests.push(repeatableData);
-
-        return acceptQuestResponse;
     }
 
     /**

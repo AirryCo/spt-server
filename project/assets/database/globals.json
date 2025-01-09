@@ -32408,7 +32408,7 @@
         ]
       }
     ],
-    "MaxBotsAliveOnMap": 50,
+    "MaxBotsAliveOnMap": 36,
     "MaxBotsAliveOnMapPvE": 50,
     "MaxLoyaltyLevelForAll": false,
     "MountingSettings": {
@@ -33721,6 +33721,36 @@
         "MaxInLobby": 0,
         "MaxInRaid": 1,
         "TemplateId": "66d9f1abb16d9aacf5068468"
+      },
+      {
+        "MaxInLobby": 0,
+        "MaxInRaid": 99,
+        "TemplateId": "67409848d0b2f8eb9b034db9"
+      },
+      {
+        "MaxInLobby": 0,
+        "MaxInRaid": 99,
+        "TemplateId": "6740987b89d5e1ddc603f4f0"
+      },
+      {
+        "MaxInLobby": 0,
+        "MaxInRaid": 99,
+        "TemplateId": "67408903268737ef6908d432"
+      },
+      {
+        "MaxInLobby": 0,
+        "MaxInRaid": 99,
+        "TemplateId": "67449b6c89d5e1ddc603f504"
+      },
+      {
+        "MaxInLobby": 0,
+        "MaxInRaid": 99,
+        "TemplateId": "674098588466ebb03408b210"
+      },
+      {
+        "MaxInLobby": 0,
+        "MaxInRaid": 99,
+        "TemplateId": "674078c4a9c9adf0450d59f9"
       }
     ],
     "SavagePlayCooldown": 1500,

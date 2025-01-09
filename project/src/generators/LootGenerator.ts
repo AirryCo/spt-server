@@ -205,7 +205,14 @@ export class LootGenerator {
 
         if (useRewardItemBlacklist) {
             const itemsToAdd = this.itemFilterService.getItemRewardBlacklist();
-            itemBlacklist = new Set([...itemBlacklist, ...itemsToAdd]);
+
+            // Get all items that match the blacklisted types and fold into item blacklist
+            const itemTypeBlacklist = this.itemFilterService.getItemRewardBaseTypeBlacklist();
+            const itemsMatchingTypeBlacklist = Object.values(itemsDb)
+                .filter((templateItem) => this.itemHelper.isOfBaseclasses(templateItem._parent, itemTypeBlacklist))
+                .map((templateItem) => templateItem._id);
+
+            itemBlacklist = new Set([...itemBlacklist, ...itemsToAdd, ...itemsMatchingTypeBlacklist]);
         }
 
         if (!allowBossItems) {

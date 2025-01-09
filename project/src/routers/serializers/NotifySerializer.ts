@@ -15,7 +15,12 @@ export class NotifySerializer extends Serializer {
         super();
     }
 
-    public override async serialize(_sessionID: string, req: IncomingMessage, resp: ServerResponse, _: any): Promise<void> {
+    public override async serialize(
+        _sessionID: string,
+        req: IncomingMessage,
+        resp: ServerResponse,
+        _: any,
+    ): Promise<void> {
         const splittedUrl = req.url.split("/");
         const tmpSessionID = splittedUrl[splittedUrl.length - 1].split("?last_id")[0];
 

@@ -34,6 +34,11 @@ export interface IQuest {
     changeQuestMessageText: string;
     /** "Pmc" or "Scav" */
     side: string;
+    acceptanceAndFinishingSource: string;
+    progressSource: string;
+    rankingModes: string[];
+    gameModes: string[];
+    arenaLocations: string[];
     /** Status of quest to player */
     sptStatus?: QuestStatus;
 }
@@ -160,8 +165,10 @@ export interface IQuestReward {
     loyaltyLevel?: number;
     /** Hideout area id */
     traderId?: string;
+    isEncoded?: boolean;
     unknown?: boolean;
     findInRaid?: boolean;
+    gameMode?: string[];
     /** Game editions whitelisted to get reward */
     availableInGameEditions?: string[];
     /** Game editions blacklisted from getting reward */

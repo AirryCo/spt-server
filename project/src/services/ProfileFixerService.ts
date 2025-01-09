@@ -64,6 +64,7 @@ export class ProfileFixerService {
         this.removeDanglingTaskConditionCounters(pmcProfile);
         this.removeOrphanedQuests(pmcProfile);
         this.verifyQuestProductionUnlocks(pmcProfile);
+        this.fixFavorites(pmcProfile);
 
         if (pmcProfile.Hideout) {
             this.addHideoutEliteSlots(pmcProfile);
@@ -71,6 +72,38 @@ export class ProfileFixerService {
 
         if (pmcProfile.Skills) {
             this.checkForSkillsOverMaxLevel(pmcProfile);
+        }
+    }
+
+    /**
+     * Resolve any dialogue attachments that were accidentally created using the player's equipment ID as
+     * the stash root object ID
+     * @param fullProfile 
+     */
+    public checkForAndFixDialogueAttachments(fullProfile: ISptProfile): void {
+        for (const traderDialogues of Object.values(fullProfile.dialogues)) {
+            for (const message of traderDialogues?.messages) {
+                // Skip any messages without attached items
+                if (!message.items?.data || !message.items?.stash) {
+                    continue;
+                }
+
+                // Skip any messages that don't have a stashId collision with the player's equipment ID
+                if (message.items?.stash !== fullProfile.characters?.pmc?.Inventory?.equipment) {
+                    continue;
+                }
+
+                // Otherwise we need to generate a new unique stash ID for this message's attachments
+                message.items.stash = this.hashUtil.generate();
+                message.items.data = this.itemHelper.adoptOrphanedItems(message.items.stash, message.items.data);
+
+                // Because `adoptOrphanedItems` sets the slotId to `hideout`, we need to re-set it to `main` to work with mail
+                for (const item of message.items.data) {
+                    if (item.slotId === "hideout") {
+                        item.slotId = "main";
+                    }
+                }
+            }
         }
     }
 
@@ -342,6 +375,22 @@ export class ProfileFixerService {
     }
 
     /**
+     * Initial release of SPT 3.10 used an incorrect favorites structure, reformat
+     * the structure to the correct MongoID array structure
+     * @param pmcProfile
+     */
+    protected fixFavorites(pmcProfile: IPmcData): void {
+        const favoritesAsAny = pmcProfile.Inventory?.favoriteItems as any;
+        if (favoritesAsAny) {
+            const correctedFavorites = favoritesAsAny.map((favorite) => {
+                return favorite._id ?? favorite;
+            });
+
+            pmcProfile.Inventory.favoriteItems = correctedFavorites ?? [];
+        }
+    }
+
+    /**
      * If the profile has elite Hideout Managment skill, add the additional slots from globals
      * NOTE: This seems redundant, but we will leave it here just incase.
      * @param pmcProfile profile to add slots to
@@ -349,12 +398,15 @@ export class ProfileFixerService {
     protected addHideoutEliteSlots(pmcProfile: IPmcData): void {
         const globals = this.databaseService.getGlobals();
 
-        const genSlots = pmcProfile.Hideout.Areas.find((x) => x.type === HideoutAreas.GENERATOR).slots.length;
-        const extraGenSlots = globals.config.SkillsSettings.HideoutManagement.EliteSlots.Generator.Slots;
+        const generator = pmcProfile.Hideout.Areas.find((area) => area.type === HideoutAreas.GENERATOR);
+        if (generator) {
+            const genSlots = generator.slots.length;
+            const extraGenSlots = globals.config.SkillsSettings.HideoutManagement.EliteSlots.Generator.Slots;
 
-        if (genSlots < 6 + extraGenSlots) {
-            this.logger.debug("Updating generator area slots to a size of 6 + hideout management skill");
-            this.addEmptyObjectsToHideoutAreaSlots(HideoutAreas.GENERATOR, 6 + extraGenSlots, pmcProfile);
+            if (genSlots < 6 + extraGenSlots) {
+                this.logger.debug("Updating generator area slots to a size of 6 + hideout management skill");
+                this.addEmptyObjectsToHideoutAreaSlots(HideoutAreas.GENERATOR, 6 + extraGenSlots, pmcProfile);
+            }
         }
 
         const waterCollSlots = pmcProfile.Hideout.Areas.find((x) => x.type === HideoutAreas.WATER_COLLECTOR).slots

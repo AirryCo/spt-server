@@ -8288,7 +8288,7 @@
             "associatedEvent": "Promo",
             "maxToSendPlayer": 1
         },
-		"STREAMERLOOT": {
+        "STREAMERLOOT": {
             "items": [
                 {
                     "_id": "665a06ac84c6bb387e0afba2",
@@ -8299,7 +8299,7 @@
                     "parentId": "665a06ac85c6ab387e0afba3",
                     "slotId": "main"
                 },
-				{
+                {
                     "_id": "665a06ac84c6bb387e0afba5",
                     "_tpl": "6694f423909d2322a8073151",
                     "upd": {
@@ -8308,7 +8308,7 @@
                     "parentId": "665a06ac85c6ab387e0afba3",
                     "slotId": "main"
                 },
-				{
+                {
                     "_id": "665a06ac84c6bb387e0afba7",
                     "_tpl": "6694f418c74d8a180f0f78c0",
                     "upd": {
@@ -8317,7 +8317,7 @@
                     "parentId": "665a06ac85c6ab387e0afba3",
                     "slotId": "main"
                 },
-				{
+                {
                     "_id": "665a06ac84c6bb387e0afba8",
                     "_tpl": "6694f4101ae1778e310f4f8e",
                     "upd": {
@@ -8333,7 +8333,7 @@
             "associatedEvent": "Promo",
             "maxToSendPlayer": 5
         },
-		"500CIGARETTES": {
+        "500CIGARETTES": {
             "items": [
                 {
                     "_id": "66f16f2d223efbd43f0c2e2d",
@@ -8351,7 +8351,7 @@
             "associatedEvent": "Promo",
             "maxToSendPlayer": 5
         },
-		"STASHQOL": {
+        "STASHQOL": {
             "items": [
                 {
                     "_id": "66f45162349a5fefd70fd437",
@@ -8362,7 +8362,7 @@
                     "parentId": "665a06ac85c6ab387e0afba3",
                     "slotId": "main"
                 },
-				{
+                {
                     "_id": "66f45162349a5fefd70fd438",
                     "_tpl": "5aafbde786f774389d0cbc0f",
                     "upd": {
@@ -8371,7 +8371,7 @@
                     "parentId": "665a06ac85c6ab387e0afba3",
                     "slotId": "main"
                 },
-				{
+                {
                     "_id": "66f4526d349a5fefd70fd445",
                     "_tpl": "5b7c710788a4506dec015957",
                     "upd": {
@@ -8380,7 +8380,7 @@
                     "parentId": "665a06ac85c6ab387e0afba3",
                     "slotId": "main"
                 },
-				{
+                {
                     "_id": "66f4526d349a5fefd70fd444",
                     "_tpl": "5c0a840b86f7742ffa4f2482",
                     "upd": {
@@ -8389,7 +8389,7 @@
                     "parentId": "665a06ac85c6ab387e0afba3",
                     "slotId": "main"
                 },
-				{
+                {
                     "_id": "66f4526d349a5fefd70fd443",
                     "_tpl": "59fb042886f7746c5005a7b2",
                     "upd": {
@@ -8398,7 +8398,7 @@
                     "parentId": "665a06ac85c6ab387e0afba3",
                     "slotId": "main"
                 },
-				{
+                {
                     "_id": "66f4526d349a5fefd70fd442",
                     "_tpl": "59fb023c86f7746d0d4b423c",
                     "upd": {
@@ -8407,7 +8407,7 @@
                     "parentId": "665a06ac85c6ab387e0afba3",
                     "slotId": "main"
                 },
-				{
+                {
                     "_id": "66f45257349a5fefd70fd441",
                     "_tpl": "5aafbcd986f7745e590fff23",
                     "upd": {
@@ -8416,7 +8416,7 @@
                     "parentId": "665a06ac85c6ab387e0afba3",
                     "slotId": "main"
                 },
-				{
+                {
                     "_id": "66f45257349a5fefd70fd440",
                     "_tpl": "5c093db286f7740a1b2617e3",
                     "upd": {
@@ -8425,7 +8425,7 @@
                     "parentId": "665a06ac85c6ab387e0afba3",
                     "slotId": "main"
                 },
-				{
+                {
                     "_id": "66f45257349a5fefd70fd43f",
                     "_tpl": "5c127c4486f7745625356c13",
                     "upd": {
@@ -8434,7 +8434,7 @@
                     "parentId": "665a06ac85c6ab387e0afba3",
                     "slotId": "main"
                 },
-				{
+                {
                     "_id": "66f45257349a5fefd70fd43e",
                     "_tpl": "590c60fc86f77412b13fddcf",
                     "upd": {
@@ -8443,7 +8443,7 @@
                     "parentId": "665a06ac85c6ab387e0afba3",
                     "slotId": "main"
                 },
-				{
+                {
                     "_id": "66f45257349a5fefd70fd43d",
                     "_tpl": "590c60fc86f77412b13fddcf",
                     "upd": {
@@ -8452,7 +8452,7 @@
                     "parentId": "665a06ac85c6ab387e0afba3",
                     "slotId": "main"
                 },
-				{
+                {
                     "_id": "66f45162349a5fefd70fd43b",
                     "_tpl": "59fafd4b86f7745ca07e1232",
                     "upd": {
@@ -8461,7 +8461,7 @@
                     "parentId": "665a06ac85c6ab387e0afba3",
                     "slotId": "main"
                 },
-				{
+                {
                     "_id": "66f45162349a5fefd70fd43a",
                     "_tpl": "5c093e3486f77430cb02e593",
                     "upd": {
@@ -8470,7 +8470,7 @@
                     "parentId": "665a06ac85c6ab387e0afba3",
                     "slotId": "main"
                 },
-				{
+                {
                     "_id": "66f45162349a5fefd70fd439",
                     "_tpl": "5d235bb686f77443f4331278",
                     "upd": {
@@ -8486,7 +8486,7 @@
             "associatedEvent": "Promo",
             "maxToSendPlayer": 2
         },
-		"SPLASH": {
+        "SPLASH": {
             "items": [
                 {
                     "_id": "66f6618d8d88ae22c907775b",
@@ -8497,7 +8497,7 @@
                     "parentId": "665a06ac85c6ab387e0afba3",
                     "slotId": "main"
                 },
-				{
+                {
                     "_id": "66f6618d8d88ae22c907775c",
                     "_tpl": "66d98233302686954b0c6f81",
                     "upd": {
@@ -8506,7 +8506,7 @@
                     "parentId": "665a06ac85c6ab387e0afba3",
                     "slotId": "main"
                 },
-				{
+                {
                     "_id": "66f6618d8d88ae22c907775d",
                     "_tpl": "66d98233302686954b0c6f81",
                     "upd": {
