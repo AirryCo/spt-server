@@ -64,6 +64,7 @@ export class ProfileFixerService {
         this.removeDanglingTaskConditionCounters(pmcProfile);
         this.removeOrphanedQuests(pmcProfile);
         this.verifyQuestProductionUnlocks(pmcProfile);
+        this.fixFavorites(pmcProfile);
 
         if (pmcProfile.Hideout) {
             this.addHideoutEliteSlots(pmcProfile);
@@ -287,9 +288,9 @@ export class ProfileFixerService {
             }
 
             // For started or successful quests, check for unlocks in the `Started` rewards
-            if (profileQuest.status == QuestStatus.Started || profileQuest.status == QuestStatus.Success) {
+            if (profileQuest.status === QuestStatus.Started || profileQuest.status === QuestStatus.Success) {
                 const productionRewards = quest.rewards.Started?.filter(
-                    (reward) => reward.type == QuestRewardType.PRODUCTIONS_SCHEME,
+                    (reward) => reward.type === QuestRewardType.PRODUCTIONS_SCHEME,
                 );
                 productionRewards?.forEach((reward) => this.verifyQuestProductionUnlock(pmcProfile, reward, quest));
             }
@@ -297,7 +298,7 @@ export class ProfileFixerService {
             // For successful quests, check for unlocks in the `Success` rewards
             if (profileQuest.status == QuestStatus.Success) {
                 const productionRewards = quest.rewards.Success?.filter(
-                    (reward) => reward.type == QuestRewardType.PRODUCTIONS_SCHEME,
+                    (reward) => reward.type === QuestRewardType.PRODUCTIONS_SCHEME,
                 );
                 productionRewards?.forEach((reward) => this.verifyQuestProductionUnlock(pmcProfile, reward, quest));
             }
@@ -342,6 +343,22 @@ export class ProfileFixerService {
     }
 
     /**
+     * Initial release of SPT 3.10 used an incorrect favorites structure, reformat
+     * the structure to the correct MongoID array structure
+     * @param pmcProfile
+     */
+    protected fixFavorites(pmcProfile: IPmcData): void {
+        const favoritesAsAny = pmcProfile.Inventory?.favoriteItems as any;
+        if (favoritesAsAny) {
+            const correctedFavorites = favoritesAsAny.map((favorite) => {
+                return favorite._id ?? favorite;
+            });
+
+            pmcProfile.Inventory.favoriteItems = correctedFavorites ?? [];
+        }
+    }
+
+    /**
      * If the profile has elite Hideout Managment skill, add the additional slots from globals
      * NOTE: This seems redundant, but we will leave it here just incase.
      * @param pmcProfile profile to add slots to
@@ -349,12 +366,15 @@ export class ProfileFixerService {
     protected addHideoutEliteSlots(pmcProfile: IPmcData): void {
         const globals = this.databaseService.getGlobals();
 
-        const genSlots = pmcProfile.Hideout.Areas.find((x) => x.type === HideoutAreas.GENERATOR).slots.length;
-        const extraGenSlots = globals.config.SkillsSettings.HideoutManagement.EliteSlots.Generator.Slots;
+        const generator = pmcProfile.Hideout.Areas.find((area) => area.type === HideoutAreas.GENERATOR);
+        if (generator) {
+            const genSlots = generator.slots.length;
+            const extraGenSlots = globals.config.SkillsSettings.HideoutManagement.EliteSlots.Generator.Slots;
 
-        if (genSlots < 6 + extraGenSlots) {
-            this.logger.debug("Updating generator area slots to a size of 6 + hideout management skill");
-            this.addEmptyObjectsToHideoutAreaSlots(HideoutAreas.GENERATOR, 6 + extraGenSlots, pmcProfile);
+            if (genSlots < 6 + extraGenSlots) {
+                this.logger.debug("Updating generator area slots to a size of 6 + hideout management skill");
+                this.addEmptyObjectsToHideoutAreaSlots(HideoutAreas.GENERATOR, 6 + extraGenSlots, pmcProfile);
+            }
         }
 
         const waterCollSlots = pmcProfile.Hideout.Areas.find((x) => x.type === HideoutAreas.WATER_COLLECTOR).slots

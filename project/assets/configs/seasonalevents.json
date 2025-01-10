@@ -7766,7 +7766,7 @@
 			"enabled": true,
             "name": "christmas",
             "type": "CHRISTMAS",
-            "startDay": "7",
+            "startDay": "12",
             "startMonth": "12",
             "endDay": "31",
             "endMonth": "12",

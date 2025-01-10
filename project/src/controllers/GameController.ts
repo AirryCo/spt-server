@@ -117,6 +117,11 @@ export class GameController {
                 fullProfile.spt.migrations = {};
             }
 
+            // Track one time use cultist rewards
+            if (typeof fullProfile.spt.cultistRewards === "undefined") {
+                fullProfile.spt.cultistRewards = new Map();
+            }
+
             //3.9 migrations
             if (fullProfile.spt.version.includes("3.9.") && !fullProfile.spt.migrations["39x"]) {
                 // Check every item has a valid mongoid
