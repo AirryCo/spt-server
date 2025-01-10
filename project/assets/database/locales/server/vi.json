@@ -1,4 +1,5 @@
 {
+    "assort-missing_loyalty_level_object": "stripQuestAssort(): Phân loại dành cho thương nhân {{traderId}} không chứa vật phẩm loyal_level_items, hủy bỏ nhiệm vụ phân loại",
     "bot-generation_failed": "tạo bot không thành công, kiểm tra log của server để biết thêm chi tiết",
     "bot-no_ammo_found_in_bot_json": "Không tìm được đạn cho loại bot: %s",
     "bot-no_bot_cap_found_for_location": "Không tìm thấy giới hạn bot của địa điểm này cho bot: %s, sử dụng giới hạn mặc định",

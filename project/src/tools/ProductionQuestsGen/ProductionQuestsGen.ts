@@ -13,6 +13,7 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { OnLoad } from "@spt/di/OnLoad";
+import { IHideoutProduction, IRequirement } from "@spt/models/eft/hideout/IHideoutProduction";
 import { QuestRewardType } from "@spt/models/enums/QuestRewardType";
 import { ILogger } from "@spt/models/spt/utils/ILogger";
 import { DatabaseServer } from "@spt/servers/DatabaseServer";
@@ -28,6 +29,7 @@ export class ProductionQuestsGen {
         "66140c4a9688754de10dac07", // Old event quest production "Documents with decrypted data"
         "661e6c26750e453380391f55", // Old event quest production "Documents with decrypted data"
         "660c2dbaa2a92e70cc074863", // Old event quest production "Decrypted flash drive"
+        "67093210d514d26f8408612b", // Old event quest production "TG-Vi-24 true vaccine"
     ];
 
     constructor(
@@ -89,7 +91,11 @@ export class ProductionQuestsGen {
         }
     }
 
-    private isValidQuestProduction(production, questProductionOutputs, questComplete): boolean {
+    private isValidQuestProduction(
+        production: IHideoutProduction,
+        questProductionOutputs,
+        questComplete: IRequirement,
+    ): boolean {
         // A lot of error handling for edge cases
         if (questProductionOutputs.length === 0) {
             this.logger.error(

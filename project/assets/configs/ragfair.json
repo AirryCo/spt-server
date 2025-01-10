@@ -39,7 +39,7 @@
             "itemCountMax": 3,
             "priceRangeVariancePercent": 15,
             "minRoubleCostToBecomeBarter": 20000,
-			"makeSingleStackOnly": true,
+            "makeSingleStackOnly": true,
             "itemTypeBlacklist": [
                 "55802f4a4bdc2ddb688b4569",
                 "55802f3e4bdc2de7118b4584",
@@ -88,11 +88,11 @@
                 "max": 0.96
             }
         },
-		"ignoreQualityPriceVarianceBlacklist": [
-			"59e3577886f774176a362503",
-			"5d02797c86f774203f38e30a",
-			"5ab8e79e86f7742d8b372e78"
-		],
+        "ignoreQualityPriceVarianceBlacklist": [
+            "59e3577886f774176a362503",
+            "5d02797c86f774203f38e30a",
+            "5ab8e79e86f7742d8b372e78"
+        ],
         "showDefaultPresetsOnly": true,
         "endTimeSeconds": {
             "min": 360,
@@ -366,14 +366,14 @@
             "57347cd0245977445a2d6ff1": 30,
 
             "5d1b385e86f774252167b98a": 30,
-			
-			"62a0a124de7ac81993580542": 40,
-			"5e42c81886f7742a01529f57": 40,
-			"5d1b371186f774253763a656": 35,
-			"5d1b36a186f7742523398433": 35,
-			"5e2af29386f7746d4159f077": 35,
-			"5d1b3a5d86f774252167ba22": 35,
-			"59e3577886f774176a362503": 35
+
+            "62a0a124de7ac81993580542": 40,
+            "5e42c81886f7742a01529f57": 40,
+            "5d1b371186f774253763a656": 35,
+            "5d1b36a186f7742523398433": 35,
+            "5e2af29386f7746d4159f077": 35,
+            "5d1b3a5d86f774252167ba22": 35,
+            "59e3577886f774176a362503": 35
         },
         "unlocksType": {
             "57864a3d24597754843f8721": 35,

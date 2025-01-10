@@ -138,30 +138,52 @@ export class CircleOfCultistService {
 
         // Ensure rewards fit into container
         const containerGrid = this.inventoryHelper.getContainerSlotMap(cultistStashDbItem[1]._id);
-        const canAddToContainer = this.inventoryHelper.canPlaceItemsInContainer(
-            this.cloner.clone(containerGrid), // MUST clone grid before passing in as function modifies grid
-            rewards,
-        );
-
-        if (canAddToContainer) {
-            for (const itemToAdd of rewards) {
-                this.inventoryHelper.placeItemInContainer(
-                    containerGrid,
-                    itemToAdd,
-                    cultistCircleStashId,
-                    CircleOfCultistService.circleOfCultistSlotId,
-                );
-                // Add item + mods to output and profile inventory
-                output.profileChanges[sessionId].items.new.push(...itemToAdd);
-                pmcData.Inventory.items.push(...itemToAdd);
-            }
-        } else {
-            this.logger.error(
-                `Unable to fit all: ${rewards.length} reward items into sacrifice grid, nothing will be returned (rewards so valuable cultists stole it)`,
-            );
-        }
+        this.addRewardsToCircleContainer(sessionId, pmcData, rewards, containerGrid, cultistCircleStashId, output);
 
         return output;
+    }
+
+    /**
+     * Attempt to add all rewards to cultist circle, if they dont fit remove one and try again until they fit
+     * @param sessionId Session id
+     * @param pmcData Player profile
+     * @param rewards Rewards to send to player
+     * @param containerGrid Cultist grid to add rewards to
+     * @param cultistCircleStashId Stash id
+     * @param output Client output
+     */
+    protected addRewardsToCircleContainer(
+        sessionId: string,
+        pmcData: IPmcData,
+        rewards: IItem[][],
+        containerGrid: number[][],
+        cultistCircleStashId: string,
+        output: IItemEventRouterResponse,
+    ): void {
+        let canAddToContainer = false;
+        while (!canAddToContainer && rewards.length > 0) {
+            canAddToContainer = this.inventoryHelper.canPlaceItemsInContainer(
+                this.cloner.clone(containerGrid), // MUST clone grid before passing in as function modifies grid
+                rewards,
+            );
+
+            // Doesn't fit, remove one item
+            if (!canAddToContainer) {
+                rewards.pop();
+            }
+        }
+
+        for (const itemToAdd of rewards) {
+            this.inventoryHelper.placeItemInContainer(
+                containerGrid,
+                itemToAdd,
+                cultistCircleStashId,
+                CircleOfCultistService.circleOfCultistSlotId,
+            );
+            // Add item + mods to output and profile inventory
+            output.profileChanges[sessionId].items.new.push(...itemToAdd);
+            pmcData.Inventory.items.push(...itemToAdd);
+        }
     }
 
     /**
@@ -378,8 +400,7 @@ export class CircleOfCultistService {
                 }
 
                 // Ensure preset has unique ids and is cloned so we don't alter the preset data stored in memory
-                const presetAndMods: IItem[] = this.itemHelper.replaceIDs(defaultPreset._items);
-
+                const presetAndMods = this.itemHelper.replaceIDs(defaultPreset._items);
                 this.itemHelper.remapRootItemId(presetAndMods);
 
                 rewardItemCount++;
@@ -396,16 +417,24 @@ export class CircleOfCultistService {
             );
 
             // Not a weapon/armor, standard single item
-            const rewardItem: IItem = {
-                _id: this.hashUtil.generate(),
-                _tpl: randomItemTplFromPool,
-                parentId: cultistCircleStashId,
-                slotId: CircleOfCultistService.circleOfCultistSlotId,
-                upd: {
-                    StackObjectsCount: stackSize,
-                    SpawnedInSession: true,
+            const rewardItem: IItem[] = [
+                {
+                    _id: this.hashUtil.generate(),
+                    _tpl: randomItemTplFromPool,
+                    parentId: cultistCircleStashId,
+                    slotId: CircleOfCultistService.circleOfCultistSlotId,
+                    upd: {
+                        StackObjectsCount: stackSize,
+                        SpawnedInSession: true,
+                    },
                 },
-            };
+            ];
+
+            // Edge case - item is ammo container and needs cartridges added
+            if (this.itemHelper.isOfBaseclass(randomItemTplFromPool, BaseClasses.AMMO_BOX)) {
+                const itemDetails = this.itemHelper.getItem(randomItemTplFromPool)[1];
+                this.itemHelper.addCartridgesToAmmoBox(rewardItem, itemDetails);
+            }
 
             // Increment price of rewards to give to player + add to reward array
             rewardItemCount++;
@@ -413,7 +442,7 @@ export class CircleOfCultistService {
             const itemPrice = singleItemPrice * stackSize;
             totalRewardCost += itemPrice;
 
-            rewards.push([rewardItem]);
+            rewards.push(rewardItem);
         }
 
         return rewards;
@@ -454,8 +483,7 @@ export class CircleOfCultistService {
                 }
 
                 // Ensure preset has unique ids and is cloned so we don't alter the preset data stored in memory
-                const presetAndMods: IItem[] = this.itemHelper.replaceIDs(defaultPreset._items);
-
+                const presetAndMods = this.itemHelper.replaceIDs(defaultPreset._items);
                 this.itemHelper.remapRootItemId(presetAndMods);
 
                 rewards.push(presetAndMods);
@@ -465,17 +493,26 @@ export class CircleOfCultistService {
 
             // 'Normal' item, non-preset
             const stackSize = this.getDirectRewardBaseTypeStackSize(rewardTpl);
-            const rewardItem: IItem = {
-                _id: this.hashUtil.generate(),
-                _tpl: rewardTpl,
-                parentId: cultistCircleStashId,
-                slotId: CircleOfCultistService.circleOfCultistSlotId,
-                upd: {
-                    StackObjectsCount: stackSize,
-                    SpawnedInSession: true,
+            const rewardItem: IItem[] = [
+                {
+                    _id: this.hashUtil.generate(),
+                    _tpl: rewardTpl,
+                    parentId: cultistCircleStashId,
+                    slotId: CircleOfCultistService.circleOfCultistSlotId,
+                    upd: {
+                        StackObjectsCount: stackSize,
+                        SpawnedInSession: true,
+                    },
                 },
-            };
-            rewards.push([rewardItem]);
+            ];
+
+            // Edge case - item is ammo container and needs cartridges added
+            if (this.itemHelper.isOfBaseclass(rewardTpl, BaseClasses.AMMO_BOX)) {
+                const itemDetails = this.itemHelper.getItem(rewardTpl)[1];
+                this.itemHelper.addCartridgesToAmmoBox(rewardItem, itemDetails);
+            }
+
+            rewards.push(rewardItem);
         }
         // Direct reward is not repeatable, flag collected in profile
         if (!directReward.repeatable) {
@@ -619,13 +656,21 @@ export class CircleOfCultistService {
     ): string[] {
         const rewardPool = new Set<string>();
         const hideoutDbData = this.databaseService.getHideout();
+        const itemsDb = this.databaseService.getItems();
 
-        // Merge reward item blacklist and boss item blacklist with cultist circle blacklist from config
-        const itemRewardBlacklist = [
+        // Get all items that match the blacklisted types and fold into item blacklist below
+        const itemTypeBlacklist = this.itemFilterService.getItemRewardBaseTypeBlacklist();
+        const itemsMatchingTypeBlacklist = Object.values(itemsDb)
+            .filter((templateItem) => this.itemHelper.isOfBaseclasses(templateItem._parent, itemTypeBlacklist))
+            .map((templateItem) => templateItem._id);
+
+        // Create set of unique values to ignore
+        const itemRewardBlacklist = new Set([
             ...this.seasonalEventService.getInactiveSeasonalEventItems(),
             ...this.itemFilterService.getItemRewardBlacklist(),
             ...cultistCircleConfig.rewardItemBlacklist,
-        ];
+            ...itemsMatchingTypeBlacklist,
+        ]);
 
         // Hideout and task rewards are ONLY if the bonus is active
         switch (craftingInfo.rewardType) {
@@ -652,7 +697,7 @@ export class CircleOfCultistService {
         // Add custom rewards from config
         if (cultistCircleConfig.additionalRewardItemPool.length > 0) {
             for (const additionalReward of cultistCircleConfig.additionalRewardItemPool) {
-                if (itemRewardBlacklist.includes(additionalReward)) {
+                if (itemRewardBlacklist.has(additionalReward)) {
                     continue;
                 }
 
@@ -672,7 +717,7 @@ export class CircleOfCultistService {
      */
     protected addTaskItemRequirementsToRewardPool(
         pmcData: IPmcData,
-        itemRewardBlacklist: string[],
+        itemRewardBlacklist: Set<string>,
         rewardPool: Set<string>,
     ): void {
         const activeTasks = pmcData.Quests.filter((quest) => quest.status === QuestStatus.Started);
@@ -683,7 +728,7 @@ export class CircleOfCultistService {
             );
             for (const condition of handoverConditions) {
                 for (const neededItem of condition.target) {
-                    if (itemRewardBlacklist.includes(neededItem) || !this.itemHelper.isValidItem(neededItem)) {
+                    if (itemRewardBlacklist.has(neededItem) || !this.itemHelper.isValidItem(neededItem)) {
                         continue;
                     }
                     this.logger.debug(`Added Task Loot: ${this.itemHelper.getItemName(neededItem)}`);
@@ -703,7 +748,7 @@ export class CircleOfCultistService {
     protected addHideoutUpgradeRequirementsToRewardPool(
         hideoutDbData: IHideout,
         pmcData: IPmcData,
-        itemRewardBlacklist: string[],
+        itemRewardBlacklist: Set<string>,
         rewardPool: Set<string>,
     ): void {
         const dbAreas = hideoutDbData.areas;
@@ -719,7 +764,7 @@ export class CircleOfCultistService {
                 const itemRequirements = this.getItemRequirements(nextStageDbData.requirements);
                 for (const rewardToAdd of itemRequirements) {
                     if (
-                        itemRewardBlacklist.includes(rewardToAdd.templateId) ||
+                        itemRewardBlacklist.has(rewardToAdd.templateId) ||
                         !this.itemHelper.isValidItem(rewardToAdd.templateId)
                     ) {
                         // Dont reward items sacrificed
@@ -751,30 +796,26 @@ export class CircleOfCultistService {
     /**
      * Get array of random reward items
      * @param rewardPool Reward pool to add to
-     * @param itemRewardBlacklist Reward Blacklist
+     * @param itemRewardBlacklist Item tpls to ignore
      * @param itemsShouldBeHighValue Should these items meet the valuable threshold
-     * @returns rewardPool
+     * @returns Set of item tpls
      */
     protected generateRandomisedItemsAndAddToRewardPool(
         rewardPool: Set<string>,
-        itemRewardBlacklist: string[],
+        itemRewardBlacklist: Set<string>,
         itemsShouldBeHighValue: boolean,
     ): Set<string> {
         const allItems = this.itemHelper.getItems();
         let currentItemCount = 0;
         let attempts = 0;
-        // currentItemCount var will look for the correct number of items, attempts var will keep this from never stopping if the highValueThreshold is too high
+        // `currentItemCount` var will look for the correct number of items, `attempts` var will keep this from never stopping if the highValueThreshold is too high
         while (
             currentItemCount < this.hideoutConfig.cultistCircle.maxRewardItemCount + 2 &&
             attempts < allItems.length
         ) {
             attempts++;
             const randomItem = this.randomUtil.getArrayValue(allItems);
-            if (
-                itemRewardBlacklist.includes(randomItem._id) ||
-                itemRewardBlacklist.includes(randomItem._parent) ||
-                !this.itemHelper.isValidItem(randomItem._id)
-            ) {
+            if (itemRewardBlacklist.has(randomItem._id) || !this.itemHelper.isValidItem(randomItem._id)) {
                 continue;
             }
 

@@ -4,11 +4,11 @@
         "weaponArmor": 4,
         "foodMedical": 1,
         "barter": 1,
-		"radar": 0
+        "radar": 0
     },
     "loot": {
         "mixed": {
-			"icon": "Common",
+            "icon": "Common",
             "weaponPresetCount": {
                 "min": 3,
                 "max": 5
@@ -110,7 +110,7 @@
             "allowBossItems": false
         },
         "weaponArmor": {
-			"icon": "Weapon",
+            "icon": "Weapon",
             "weaponPresetCount": {
                 "min": 6,
                 "max": 8
@@ -183,7 +183,7 @@
             "allowBossItems": false
         },
         "foodMedical": {
-			"icon": "Medical",
+            "icon": "Medical",
             "weaponPresetCount": {
                 "min": 0,
                 "max": 0
@@ -264,7 +264,7 @@
             "allowBossItems": false
         },
         "barter": {
-			"icon": "Supply",
+            "icon": "Supply",
             "weaponPresetCount": {
                 "min": 0,
                 "max": 0
@@ -345,9 +345,9 @@
             "armorLevelWhitelist": [0],
             "allowBossItems": false
         },
-		"radar": {
-			"icon": "Supply",
-			"weaponPresetCount": {
+        "radar": {
+            "icon": "Supply",
+            "weaponPresetCount": {
                 "min": 0,
                 "max": 0
             },
@@ -355,28 +355,28 @@
                 "min": 0,
                 "max": 0
             },
-			"itemCount": {
+            "itemCount": {
                 "min": 0,
                 "max": 0
             },
-			"weaponCrateCount": {
+            "weaponCrateCount": {
                 "min": 0,
                 "max": 0
             },
-			"itemBlacklist": [],
-			"itemTypeWhitelist": [],
-			"itemLimits": {},
-			"itemStackLimits": {},
-			"armorLevelWhitelist": [],
-			"allowBossItems": false,
-			"useForcedLoot": true,
-			"forcedLoot": {
-				"66d9f7256916142b3b02276e": {"min": 2, "max": 4 }
-			}
-		}
+            "itemBlacklist": [],
+            "itemTypeWhitelist": [],
+            "itemLimits": {},
+            "itemStackLimits": {},
+            "armorLevelWhitelist": [],
+            "allowBossItems": false,
+            "useForcedLoot": true,
+            "forcedLoot": {
+                "66d9f7256916142b3b02276e": { "min": 2, "max": 4 }
+            }
+        }
     },
-	"customAirdropMapping": {
-		"66da1b49099cf6adcc07a36b": "radar",
-		"66da1b546916142b3b022777": "radar"
-	}
+    "customAirdropMapping": {
+        "66da1b49099cf6adcc07a36b": "radar",
+        "66da1b546916142b3b022777": "radar"
+    }
 }

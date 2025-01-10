@@ -94,7 +94,7 @@ const updateBuildProperties = async () => {
         res.entries,
         1,
         1033,
-        iconFile.icons.map((item) => item.data)
+        iconFile.icons.map((item) => item.data),
     );
 
     const vi = ResEdit.Resource.VersionInfo.fromEntries(res.entries)[0];
@@ -106,7 +106,7 @@ const updateBuildProperties = async () => {
             FileDescription: manifest.description,
             CompanyName: manifest.name,
             LegalCopyright: manifest.license,
-        }
+        },
     );
     vi.removeStringValue({ lang: 1033, codepage: 1200 }, "OriginalFilename");
     vi.removeStringValue({ lang: 1033, codepage: 1200 }, "InternalName");
@@ -189,13 +189,7 @@ const createHashFile = async () => {
 };
 
 // Combine all tasks into addAssets
-const addAssets = gulp.series(
-    copyAssets,
-    downloadPnpm,
-    copyLicense,
-    writeBuildDataToJSON,
-    createHashFile
-);
+const addAssets = gulp.series(copyAssets, downloadPnpm, copyLicense, writeBuildDataToJSON, createHashFile);
 
 /**
  * Cleans the build directory.
@@ -333,7 +327,7 @@ gulp.task("build:bleedingmods", build("bleedingmods"));
 gulp.task("run:build", async () => await exec(serverExeName, { stdio, cwd: buildDir }));
 gulp.task(
     "run:debug",
-    async () => await exec("ts-node-dev -r tsconfig-paths/register src/ide/TestEntry.ts", { stdio })
+    async () => await exec("ts-node-dev -r tsconfig-paths/register src/ide/TestEntry.ts", { stdio }),
 );
 gulp.task("run:profiler", async () => {
     await cleanCompiled();

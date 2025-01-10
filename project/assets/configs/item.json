@@ -48,10 +48,12 @@
         "5ae089fb5acfc408fb13989b",
         "6241c2c2117ad530666a5108",
         "5580239d4bdc2de7118b4583",
-		"66da1b49099cf6adcc07a36b",
-		"66da1b546916142b3b022777",
-		"670ad7f1ad195290cd00da7a"
+        "66da1b49099cf6adcc07a36b",
+        "66da1b546916142b3b022777",
+        "670ad7f1ad195290cd00da7a",
+		"66ec2aa6daf127599c0c31f1"
     ],
+    "rewardItemTypeBlacklist": ["65649eb40bf0ed77b8044453"],
     "lootableItemBlacklist": ["660bbc47c38b837877075e47", "660bc341c38b837877075e4c"],
     "rewardItemBlacklist": [
         "58ac60eb86f77401897560ff",
@@ -102,18 +104,18 @@
         "6662ea05f6259762c56f3189",
         "6638a5474e92f038531e210e",
         "65ddcc9cfa85b9f17d0dfb07",
-		"6331ba83f2ab4f3f09502983",
-		"6331bb0d1aa9f42b804997a6",
-		"66d9f7e7099cf6adcc07a369",
-		"6655e35b6bc645cb7b059912",
-		"66d9f7256916142b3b02276e",
-		"671d85439ae8365d69117ba6",
-		"671d8617a3e45c1f5908278c",
-		"670e8eab8c1bb0e5a7075acf",
-		"671d8ac8a3e45c1f59082799",
-		"671d8b38b769f0d88c0950f8",
-		"671d8b8c0959c721a50ca838",
-		"660bc341c38b837877075e4c"
+        "6331ba83f2ab4f3f09502983",
+        "6331bb0d1aa9f42b804997a6",
+        "66d9f7e7099cf6adcc07a369",
+        "6655e35b6bc645cb7b059912",
+        "66d9f7256916142b3b02276e",
+        "671d85439ae8365d69117ba6",
+        "671d8617a3e45c1f5908278c",
+        "670e8eab8c1bb0e5a7075acf",
+        "671d8ac8a3e45c1f59082799",
+        "671d8b38b769f0d88c0950f8",
+        "671d8b8c0959c721a50ca838",
+        "660bc341c38b837877075e4c"
     ],
     "bossItems": [
         "6275303a9f372d6ea97f9ec7",
@@ -156,8 +158,8 @@
         "5c1a1e3f2e221602b66cc4c2"
     ],
     "handbookPriceOverride": {
-        "63a8970d7108f713591149f5": {"price": 5000, "parentId": "5b5f6fa186f77409407a7eb7"},
-        "63a898a328e385334e0640a5": {"price": 10000, "parentId": "5b5f6fa186f77409407a7eb7"},
-        "63a897c6b1ff6e29734fcc95": {"price": 20000, "parentId": "5b5f6fa186f77409407a7eb7"}
+        "63a8970d7108f713591149f5": { "price": 5000, "parentId": "5b5f6fa186f77409407a7eb7" },
+        "63a898a328e385334e0640a5": { "price": 10000, "parentId": "5b5f6fa186f77409407a7eb7" },
+        "63a897c6b1ff6e29734fcc95": { "price": 20000, "parentId": "5b5f6fa186f77409407a7eb7" }
     }
 }

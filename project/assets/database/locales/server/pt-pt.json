@@ -57,6 +57,7 @@
     "dialog-missing_item_template": "Não foi possível encontrar o item tpl {{tpl}} na bd, não foi possível enviar a mensagem do tipo {{type}}, ignorando",
     "event-unhandled_event": "[EVENTO NÃO TRATADO] %s",
     "executing_startup_callbacks": "Servidor: executando chamadas de inicialização...",
+    "fence-ammo_not_found_in_db": "Munição: %s não é um item válido",
     "fence-unable_to_find_assort_by_id": "Não foi possível encontrar o item com id: %s no assort do Fence",
     "fixer-updated_pockets": "Item 'pocket' atualizado para nova versão 18876 com 3 novos slots especiais",
     "gameevent-bot_not_found": "addEventGearToScavs() - não foi possível encontrar bot do tipo %s na base de dados, ignorando",

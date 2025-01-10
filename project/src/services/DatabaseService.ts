@@ -331,19 +331,18 @@ export class DatabaseService {
      */
     public validateDatabase(): void {
         const start = performance.now();
-        
-        this.isDataValid = 
-            this.validateTable(this.getQuests(), 'quest') &&
-            this.validateTable(this.getTraders(), 'trader') &&
-            this.validateTable(this.getItems(), 'item') &&
-            this.validateTable(this.getCustomization(), 'customization');
 
-        if (!this.isDataValid)
-        {
+        this.isDataValid =
+            this.validateTable(this.getQuests(), "quest") &&
+            this.validateTable(this.getTraders(), "trader") &&
+            this.validateTable(this.getItems(), "item") &&
+            this.validateTable(this.getCustomization(), "customization");
+
+        if (!this.isDataValid) {
             this.logger.error(this.localisationService.getText("database-invalid_data"));
         }
 
-        const validateTime = performance.now() - start
+        const validateTime = performance.now() - start;
         this.logger.debug(`ID validation took: ${validateTime.toFixed(2)}ms`);
     }
 
@@ -353,12 +352,9 @@ export class DatabaseService {
      * @param tableType The type of table, used in output message
      * @returns True if the table only contains valid data
      */
-    private validateTable(table: Record<string, any>, tableType: string): boolean
-    {
-        for (const tableId in table)
-        {
-            if (!this.hashUtil.isValidMongoId(tableId))
-            {
+    private validateTable(table: Record<string, any>, tableType: string): boolean {
+        for (const tableId in table) {
+            if (!this.hashUtil.isValidMongoId(tableId)) {
                 this.logger.error(`Invalid ${tableType} ID: '${tableId}'`);
                 return false;
             }

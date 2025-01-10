@@ -1,6 +1,6 @@
 {
     "projectName": "AirryCo's SPT Linux",
-    "sptVersion": "3.10.2",
+    "sptVersion": "3.10.3",
     "compatibleTarkovVersion": "0.15.5.33420",
     "serverName": "SPT Server",
     "profileSaveIntervalSeconds": 15,
@@ -16,10 +16,10 @@
     "fixes": {
         "fixShotgunDispersion": true,
         "removeModItemsFromProfile": false,
-		"removeInvalidTradersFromProfile": false,
+        "removeInvalidTradersFromProfile": false,
         "fixProfileBreakingInventoryItemIssues": false
     },
-	"survey": {
+    "survey": {
         "locale": {
             "en": {
                 "question_1": "How off-topic is general chat on the SPT discord?",
@@ -57,98 +57,116 @@
                 "textLocaleKey": "farewell"
             },
             "pages": [[0, 1]],
-            "questions": [{
+            "questions": [
+                {
                     "id": 0,
                     "sortIndex": 1,
                     "titleLocaleKey": "question_1",
                     "hintLocaleKey": "",
                     "answerLimit": 10,
                     "answerType": "MultiOption",
-                    "answers": [{
+                    "answers": [
+                        {
                             "id": 0,
                             "questionId": 0,
                             "sortIndex": 1,
                             "localeKey": "question_1_answer_1"
-                        }, {
+                        },
+                        {
                             "id": 1,
                             "questionId": 0,
                             "sortIndex": 1,
                             "localeKey": "question_1_answer_2"
-                        }, {
+                        },
+                        {
                             "id": 2,
                             "questionId": 0,
                             "sortIndex": 1,
                             "localeKey": "question_1_answer_3"
-                        }, {
+                        },
+                        {
                             "id": 3,
                             "questionId": 0,
                             "sortIndex": 1,
                             "localeKey": "question_1_answer_4"
-                        }, {
+                        },
+                        {
                             "id": 4,
                             "questionId": 0,
                             "sortIndex": 1,
                             "localeKey": "question_1_answer_5"
-                        }, {
+                        },
+                        {
                             "id": 5,
                             "questionId": 0,
                             "sortIndex": 1,
                             "localeKey": "question_1_answer_6"
-                        }, {
+                        },
+                        {
                             "id": 6,
                             "questionId": 0,
                             "sortIndex": 1,
                             "localeKey": "question_1_answer_7"
-                        }, {
+                        },
+                        {
                             "id": 7,
                             "questionId": 0,
                             "sortIndex": 1,
                             "localeKey": "question_1_answer_8"
-                        }, {
+                        },
+                        {
                             "id": 8,
                             "questionId": 0,
                             "sortIndex": 1,
                             "localeKey": "question_1_answer_9"
-                        }, {
+                        },
+                        {
                             "id": 9,
                             "questionId": 0,
                             "sortIndex": 1,
                             "localeKey": "question_1_answer_10"
-                        }, {
+                        },
+                        {
                             "id": 10,
                             "questionId": 0,
                             "sortIndex": 1,
                             "localeKey": "question_1_answer_11"
                         }
                     ]
-                }, {
+                },
+                {
                     "id": 1,
                     "sortIndex": 1,
                     "titleLocaleKey": "question_2",
                     "hintLocaleKey": "",
                     "answerLimit": 5,
                     "answerType": "SingleOption",
-                    "answers": [{
+                    "answers": [
+                        {
                             "id": 0,
                             "questionId": 1,
                             "sortIndex": 1,
                             "localeKey": "question_2_answer_1"
-                        }, {
+                        },
+                        {
                             "id": 1,
                             "questionId": 1,
                             "sortIndex": 1,
                             "localeKey": "question_2_answer_2"
-                        }, {
+                        },
+                        {
                             "id": 2,
                             "questionId": 1,
                             "sortIndex": 1,
                             "localeKey": "question_2_answer_3"
-                        }, {
+                        },
+                        {
                             "id": 3,
                             "questionId": 1,
                             "sortIndex": 1,
                             "localeKey": "question_2_answer_4"
-                        }, {
+                        },
+                        {
                             "id": 4,
                             "questionId": 1,
                             "sortIndex": 1,
@@ -165,7 +183,7 @@
         "compressProfile": false,
         "chatbotFeatures": {
             "sptFriendEnabled": true,
-			"sptFriendGiftsEnabled": true,
+            "sptFriendGiftsEnabled": true,
             "commandoEnabled": true,
             "commandoFeatures": {
                 "giveCommandEnabled": true
@@ -173,10 +191,10 @@
             "commandUseLimits": {
                 "StashRows": 15
             },
-			"ids": {
-				"commando": "6723fd51c5924c57ce0ca01e",
-				"spt": "6723fd51c5924c57ce0ca01f"
-			}
+            "ids": {
+                "commando": "6723fd51c5924c57ce0ca01e",
+                "spt": "6723fd51c5924c57ce0ca01f"
+            }
         },
         "createNewProfileTypesBlacklist": []
     },

@@ -8,16 +8,16 @@
         "5e383a6386f77465910ce1f3",
         "5e4d515e86f77438b2195244",
         "639282134ed9512be67647ed",
-		"6613f3007f6666d56807c929",
-		"6613f307fca4f2f386029409"
+        "6613f3007f6666d56807c929",
+        "6613f307fca4f2f386029409"
     ],
     "bearOnlyQuests": [
         "6179b5b06e9dd54ac275e409",
         "5e381b0286f77420e3417a74",
         "5e4d4ac186f774264f758336",
         "639136d68ba6894d155e77cf",
-		"66151401efb0539ae10875ae",
-		"6615141bfda04449120269a7"
+        "66151401efb0539ae10875ae",
+        "6615141bfda04449120269a7"
     ],
     "profileBlacklist": {
         "unheard_edition": ["666314a50aa5c7436c00908a"]
@@ -208,27 +208,34 @@
             "endTimestamp": "",
             "yearly": false
         },
-		"66e3e2ee2136472d220bcb36": {
-			"name": "Night of The Cult",
+        "66e3e2ee2136472d220bcb36": {
+            "name": "Night of The Cult",
             "season": "None",
             "startTimestamp": 1341615600000,
             "endTimestamp": "",
             "yearly": false
-		},
-		"670404a2ea1caa8f2e0be106": {
-			"name": "Don’t Believe Your Eyes",
+        },
+        "670404a2ea1caa8f2e0be106": {
+            "name": "Don’t Believe Your Eyes",
             "season": "halloween",
             "startTimestamp": 1341615600000,
             "endTimestamp": "",
             "yearly": true
-		},
-		"67190f6c1b3f4964d90d71e9": {
-			"name": "Global Threat",
+        },
+        "67190f6c1b3f4964d90d71e9": {
+            "name": "Global Threat",
             "season": "halloween",
             "startTimestamp": 1341615600000,
             "endTimestamp": "",
             "yearly": true
-		}
+        },
+        "674647f38466ebb03408b291": {
+            "name": "Thats a Great Plan Walter",
+            "season": "None",
+            "startTimestamp": 1341615600000,
+            "endTimestamp": "",
+            "yearly": false
+        }
     },
     "repeatableQuests": [
         {

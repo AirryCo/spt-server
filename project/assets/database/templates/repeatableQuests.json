@@ -28,7 +28,10 @@
 						"value": 1,
 						"type": "Elimination",
 						"oneSessionOnly": false,
+						"completeInSeconds": 0,
 						"doNotResetIfCounterCompleted": false,
+						"isResetOnConditionFailed": false,
+						"isNecessary": false,
 						"counter": {
 							"id": "618c1de4d4cd91439f3de4ac",
 							"conditions": [{
@@ -59,7 +62,7 @@
 								}
 							]
 						},
-					"conditionType": "CounterCreator"
+						"conditionType": "CounterCreator"
 				}],
                 "Fail": []
             },
@@ -74,13 +77,26 @@
             "acceptPlayerMessage": "{templateId} acceptPlayerMessage {traderId}",
             "declinePlayerMessage": "{templateId} declinePlayerMessage {traderId}",
             "completePlayerMessage": "{templateId} completePlayerMessage {traderId}",
-            "templateId": "{templateId}",
+			"status": 0,
+			"acceptanceAndFinishingSource": "eft",
+			"progressSource": "eft",
+			"rankingModes": [],
+			"gameModes": [],
+			"arenaLocations": [],
             "changeCost": [{
                     "templateId": "5449016a4bdc2d6f028b456f",
                     "count": 5000
                 }
             ],
-            "changeStandingCost": 0
+            "changeStandingCost": 0,
+			"questStatus": {
+				"id": "mongoId",
+				"uid": "playerId",
+				"qid": "questId",
+				"startTime": 0,
+				"status": 1,
+				"statusTimers": {}
+			}
         },
         "Completion": {
             "_id": "61943a75eb60e11b7965cdbf4",
@@ -114,13 +130,26 @@
             "acceptPlayerMessage": "{templateId} acceptPlayerMessage {traderId}",
             "declinePlayerMessage": "{templateId} declinePlayerMessage {traderId}",
             "completePlayerMessage": "{templateId} completePlayerMessage {traderId}",
-            "templateId": "{templateId}",
+			"status": 0,
+			"acceptanceAndFinishingSource": "eft",
+			"progressSource": "eft",
+			"rankingModes": [],
+			"gameModes": [],
+			"arenaLocations": [],
             "changeCost": [{
                     "templateId": "5449016a4bdc2d6f028b456f",
                     "count": 5000
                 }
             ],
-            "changeStandingCost": 0
+            "changeStandingCost": 0,
+			"questStatus": {
+				"id": "mongoId",
+				"uid": "playerId",
+				"qid": "questId",
+				"startTime": 0,
+				"status": 1,
+				"statusTimers": {}
+			}
         },
         "Exploration": {
             "_id": "65947c6afb90e7fcb40f8d684",
@@ -185,13 +214,26 @@
             "acceptPlayerMessage": "{templateId} acceptPlayerMessage {traderId}",
             "declinePlayerMessage": "{templateId} declinePlayerMessage {traderId}",
             "completePlayerMessage": "{templateId} completePlayerMessage {traderId}",
-            "templateId": "{templateId}",
+			"status": 0,
+			"acceptanceAndFinishingSource": "eft",
+			"progressSource": "eft",
+			"rankingModes": [],
+			"gameModes": [],
+			"arenaLocations": [],
             "changeCost": [{
                     "templateId": "5449016a4bdc2d6f028b456f",
                     "count": 5000
                 }
             ],
-            "changeStandingCost": 0
+            "changeStandingCost": 0,
+			"questStatus": {
+				"id": "mongoId",
+				"uid": "playerId",
+				"qid": "questId",
+				"startTime": 0,
+				"status": 1,
+				"statusTimers": {}
+			}
         },
         "Pickup": {
             "_id": "64cfb3818db9f48b3f0b0a759",
@@ -217,7 +259,7 @@
 						"dynamicLocale": false,
 						"index": 0,
 						"visibilityConditions": [],
-						"globalQuestCounterId": null,
+						"globalQuestCounterId": "",
 						"target": ["5b47574386f77428ca22b336"],
 						"value": 7,
 						"minDurability": 0,
@@ -233,7 +275,7 @@
 						"dynamicLocale": true,
 						"index": 0,
 						"visibilityConditions": [],
-						"globalQuestCounterId": null,
+						"globalQuestCounterId": "",
 						"value": 1,
 						"type": "PickUp",
 						"completeInSeconds": 0,
@@ -276,13 +318,26 @@
             "acceptPlayerMessage": "{templateId} acceptPlayerMessage {traderId}",
             "declinePlayerMessage": "{templateId} declinePlayerMessage {traderId}",
             "completePlayerMessage": "{templateId} completePlayerMessage {traderId}",
-            "templateId": "{templateId}",
+            "status": 0,
+			"acceptanceAndFinishingSource": "eft",
+			"progressSource": "eft",
+			"rankingModes": [],
+			"gameModes": [],
+			"arenaLocations": [],
             "changeCost": [{
                     "templateId": "5449016a4bdc2d6f028b456f",
                     "count": 12000
                 }
             ],
-            "changeStandingCost": 0
+            "changeStandingCost": 0,
+			"questStatus": {
+				"id": "mongoId",
+				"uid": "playerId",
+				"qid": "questId",
+				"startTime": 0,
+				"status": 1,
+				"statusTimers": {}
+			}
         }
     },
     "rewards": {
