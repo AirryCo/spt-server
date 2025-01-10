@@ -1,17 +1,26 @@
 import { ProfileHelper } from "@spt/helpers/ProfileHelper";
-import { IPmcData } from "@spt/models/eft/common/IPmcData";
-import { ISuit } from "@spt/models/eft/common/tables/ITrader";
-import {
+import { IEmptyRequestData } from "@spt/models/eft/common/IEmptyRequestData";
+import type { IPmcData } from "@spt/models/eft/common/IPmcData";
+import type { ICustomisationStorage } from "@spt/models/eft/common/tables/ICustomisationStorage";
+import type { ISuit } from "@spt/models/eft/common/tables/ITrader";
+import type {
     IBuyClothingRequestData,
     IPaymentItemForClothing,
 } from "@spt/models/eft/customization/IBuyClothingRequestData";
-import { IWearClothingRequestData } from "@spt/models/eft/customization/IWearClothingRequestData";
-import { IItemEventRouterResponse } from "@spt/models/eft/itemEvent/IItemEventRouterResponse";
-import { ILogger } from "@spt/models/spt/utils/ILogger";
+import type {
+    CustomizationSetOption,
+    ICustomizationSetRequest,
+} from "@spt/models/eft/customization/ICustomizationSetRequest";
+import type { IHideoutCustomisation } from "@spt/models/eft/hideout/IHideoutCustomisation";
+import type { IItemEventRouterResponse } from "@spt/models/eft/itemEvent/IItemEventRouterResponse";
+import { ISptProfile } from "@spt/models/eft/profile/ISptProfile";
+import { GameEditions } from "@spt/models/enums/GameEditions";
+import type { ILogger } from "@spt/models/spt/utils/ILogger";
 import { EventOutputHolder } from "@spt/routers/EventOutputHolder";
 import { SaveServer } from "@spt/servers/SaveServer";
 import { DatabaseService } from "@spt/services/DatabaseService";
 import { LocalisationService } from "@spt/services/LocalisationService";
+import type { ICloner } from "@spt/utils/cloners/ICloner";
 import { inject, injectable } from "tsyringe";
 
 @injectable()
@@ -28,6 +37,7 @@ export class CustomizationController {
         @inject("SaveServer") protected saveServer: SaveServer,
         @inject("LocalisationService") protected localisationService: LocalisationService,
         @inject("ProfileHelper") protected profileHelper: ProfileHelper,
+        @inject("PrimaryCloner") protected cloner: ICloner,
     ) {}
 
     /**
@@ -52,34 +62,6 @@ export class CustomizationController {
             throw new Error(this.localisationService.getText("customisation-unable_to_get_trader_suits", traderID));
 
         return matchedSuits;
-    }
-
-    /**
-     * Handle CustomizationWear event
-     * Equip one to many clothing items to player
-     */
-    public wearClothing(
-        pmcData: IPmcData,
-        wearClothingRequest: IWearClothingRequestData,
-        sessionID: string,
-    ): IItemEventRouterResponse {
-        for (const suitId of wearClothingRequest.suites) {
-            // Find desired clothing item in db
-            const dbSuit = this.databaseService.getCustomization()[suitId];
-
-            // Legs
-            if (dbSuit._parent === this.clothingIds.lowerParentId) {
-                pmcData.Customization.Feet = dbSuit._props.Feet;
-            }
-
-            // Torso
-            if (dbSuit._parent === this.clothingIds.upperParentId) {
-                pmcData.Customization.Body = dbSuit._props.Body;
-                pmcData.Customization.Hands = dbSuit._props.Hands;
-            }
-        }
-
-        return this.eventOutputHolder.getOutput(sessionID);
     }
 
     /**
@@ -237,5 +219,77 @@ export class CustomizationController {
         }
 
         return result;
+    }
+
+    /** Handle client/hideout/customization/offer/list */
+    public getHideoutCustomisation(sessionID: string, info: IEmptyRequestData): IHideoutCustomisation {
+        return this.databaseService.getHideout().customisation;
+    }
+
+    /** Handle client/customization/storage */
+    public getCustomisationStorage(sessionID: string, info: IEmptyRequestData): ICustomisationStorage[] {
+        const customisationResultsClone = this.cloner.clone(this.databaseService.getTemplates().customisationStorage);
+
+        const profile = this.profileHelper.getFullProfile(sessionID);
+        if (!profile) {
+            return customisationResultsClone;
+        }
+
+        // Append customisations unlocked by player to results
+        customisationResultsClone.push(...(profile.customisationUnlocks ?? []));
+
+        return customisationResultsClone;
+    }
+
+    /** Handle CustomizationSet event */
+    public setClothing(
+        sessionId: string,
+        request: ICustomizationSetRequest,
+        pmcData: IPmcData,
+    ): IItemEventRouterResponse {
+        for (const customisation of request.customizations) {
+            switch (customisation.type) {
+                case "dogTag":
+                    pmcData.Customization.DogTag = customisation.id;
+                    break;
+                case "suite":
+                    this.applyClothingItemToProfile(customisation, pmcData);
+                    break;
+                default:
+                    this.logger.error(`Unhandled customisation type: ${customisation.type}`);
+                    break;
+            }
+        }
+
+        return this.eventOutputHolder.getOutput(sessionId);
+    }
+
+    /**
+     * Applies a purchsed suit to the players doll
+     * @param customisation Suit to apply to profile
+     * @param pmcData Profile to update
+     */
+    protected applyClothingItemToProfile(customisation: CustomizationSetOption, pmcData: IPmcData): void {
+        const dbSuit = this.databaseService.getCustomization()[customisation.id];
+        if (!dbSuit) {
+            this.logger.error(
+                `Unable to find suit customisation id: ${customisation.id}, cannot apply clothing to player profile: ${pmcData._id}`,
+            );
+
+            return;
+        }
+
+        // Body
+        if (dbSuit._parent === this.clothingIds.upperParentId) {
+            pmcData.Customization.Body = dbSuit._props.Body;
+            pmcData.Customization.Hands = dbSuit._props.Hands;
+
+            return;
+        }
+
+        // Feet
+        if (dbSuit._parent === this.clothingIds.lowerParentId) {
+            pmcData.Customization.Feet = dbSuit._props.Feet;
+        }
     }
 }

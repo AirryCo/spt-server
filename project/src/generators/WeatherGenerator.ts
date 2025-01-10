@@ -5,8 +5,8 @@ import { IWeather, IWeatherData } from "@spt/models/eft/weather/IWeatherData";
 import { ConfigTypes } from "@spt/models/enums/ConfigTypes";
 import { Season } from "@spt/models/enums/Season";
 import { WindDirection } from "@spt/models/enums/WindDirection";
-import { IWeatherConfig } from "@spt/models/spt/config/IWeatherConfig";
-import { ILogger } from "@spt/models/spt/utils/ILogger";
+import { ISeasonalValues, IWeatherConfig } from "@spt/models/spt/config/IWeatherConfig";
+import type { ILogger } from "@spt/models/spt/utils/ILogger";
 import { ConfigServer } from "@spt/servers/ConfigServer";
 import { SeasonalEventService } from "@spt/services/SeasonalEventService";
 import { RandomUtil } from "@spt/utils/RandomUtil";
@@ -80,21 +80,23 @@ export class WeatherGenerator {
      * @returns Randomised weather data
      */
     public generateWeather(currentSeason: Season, timestamp?: number): IWeather {
-        const clouds = this.getWeightedClouds();
+        const weatherValues = this.getWeatherValuesBySeason(currentSeason);
+        const clouds = this.getWeightedClouds(weatherValues);
 
         // Force rain to off if no clouds
-        const rain = clouds <= 0.6 ? 0 : this.getWeightedRain();
+        const rain = clouds <= 0.6 ? 0 : this.getWeightedRain(weatherValues);
 
         const result: IWeather = {
             cloud: clouds,
-            wind_speed: this.getWeightedWindSpeed(),
-            wind_direction: this.getWeightedWindDirection(),
-            wind_gustiness: this.getRandomFloat("windGustiness", 2),
+            wind_speed: this.getWeightedWindSpeed(weatherValues),
+            wind_direction: this.getWeightedWindDirection(weatherValues),
+            wind_gustiness: this.getRandomFloat(weatherValues.windGustiness.min, weatherValues.windGustiness.max, 2),
             rain: rain,
-            rain_intensity: rain > 1 ? this.getRandomFloat("rainIntensity") : 0,
-            fog: this.getWeightedFog(),
+            rain_intensity:
+                rain > 1 ? this.getRandomFloat(weatherValues.rainIntensity.min, weatherValues.rainIntensity.max) : 0,
+            fog: this.getWeightedFog(weatherValues),
             temp: 0,
-            pressure: this.getRandomFloat("pressure"),
+            pressure: this.getRandomFloat(weatherValues.pressure.min, weatherValues.pressure.max),
             time: "",
             date: "",
             timestamp: 0, // Added below
@@ -103,24 +105,32 @@ export class WeatherGenerator {
 
         this.setCurrentDateTime(result, timestamp);
 
-        result.temp = this.getRaidTemperature(currentSeason, result.sptInRaidTimestamp);
+        result.temp = this.getRaidTemperature(weatherValues, result.sptInRaidTimestamp);
+
+        return result;
+    }
+
+    protected getWeatherValuesBySeason(currentSeason: Season): ISeasonalValues {
+        const result = this.weatherConfig.weather.seasonValues[Season[currentSeason]];
+        if (!result) {
+            return this.weatherConfig.weather.seasonValues.default;
+        }
 
         return result;
     }
 
     /**
-     * Choose a temprature for the raid based on time of day and current season
+     * Choose a temprature for the raid based on time of day
      * @param currentSeason What season tarkov is currently in
      * @param inRaidTimestamp What time is the raid running at
      * @returns Timestamp
      */
-    protected getRaidTemperature(currentSeason: Season, inRaidTimestamp: number): number {
+    protected getRaidTemperature(weather: ISeasonalValues, inRaidTimestamp: number): number {
         // Convert timestamp to date so we can get current hour and check if its day or night
         const currentRaidTime = new Date(inRaidTimestamp);
-        const seasonDayNightTempValues = this.weatherConfig.weather.temp[currentSeason];
         const minMax = this.weatherHelper.isHourAtNightTime(currentRaidTime.getHours())
-            ? seasonDayNightTempValues.night
-            : seasonDayNightTempValues.day;
+            ? weather.temp.night
+            : weather.temp.day;
 
         return Number.parseFloat(this.randomUtil.getFloat(minMax.min, minMax.max).toPrecision(2));
     }
@@ -142,46 +152,28 @@ export class WeatherGenerator {
         weather.sptInRaidTimestamp = inRaidTime.getTime();
     }
 
-    protected getWeightedWindDirection(): WindDirection {
-        return this.weightedRandomHelper.weightedRandom(
-            this.weatherConfig.weather.windDirection.values,
-            this.weatherConfig.weather.windDirection.weights,
-        ).item;
+    protected getWeightedWindDirection(weather: ISeasonalValues): WindDirection {
+        return this.weightedRandomHelper.weightedRandom(weather.windDirection.values, weather.windDirection.weights)
+            .item;
     }
 
-    protected getWeightedClouds(): number {
-        return this.weightedRandomHelper.weightedRandom(
-            this.weatherConfig.weather.clouds.values,
-            this.weatherConfig.weather.clouds.weights,
-        ).item;
+    protected getWeightedClouds(weather: ISeasonalValues): number {
+        return this.weightedRandomHelper.weightedRandom(weather.clouds.values, weather.clouds.weights).item;
     }
 
-    protected getWeightedWindSpeed(): number {
-        return this.weightedRandomHelper.weightedRandom(
-            this.weatherConfig.weather.windSpeed.values,
-            this.weatherConfig.weather.windSpeed.weights,
-        ).item;
+    protected getWeightedWindSpeed(weather: ISeasonalValues): number {
+        return this.weightedRandomHelper.weightedRandom(weather.windSpeed.values, weather.windSpeed.weights).item;
     }
 
-    protected getWeightedFog(): number {
-        return this.weightedRandomHelper.weightedRandom(
-            this.weatherConfig.weather.fog.values,
-            this.weatherConfig.weather.fog.weights,
-        ).item;
+    protected getWeightedFog(weather: ISeasonalValues): number {
+        return this.weightedRandomHelper.weightedRandom(weather.fog.values, weather.fog.weights).item;
     }
 
-    protected getWeightedRain(): number {
-        return this.weightedRandomHelper.weightedRandom(
-            this.weatherConfig.weather.rain.values,
-            this.weatherConfig.weather.rain.weights,
-        ).item;
+    protected getWeightedRain(weather: ISeasonalValues): number {
+        return this.weightedRandomHelper.weightedRandom(weather.rain.values, weather.rain.weights).item;
     }
 
-    protected getRandomFloat(node: string, precision = 3): number {
-        return Number.parseFloat(
-            this.randomUtil
-                .getFloat(this.weatherConfig.weather[node].min, this.weatherConfig.weather[node].max)
-                .toPrecision(precision),
-        );
+    protected getRandomFloat(min: number, max: number, precision = 3): number {
+        return Number.parseFloat(this.randomUtil.getFloat(min, max).toPrecision(precision));
     }
 }

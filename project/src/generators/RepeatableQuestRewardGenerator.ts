@@ -17,7 +17,7 @@ import {
 } from "@spt/models/spt/config/IQuestConfig";
 import { IQuestRewardValues } from "@spt/models/spt/repeatable/IQuestRewardValues";
 import { ExhaustableArray } from "@spt/models/spt/server/ExhaustableArray";
-import { ILogger } from "@spt/models/spt/utils/ILogger";
+import type { ILogger } from "@spt/models/spt/utils/ILogger";
 import { ConfigServer } from "@spt/servers/ConfigServer";
 import { DatabaseService } from "@spt/services/DatabaseService";
 import { ItemFilterService } from "@spt/services/ItemFilterService";
@@ -25,9 +25,8 @@ import { LocalisationService } from "@spt/services/LocalisationService";
 import { SeasonalEventService } from "@spt/services/SeasonalEventService";
 import { HashUtil } from "@spt/utils/HashUtil";
 import { MathUtil } from "@spt/utils/MathUtil";
-import { ObjectId } from "@spt/utils/ObjectId";
 import { RandomUtil } from "@spt/utils/RandomUtil";
-import { ICloner } from "@spt/utils/cloners/ICloner";
+import type { ICloner } from "@spt/utils/cloners/ICloner";
 import { inject, injectable } from "tsyringe";
 
 @injectable()
@@ -44,7 +43,6 @@ export class RepeatableQuestRewardGenerator {
         @inject("PresetHelper") protected presetHelper: PresetHelper,
         @inject("HandbookHelper") protected handbookHelper: HandbookHelper,
         @inject("LocalisationService") protected localisationService: LocalisationService,
-        @inject("ObjectId") protected objectId: ObjectId,
         @inject("ItemFilterService") protected itemFilterService: ItemFilterService,
         @inject("SeasonalEventService") protected seasonalEventService: SeasonalEventService,
         @inject("ConfigServer") protected configServer: ConfigServer,
@@ -311,20 +309,22 @@ export class RepeatableQuestRewardGenerator {
             itemsToReturn.push({ item: chosenItemFromPool, stackSize: rewardItemStackCount });
 
             const itemCost = this.presetHelper.getDefaultPresetOrItemPrice(chosenItemFromPool._id);
-            itemRewardBudget -= rewardItemStackCount * itemCost;
+            const calculatedItemRewardBudget = itemRewardBudget - rewardItemStackCount * itemCost;
             this.logger.debug(`Added item: ${chosenItemFromPool._id} with price: ${rewardItemStackCount * itemCost}`);
 
             // If we still have budget narrow down possible items
-            if (itemRewardBudget > 0) {
+            if (calculatedItemRewardBudget > 0) {
                 // Filter possible reward items to only items with a price below the remaining budget
                 exhausableItemPool = new ExhaustableArray(
-                    this.filterRewardPoolWithinBudget(itemPool, itemRewardBudget, 0),
+                    this.filterRewardPoolWithinBudget(itemPool, calculatedItemRewardBudget, 0),
                     this.randomUtil,
                     this.cloner,
                 );
 
                 if (!exhausableItemPool.hasValues()) {
-                    this.logger.debug(`Reward pool empty with: ${itemRewardBudget} roubles of budget remaining`);
+                    this.logger.debug(
+                        `Reward pool empty with: ${calculatedItemRewardBudget} roubles of budget remaining`,
+                    );
                     break; // No reward items left, exit
                 }
             }
@@ -518,7 +518,7 @@ export class RepeatableQuestRewardGenerator {
      * @returns {object}                    Object of "Reward"-item-type
      */
     protected generateItemReward(tpl: string, count: number, index: number, foundInRaid = true): IQuestReward {
-        const id = this.objectId.generate();
+        const id = this.hashUtil.generate();
         const questRewardItem: IQuestReward = {
             id: this.hashUtil.generate(),
             unknown: false,
@@ -555,7 +555,7 @@ export class RepeatableQuestRewardGenerator {
         preset?: IItem[],
         foundInRaid = true,
     ): IQuestReward {
-        const id = this.objectId.generate();
+        const id = this.hashUtil.generate();
         const questRewardItem: IQuestReward = {
             id: this.hashUtil.generate(),
             unknown: false,

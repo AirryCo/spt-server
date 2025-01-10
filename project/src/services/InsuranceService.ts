@@ -10,7 +10,7 @@ import { ItemTpl } from "@spt/models/enums/ItemTpl";
 import { MessageType } from "@spt/models/enums/MessageType";
 import { IInsuranceConfig } from "@spt/models/spt/config/IInsuranceConfig";
 import { IInsuranceEquipmentPkg } from "@spt/models/spt/services/IInsuranceEquipmentPkg";
-import { ILogger } from "@spt/models/spt/utils/ILogger";
+import type { ILogger } from "@spt/models/spt/utils/ILogger";
 import { ConfigServer } from "@spt/servers/ConfigServer";
 import { SaveServer } from "@spt/servers/SaveServer";
 import { DatabaseService } from "@spt/services/DatabaseService";
@@ -19,7 +19,7 @@ import { MailSendService } from "@spt/services/MailSendService";
 import { HashUtil } from "@spt/utils/HashUtil";
 import { RandomUtil } from "@spt/utils/RandomUtil";
 import { TimeUtil } from "@spt/utils/TimeUtil";
-import { ICloner } from "@spt/utils/cloners/ICloner";
+import type { ICloner } from "@spt/utils/cloners/ICloner";
 import { inject, injectable } from "tsyringe";
 
 @injectable()
@@ -78,14 +78,27 @@ export class InsuranceService {
         // Get insurance items for each trader
         const globals = this.databaseService.getGlobals();
         for (const traderId in this.getInsurance(sessionID)) {
+            const traderEnum = this.traderHelper.getTraderById(traderId);
+            if (!traderEnum) {
+                this.logger.error(this.localisationService.getText("insurance-trader_missing_from_enum", traderId));
+
+                continue;
+            }
+
             const traderBase = this.traderHelper.getTrader(traderId, sessionID);
             if (!traderBase) {
-                throw new Error(this.localisationService.getText("insurance-unable_to_find_trader_by_id", traderId));
+                this.logger.error(this.localisationService.getText("insurance-unable_to_find_trader_by_id", traderId));
+
+                continue;
             }
 
             const dialogueTemplates = this.databaseService.getTrader(traderId).dialogue;
             if (!dialogueTemplates) {
-                throw new Error(this.localisationService.getText("insurance-trader_lacks_dialogue_property", traderId));
+                this.logger.error(
+                    this.localisationService.getText("insurance-trader_lacks_dialogue_property", traderId),
+                );
+
+                continue;
             }
 
             const systemData = {
@@ -94,10 +107,6 @@ export class InsuranceService {
                 location: mapId,
             };
 
-            const traderEnum = this.traderHelper.getTraderById(traderId);
-            if (!traderEnum) {
-                throw new Error(this.localisationService.getText("insurance-trader_missing_from_enum", traderId));
-            }
             // Send "i will go look for your stuff" message from trader to player
             this.mailSendService.sendLocalisedNpcMessageToPlayer(
                 sessionID,

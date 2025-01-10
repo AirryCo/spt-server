@@ -4,11 +4,10 @@ import { ITemplateItem } from "@spt/models/eft/common/tables/ITemplateItem";
 import { BaseClasses } from "@spt/models/enums/BaseClasses";
 import { ConfigTypes } from "@spt/models/enums/ConfigTypes";
 import { IBotConfig } from "@spt/models/spt/config/IBotConfig";
-import { ILogger } from "@spt/models/spt/utils/ILogger";
+import type { ILogger } from "@spt/models/spt/utils/ILogger";
 import { ConfigServer } from "@spt/servers/ConfigServer";
 import { DatabaseService } from "@spt/services/DatabaseService";
 import { LocalisationService } from "@spt/services/LocalisationService";
-import { VFS } from "@spt/utils/VFS";
 import { inject, injectable } from "tsyringe";
 
 /** Store a mapping between weapons, their slots and the items that fit those slots */
@@ -22,7 +21,6 @@ export class BotEquipmentModPoolService {
 
     constructor(
         @inject("PrimaryLogger") protected logger: ILogger,
-        @inject("VFS") protected vfs: VFS,
         @inject("ItemHelper") protected itemHelper: ItemHelper,
         @inject("DatabaseService") protected databaseService: DatabaseService,
         @inject("LocalisationService") protected localisationService: LocalisationService,
@@ -84,7 +82,7 @@ export class BotEquipmentModPoolService {
 
                         // Check item added into array for slots, need to iterate over those
                         const subItemDetails = this.itemHelper.getItem(itemToAdd)[1];
-                        const hasSubItemsToAdd = subItemDetails?._props?.Slots?.length ?? 0 > 0;
+                        const hasSubItemsToAdd = (subItemDetails?._props?.Slots?.length ?? 0) > 0;
                         if (hasSubItemsToAdd && !pool[subItemDetails._id]) {
                             // Recursive call
                             this.generatePool([subItemDetails], poolType);

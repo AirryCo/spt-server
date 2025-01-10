@@ -10,14 +10,15 @@ import { IGetFriendListDataResponse } from "@spt/models/eft/dialog/IGetFriendLis
 import { IGetMailDialogViewRequestData } from "@spt/models/eft/dialog/IGetMailDialogViewRequestData";
 import { IGetMailDialogViewResponseData } from "@spt/models/eft/dialog/IGetMailDialogViewResponseData";
 import { ISendMessageRequest } from "@spt/models/eft/dialog/ISendMessageRequest";
-import { IDialogue, IDialogueInfo, IMessage, ISptProfile, IUserDialogInfo } from "@spt/models/eft/profile/ISptProfile";
+import { IDialogue, IDialogueInfo, IMessage, ISptProfile } from "@spt/models/eft/profile/ISptProfile";
+import { IUserDialogInfo } from "@spt/models/eft/profile/IUserDialogInfo";
 import { IWsFriendsListAccept } from "@spt/models/eft/ws/IWsFriendsListAccept";
 import { BackendErrorCodes } from "@spt/models/enums/BackendErrorCodes";
 import { ConfigTypes } from "@spt/models/enums/ConfigTypes";
 import { MessageType } from "@spt/models/enums/MessageType";
 import { NotificationEventType } from "@spt/models/enums/NotificationEventType";
 import { ICoreConfig } from "@spt/models/spt/config/ICoreConfig";
-import { ILogger } from "@spt/models/spt/utils/ILogger";
+import type { ILogger } from "@spt/models/spt/utils/ILogger";
 import { ConfigServer } from "@spt/servers/ConfigServer";
 import { SaveServer } from "@spt/servers/SaveServer";
 import { LocalisationService } from "@spt/services/LocalisationService";
@@ -82,10 +83,12 @@ export class DialogueController {
 
         // Add any friends the user has after the chatbots
         const profile = this.profileHelper.getFullProfile(sessionID);
-        for (const friendId of profile?.friends) {
-            const friendProfile = this.profileHelper.getChatRoomMemberFromSessionId(friendId);
-            if (friendProfile) {
-                friends.push(friendProfile);
+        if (profile?.friends) {
+            for (const friendId of profile.friends) {
+                const friendProfile = this.profileHelper.getChatRoomMemberFromSessionId(friendId);
+                if (friendProfile) {
+                    friends.push(friendProfile);
+                }
             }
         }
 

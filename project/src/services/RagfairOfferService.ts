@@ -5,7 +5,7 @@ import { IItem } from "@spt/models/eft/common/tables/IItem";
 import { IRagfairOffer } from "@spt/models/eft/ragfair/IRagfairOffer";
 import { ConfigTypes } from "@spt/models/enums/ConfigTypes";
 import { IRagfairConfig } from "@spt/models/spt/config/IRagfairConfig";
-import { ILogger } from "@spt/models/spt/utils/ILogger";
+import type { ILogger } from "@spt/models/spt/utils/ILogger";
 import { EventOutputHolder } from "@spt/routers/EventOutputHolder";
 import { ConfigServer } from "@spt/servers/ConfigServer";
 import { SaveServer } from "@spt/servers/SaveServer";
@@ -15,7 +15,7 @@ import { HashUtil } from "@spt/utils/HashUtil";
 import { HttpResponseUtil } from "@spt/utils/HttpResponseUtil";
 import { RagfairOfferHolder } from "@spt/utils/RagfairOfferHolder";
 import { TimeUtil } from "@spt/utils/TimeUtil";
-import { ICloner } from "@spt/utils/cloners/ICloner";
+import type { ICloner } from "@spt/utils/cloners/ICloner";
 import { inject, injectable } from "tsyringe";
 
 @injectable()
@@ -250,6 +250,7 @@ export class RagfairOfferService {
         if (firstOfferItem.upd.StackObjectsCount > firstOfferItem.upd.OriginalStackObjectsCount) {
             playerOffer.items[0].upd.StackObjectsCount = firstOfferItem.upd.OriginalStackObjectsCount;
         }
+        // biome-ignore lint/performance/noDelete: Delete is fine here as we entirely want to get rid of the data.
         delete playerOffer.items[0].upd.OriginalStackObjectsCount;
         // Remove player offer from flea
         this.ragfairOfferHandler.removeOffer(playerOffer);

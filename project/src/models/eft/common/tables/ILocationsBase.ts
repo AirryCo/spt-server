@@ -1,11 +1,10 @@
 export interface ILocationsBase {
-    locations: ILocations;
+    locations: any;
     paths: IPath[];
 }
 
-export type ILocations = {};
-
 export interface IPath {
     Source: string;
+    Event: boolean;
     Destination: string;
 }

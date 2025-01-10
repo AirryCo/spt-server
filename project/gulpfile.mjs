@@ -1,16 +1,17 @@
+import { spawn } from "node:child_process";
 import crypto from "node:crypto";
 import path from "node:path";
 import pkg from "@yao-pkg/pkg";
 import pkgfetch from "@yao-pkg/pkg-fetch";
 import fs from "fs-extra";
 import gulp from "gulp";
-import decompress from "gulp-decompress";
-import download from "gulp-download";
 import { exec } from "gulp-execa";
 import rename from "gulp-rename";
 import minimist from "minimist";
 import * as ResEdit from "resedit";
-import manifest from "./package.json" assert { type: "json" };
+
+// Load the package.json file
+const manifest = JSON.parse(fs.readFileSync("./package.json", "utf8"));
 
 // Accept command line arguments for arch and platform
 const knownOptions = { string: ["arch", "platform"], default: { arch: process.arch, platform: process.platform } };
@@ -19,7 +20,7 @@ const targetArch = options.arch;
 const targetPlatform = options.platform;
 console.log(`target arch: ${targetArch}, target platform: ${targetPlatform}`);
 
-const nodeVersion = "node20"; // As of @yao-pkg/pkg-fetch v3.5.9, it's v20.11.1
+const nodeVersion = "node22"; // As of @yao-pkg/pkg-fetch@3.5.18, it's Node 22.12.0
 const stdio = "inherit";
 const buildDir = "build/";
 const dataDir = path.join(buildDir, "SPT_Data", "Server");
@@ -27,19 +28,149 @@ const serverExeName = "SPT.Server";
 const serverExe = path.join(buildDir, serverExeName);
 const pkgConfig = "pkgconfig.json";
 const entries = {
-    release: path.join("obj", "ide", "ReleaseEntry.js"),
-    debug: path.join("obj", "ide", "DebugEntry.js"),
-    bleeding: path.join("obj", "ide", "BleedingEdgeEntry.js"),
-    bleedingmods: path.join("obj", "ide", "BleedingEdgeModsEntry.js"),
+    release: "RELEASE",
+    debug: "DEBUG",
+    bleeding: "BLEEDING_EDGE",
+    bleedingmods: "BLEEDING_EDGE_MODS",
 };
 const licenseFile = "../LICENSE.md";
+
+// Modules to transpile
+const backupDir = path.resolve("backup_modules");
+const transpiledDir = path.resolve("transpiled_modules");
+const modulesToTranspile = [
+    "@messageformat/date-skeleton/lib/get-date-formatter.js",
+    "@messageformat/date-skeleton/lib/index.js",
+    "@messageformat/date-skeleton/lib/options.js",
+    "@messageformat/date-skeleton/lib/tokens.js",
+    "@messageformat/number-skeleton/lib/errors.js",
+    "@messageformat/number-skeleton/lib/get-formatter.js",
+    "@messageformat/number-skeleton/lib/index.js",
+    "@messageformat/number-skeleton/lib/numberformat/locales.js",
+    "@messageformat/number-skeleton/lib/numberformat/modifier.js",
+    "@messageformat/number-skeleton/lib/numberformat/options.js",
+    "@messageformat/number-skeleton/lib/parse-pattern.js",
+    "@messageformat/number-skeleton/lib/parse-skeleton.js",
+    "@messageformat/number-skeleton/lib/pattern-parser/affix-tokens.js",
+    "@messageformat/number-skeleton/lib/pattern-parser/number-as-skeleton.js",
+    "@messageformat/number-skeleton/lib/pattern-parser/number-tokens.js",
+    "@messageformat/number-skeleton/lib/pattern-parser/parse-tokens.js",
+    "@messageformat/number-skeleton/lib/skeleton-parser/options.js",
+    "@messageformat/number-skeleton/lib/skeleton-parser/parse-precision-blueprint.js",
+    "@messageformat/number-skeleton/lib/skeleton-parser/token-parser.js",
+    "@messageformat/number-skeleton/lib/types/skeleton.js",
+    "@messageformat/number-skeleton/lib/types/unit.js",
+    "atomically/dist/constants.js",
+    "atomically/dist/index.js",
+    "atomically/dist/utils/lang.js",
+    "atomically/dist/utils/scheduler.js",
+    "atomically/dist/utils/temp.js",
+    "stubborn-fs/dist/attemptify.js",
+    "stubborn-fs/dist/constants.js",
+    "stubborn-fs/dist/handlers.js",
+    "stubborn-fs/dist/index.js",
+    "stubborn-fs/dist/retryify.js",
+    "stubborn-fs/dist/retryify_queue.js",
+    "when-exit/dist/node/constants.js",
+    "when-exit/dist/node/index.js",
+    "when-exit/dist/node/interceptor.js",
+    "when-exit/dist/node/signals.js",
+];
+
+/**
+ * Runs a shell command with spawn, wrapping it in a Promise for async/await usage.
+ */
+const runCommand = (command, args, options = {}) => {
+    return new Promise((resolve, reject) => {
+        const process = spawn(command, args, { shell: true, ...options });
+
+        process.stdout.on("data", (data) => {
+            const message = data.toString().trim();
+            if (message) console.log(message);
+        });
+
+        process.stderr.on("data", (data) => {
+            const message = data.toString().trim();
+            if (message) console.error(message);
+        });
+
+        process.on("exit", (code) => {
+            if (code === 0) {
+                resolve();
+            } else {
+                reject(new Error(`${command} exited with code ${code}`));
+            }
+        });
+
+        process.on("error", reject);
+    });
+};
+
+const transpileModules = async () => {
+    await fs.ensureDir(backupDir);
+    await fs.ensureDir(transpiledDir);
+
+    for (const modulePath of modulesToTranspile) {
+        // Resolve the path of the module
+        const resolvedPath = path.resolve("node_modules", modulePath);
+        const relativeModulePath = modulePath.replace(/\//g, path.sep); // Normalize for platform-specific paths
+        const backupPath = path.join(backupDir, relativeModulePath);
+        const outputPath = path.join(transpiledDir, relativeModulePath);
+
+        // Backup the original file
+        await fs.ensureDir(path.dirname(backupPath));
+        await fs.copy(resolvedPath, backupPath, { overwrite: true });
+        console.log(`Backed up: ${path.basename(resolvedPath)}`);
+
+        // Ensure the output directory exists
+        await fs.ensureDir(path.dirname(outputPath));
+
+        // Transpile the module
+        try {
+            await runCommand("npx", ["swc", resolvedPath, "-o", outputPath, "--config-file", ".swcrc"]);
+            console.log(`Successfully transpiled: ${resolvedPath}`);
+        } catch (error) {
+            console.error(`Error transpiling module: ${resolvedPath}`);
+            throw error;
+        }
+
+        // Replace the original file with the transpiled version
+        await fs.copy(outputPath, resolvedPath, { overwrite: true });
+        console.log(`Replaced original module: ${path.basename(resolvedPath)} with transpiled version.\n`);
+    }
+};
+
+const restoreModules = async () => {
+    for (const modulePath of modulesToTranspile) {
+        // Resolve the path of the module
+        const resolvedPath = path.resolve("node_modules", modulePath);
+        const relativeModulePath = modulePath.replace(/\//g, path.sep); // Normalize for platform-specific paths
+        const backupPath = path.join(backupDir, relativeModulePath);
+
+        // Restore the original file
+        if (await fs.pathExists(backupPath)) {
+            await fs.copy(backupPath, resolvedPath, { overwrite: true });
+            console.log(`Restored original module: ${path.basename(resolvedPath)}`);
+        }
+    }
+
+    // Clean up backup directory after restoration
+    await fs.remove(backupDir);
+    await fs.remove(transpiledDir);
+    console.log("Backup directory removed.");
+};
 
 /**
  * Transpile src files into Javascript with SWC
  */
 const compile = async () => {
     // Compile TypeScript files using SWC
-    await exec("npx swc src -d obj", { stdio: "inherit" });
+    try {
+        await runCommand("npx", ["swc", "src", "-d", "obj", "--config-file", ".swcrc"]);
+    } catch (error) {
+        console.error("Error transpiling source:");
+        throw error;
+    }
 
     // Merge the contents from the /obj/src directory into /obj
     const srcDir = path.join("obj", "src");
@@ -128,22 +259,6 @@ const copyAssets = () =>
         .pipe(gulp.dest(dataDir));
 
 /**
- * Download pnpm executable
- */
-const downloadPnpm = async () => {
-    // Please ensure that the @pnpm/exe version in devDependencies is pinned to a specific version. If it's not, the
-    // following task will download *all* versions that are compatible with the semver range specified.
-    const pnpmVersion = manifest.devDependencies["@pnpm/exe"];
-    const pnpmPackageName = `@pnpm/${targetPlatform === "win32" ? "win" : targetPlatform}-${targetArch}`;
-    const npmResult = await exec(`npm view ${pnpmPackageName}@${pnpmVersion} dist.tarball`, { stdout: "pipe" });
-    const pnpmLink = npmResult.stdout.trim();
-    console.log(`Downloading pnpm binary from ${pnpmLink}`);
-    download(pnpmLink)
-        .pipe(decompress({ strip: 1 }))
-        .pipe(gulp.dest(path.join(dataDir, "@pnpm", "exe")));
-};
-
-/**
  * Rename and copy the license file
  */
 const copyLicense = () => gulp.src([licenseFile]).pipe(rename("LICENSE-Server.txt")).pipe(gulp.dest(buildDir));
@@ -151,7 +266,7 @@ const copyLicense = () => gulp.src([licenseFile]).pipe(rename("LICENSE-Server.tx
 /**
  * Writes the latest build data to the core.json and build.json configuration files.
  */
-const writeBuildDataToJSON = async () => {
+const writeBuildDataToJSON = async (entryType) => {
     try {
         // Fetch the latest Git commit hash
         const gitResult = await exec("git rev-parse HEAD", { stdout: "pipe" });
@@ -166,12 +281,14 @@ const writeBuildDataToJSON = async () => {
         await fs.writeFile(coreJSONPath, JSON.stringify(coreParsed, null, 4));
 
         // Write build.json
-        const buildJsonPath = path.join("obj", "ide", "build.json");
-        const buildInfo = {};
+        const buildJsonPath = path.join("obj", "entry", "build.json");
 
+        const buildInfo = {};
+        buildInfo.entryType = entryType;
+        buildInfo.expectedNode = manifest?.engines?.node ?? "";
+        buildInfo.sptVersion = coreParsed.sptVersion;
         buildInfo.commit = coreParsed.commit;
         buildInfo.buildTime = coreParsed.buildTime;
-        buildInfo.sptVersion = coreParsed.sptVersion;
         await fs.writeFile(buildJsonPath, JSON.stringify(buildInfo, null, 4));
     } catch (error) {
         throw new Error(`Failed to write commit hash to core.json: ${error.message}`);
@@ -189,7 +306,8 @@ const createHashFile = async () => {
 };
 
 // Combine all tasks into addAssets
-const addAssets = gulp.series(copyAssets, downloadPnpm, copyLicense, writeBuildDataToJSON, createHashFile);
+const addAssets = (entryType) =>
+    gulp.series(copyAssets, copyLicense, () => writeBuildDataToJSON(entryType), createHashFile);
 
 /**
  * Cleans the build directory.
@@ -282,28 +400,30 @@ const loadRecursiveAsync = async (filepath) => {
 };
 
 // Main Tasks Generation
-const build = (packagingType) => {
-    const anonPackaging = () => packaging(entries[packagingType]);
-    anonPackaging.displayName = `packaging-${packagingType}`;
+const build = (entryType) => {
+    const anonPackaging = () => packaging(entries[entryType]);
+    anonPackaging.displayName = `packaging-${entryType}`;
     const tasks = [
         cleanBuild,
         validateJSONs,
+        transpileModules,
         compile,
-        addAssets,
+        addAssets(entries[entryType]),
         fetchPackageImage,
         anonPackaging,
         updateBuildProperties,
         cleanCompiled,
+        restoreModules,
     ];
     return gulp.series(tasks);
 };
 
 // Packaging Arguments
-const packaging = async (entry) => {
+const packaging = async (entryType) => {
     const target = `${nodeVersion}-${targetPlatform}-${targetArch}`;
     try {
         await pkg.exec([
-            entry,
+            path.join("obj", "entry", "run.js"),
             "--compress",
             "GZip",
             "--target",
@@ -312,7 +432,7 @@ const packaging = async (entry) => {
             serverExe,
             "--config",
             pkgConfig,
-            "--public",
+            '--public-packages "*"',
         ]);
     } catch (error) {
         console.error(`Error occurred during packaging: ${error}`);
@@ -325,12 +445,8 @@ gulp.task("build:bleeding", build("bleeding"));
 gulp.task("build:bleedingmods", build("bleedingmods"));
 
 gulp.task("run:build", async () => await exec(serverExeName, { stdio, cwd: buildDir }));
-gulp.task(
-    "run:debug",
-    async () => await exec("ts-node-dev -r tsconfig-paths/register src/ide/TestEntry.ts", { stdio }),
-);
 gulp.task("run:profiler", async () => {
     await cleanCompiled();
     await compile();
-    await exec("node --prof --inspect --trace-warnings obj/ide/TestEntry.js", { stdio });
+    await exec("node --prof --inspect --trace-warnings obj/entry/run.js", { stdio });
 });

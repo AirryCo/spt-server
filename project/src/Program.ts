@@ -7,10 +7,13 @@ import { container } from "tsyringe";
 
 export class Program {
     private errorHandler: ErrorHandler;
+
     constructor() {
-        // set window properties
-        process.stdout.setEncoding("utf8");
+        if (process.stdout.isTTY) {
+            process.stdout?.setEncoding("utf8");
+        }
         process.title = "SPT Server";
+
         this.errorHandler = new ErrorHandler();
     }
 
@@ -27,8 +30,8 @@ export class Program {
 
             Container.registerPostLoadTypes(container, childContainer);
             childContainer.resolve<App>("App").load();
-        } catch (err: any) {
-            this.errorHandler.handleCriticalError(err instanceof Error ? err : new Error(err));
+        } catch (err: unknown) {
+            this.errorHandler.handleCriticalError(err instanceof Error ? err : new Error(String(err)));
         }
     }
 }

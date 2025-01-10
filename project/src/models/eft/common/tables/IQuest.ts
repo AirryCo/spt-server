@@ -158,6 +158,8 @@ export interface IQuestRewards {
 export interface IQuestReward {
     value?: string | number;
     id?: string;
+    illustrationConfig?: any;
+    isHidden?: boolean;
     type: QuestRewardType;
     index: number;
     target?: string;

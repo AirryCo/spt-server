@@ -1,3 +1,4 @@
+import { ProgramStatics } from "@spt/ProgramStatics";
 import { ApplicationContext } from "@spt/context/ApplicationContext";
 import { ContextVariableType } from "@spt/context/ContextVariableType";
 import { HideoutHelper } from "@spt/helpers/HideoutHelper";
@@ -13,7 +14,7 @@ import { ICurrentGroupResponse } from "@spt/models/eft/game/ICurrentGroupRespons
 import { IGameConfigResponse } from "@spt/models/eft/game/IGameConfigResponse";
 import { IGameKeepAliveResponse } from "@spt/models/eft/game/IGameKeepAliveResponse";
 import { IGameModeRequestData } from "@spt/models/eft/game/IGameModeRequestData";
-import { ESessionMode } from "@spt/models/eft/game/IGameModeResponse";
+import { ESessionMode, IGameModeResponse } from "@spt/models/eft/game/IGameModeResponse";
 import { IGetRaidTimeRequest } from "@spt/models/eft/game/IGetRaidTimeRequest";
 import { IGetRaidTimeResponse } from "@spt/models/eft/game/IGetRaidTimeResponse";
 import { IServerDetails } from "@spt/models/eft/game/IServerDetails";
@@ -28,7 +29,7 @@ import { ICoreConfig } from "@spt/models/spt/config/ICoreConfig";
 import { IHideoutConfig } from "@spt/models/spt/config/IHideoutConfig";
 import { IHttpConfig } from "@spt/models/spt/config/IHttpConfig";
 import { IRagfairConfig } from "@spt/models/spt/config/IRagfairConfig";
-import { ILogger } from "@spt/models/spt/utils/ILogger";
+import type { ILogger } from "@spt/models/spt/utils/ILogger";
 import { ConfigServer } from "@spt/servers/ConfigServer";
 import { CustomLocationWaveService } from "@spt/services/CustomLocationWaveService";
 import { DatabaseService } from "@spt/services/DatabaseService";
@@ -44,7 +45,7 @@ import { SeasonalEventService } from "@spt/services/SeasonalEventService";
 import { HashUtil } from "@spt/utils/HashUtil";
 import { RandomUtil } from "@spt/utils/RandomUtil";
 import { TimeUtil } from "@spt/utils/TimeUtil";
-import { ICloner } from "@spt/utils/cloners/ICloner";
+import type { ICloner } from "@spt/utils/cloners/ICloner";
 import { inject, injectable } from "tsyringe";
 
 @injectable()
@@ -88,6 +89,7 @@ export class GameController {
     }
 
     public load(): void {
+        // Runs on server start
         this.postDbLoadService.performPostDbLoadActions();
     }
 
@@ -254,6 +256,7 @@ export class GameController {
         // Hideout Improvement property changed name
         if ((fullProfile.characters.pmc.Hideout as any).Improvement) {
             fullProfile.characters.pmc.Hideout.Improvements = (fullProfile.characters.pmc.Hideout as any).Improvement;
+            // biome-ignore lint/performance/noDelete: Delete is fine here, as we're seeking to remove these entirely
             delete (fullProfile.characters.pmc.Hideout as any).Improvement;
             this.logger.warning(`Migration: Moved Hideout Improvement data to new property 'Improvements'`);
         }
@@ -271,12 +274,14 @@ export class GameController {
         // Remove PMC 'ragfair' from trader list
         if (fullProfile.characters.pmc.TradersInfo.ragfair) {
             this.logger.warning("Migration: deleting: ragfair traderinfo object from PMC");
+            // biome-ignore lint/performance/noDelete: Delete is fine here, as we're seeking to remove these entirely
             delete fullProfile.characters.pmc.TradersInfo.ragfair;
         }
 
         // Remove SCAV 'ragfair' from trader list
         if (fullProfile.characters.scav.TradersInfo.ragfair) {
             this.logger.warning("Migration: deleting: ragfair traderinfo object from PMC");
+            // biome-ignore lint/performance/noDelete: Delete is fine here, as we're seeking to remove these entirely
             delete fullProfile.characters.scav.TradersInfo.ragfair;
         }
 
@@ -313,6 +318,11 @@ export class GameController {
             useProtobuf: false,
             utc_time: new Date().getTime() / 1000,
             totalInGame: gameTime,
+            sessionMode: "pve",
+            purchasedGames: {
+                eft: true,
+                arena: false,
+            },
         };
 
         return config;
@@ -321,7 +331,7 @@ export class GameController {
     /**
      * Handle client/game/mode
      */
-    public getGameMode(sessionID: string, info: IGameModeRequestData): any {
+    public getGameMode(sessionID: string, info: IGameModeRequestData): IGameModeResponse {
         return { gameMode: ESessionMode.PVE, backendUrl: this.httpServerHelper.getBackendUrl() };
     }
 
@@ -329,7 +339,7 @@ export class GameController {
      * Handle client/server/list
      */
     public getServer(sessionId: string): IServerDetails[] {
-        return [{ ip: this.httpConfig.backendIp, port: Number.parseInt(this.httpConfig.backendPort) }];
+        return [{ ip: this.httpConfig.backendIp, port: this.httpConfig.backendPort }];
     }
 
     /**
@@ -554,6 +564,7 @@ export class GameController {
     protected checkForAndRemoveUndefinedDialogs(fullProfile: ISptProfile): void {
         const undefinedDialog = fullProfile.dialogues.undefined;
         if (undefinedDialog) {
+            // biome-ignore lint/performance/noDelete: Delete is fine here, as we're seeking to delete undefined dialogs.
             delete fullProfile.dialogues.undefined;
         }
     }
@@ -561,10 +572,10 @@ export class GameController {
     protected logProfileDetails(fullProfile: ISptProfile): void {
         this.logger.debug(`Profile made with: ${fullProfile.spt.version}`);
         this.logger.debug(
-            `Server version: ${globalThis.G_SPTVERSION || this.coreConfig.sptVersion} ${globalThis.G_COMMIT}`,
+            `Server version: ${ProgramStatics.SPT_VERSION || this.coreConfig.sptVersion} ${ProgramStatics.COMMIT}`,
         );
-        this.logger.debug(`Debug enabled: ${globalThis.G_DEBUG_CONFIGURATION}`);
-        this.logger.debug(`Mods enabled: ${globalThis.G_MODS_ENABLED}`);
+        this.logger.debug(`Debug enabled: ${ProgramStatics.DEBUG}`);
+        this.logger.debug(`Mods enabled: ${ProgramStatics.MODS}`);
     }
 
     public getSurvey(sessionId: string): ISurveyResponseData {

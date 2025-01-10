@@ -16,15 +16,15 @@ import { ItemAddedResult } from "@spt/models/enums/ItemAddedResult";
 import { LootCacheType } from "@spt/models/spt/bots/IBotLootCache";
 import { IItemSpawnLimitSettings } from "@spt/models/spt/bots/IItemSpawnLimitSettings";
 import { IBotConfig } from "@spt/models/spt/config/IBotConfig";
-import { IPmcConfig } from "@spt/models/spt/config/IPmcConfig";
-import { ILogger } from "@spt/models/spt/utils/ILogger";
+import { IMinMaxLootItemValue, IPmcConfig } from "@spt/models/spt/config/IPmcConfig";
+import type { ILogger } from "@spt/models/spt/utils/ILogger";
 import { ConfigServer } from "@spt/servers/ConfigServer";
 import { BotLootCacheService } from "@spt/services/BotLootCacheService";
 import { DatabaseService } from "@spt/services/DatabaseService";
 import { LocalisationService } from "@spt/services/LocalisationService";
 import { HashUtil } from "@spt/utils/HashUtil";
 import { RandomUtil } from "@spt/utils/RandomUtil";
-import { ICloner } from "@spt/utils/cloners/ICloner";
+import type { ICloner } from "@spt/utils/cloners/ICloner";
 import { inject, injectable } from "tsyringe";
 
 @injectable()
@@ -243,6 +243,8 @@ export class BotLootGenerator {
             containersIdFull,
         );
 
+        const itemPriceLimits = this.getSingleItemLootPriceLimits(botLevel, isPmc);
+
         // Backpack - generate loot if they have one
         if (containersBotHasAvailable.includes(EquipmentSlots.BACKPACK)) {
             // Add randomly generated weapon to PMC backpacks
@@ -262,7 +264,13 @@ export class BotLootGenerator {
 
             const backpackLootRoubleTotal = this.getBackpackRoubleTotalByLevel(botLevel, isPmc);
             this.addLootFromPool(
-                this.botLootCacheService.getLootFromCache(botRole, isPmc, LootCacheType.BACKPACK, botJsonTemplate),
+                this.botLootCacheService.getLootFromCache(
+                    botRole,
+                    isPmc,
+                    LootCacheType.BACKPACK,
+                    botJsonTemplate,
+                    itemPriceLimits?.backpack,
+                ),
                 [EquipmentSlots.BACKPACK],
                 backpackLootCount,
                 botInventory,
@@ -278,7 +286,13 @@ export class BotLootGenerator {
         if (containersBotHasAvailable.includes(EquipmentSlots.TACTICAL_VEST)) {
             // Vest
             this.addLootFromPool(
-                this.botLootCacheService.getLootFromCache(botRole, isPmc, LootCacheType.VEST, botJsonTemplate),
+                this.botLootCacheService.getLootFromCache(
+                    botRole,
+                    isPmc,
+                    LootCacheType.VEST,
+                    botJsonTemplate,
+                    itemPriceLimits?.vest,
+                ),
                 [EquipmentSlots.TACTICAL_VEST],
                 vestLootCount,
                 botInventory,
@@ -292,7 +306,13 @@ export class BotLootGenerator {
 
         // Pockets
         this.addLootFromPool(
-            this.botLootCacheService.getLootFromCache(botRole, isPmc, LootCacheType.POCKET, botJsonTemplate),
+            this.botLootCacheService.getLootFromCache(
+                botRole,
+                isPmc,
+                LootCacheType.POCKET,
+                botJsonTemplate,
+                itemPriceLimits?.pocket,
+            ),
             [EquipmentSlots.POCKETS],
             pocketLootCount,
             botInventory,
@@ -333,10 +353,21 @@ export class BotLootGenerator {
             const matchingValue = this.pmcConfig.maxBackpackLootTotalRub.find(
                 (minMaxValue) => botLevel >= minMaxValue.min && botLevel <= minMaxValue.max,
             );
-            return matchingValue.value;
+            return matchingValue?.value;
         }
 
         return 0;
+    }
+
+    protected getSingleItemLootPriceLimits(botLevel: number, isPmc: boolean): IMinMaxLootItemValue | undefined {
+        if (isPmc) {
+            const matchingValue = this.pmcConfig.lootItemLimitsRub.find(
+                (minMaxValue) => botLevel >= minMaxValue.min && botLevel <= minMaxValue.max,
+            );
+            return matchingValue;
+        }
+
+        return undefined;
     }
 
     /**

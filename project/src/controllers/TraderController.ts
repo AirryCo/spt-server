@@ -1,4 +1,5 @@
 import { FenceBaseAssortGenerator } from "@spt/generators/FenceBaseAssortGenerator";
+import { PaymentHelper } from "@spt/helpers/PaymentHelper";
 import { ProfileHelper } from "@spt/helpers/ProfileHelper";
 import { TraderAssortHelper } from "@spt/helpers/TraderAssortHelper";
 import { TraderHelper } from "@spt/helpers/TraderHelper";
@@ -8,7 +9,7 @@ import { ConfigTypes } from "@spt/models/enums/ConfigTypes";
 import { Money } from "@spt/models/enums/Money";
 import { Traders } from "@spt/models/enums/Traders";
 import { ITraderConfig } from "@spt/models/spt/config/ITraderConfig";
-import { ILogger } from "@spt/models/spt/utils/ILogger";
+import type { ILogger } from "@spt/models/spt/utils/ILogger";
 import { ConfigServer } from "@spt/servers/ConfigServer";
 import { DatabaseService } from "@spt/services/DatabaseService";
 import { FenceService } from "@spt/services/FenceService";
@@ -16,7 +17,7 @@ import { RagfairPriceService } from "@spt/services/RagfairPriceService";
 import { TraderAssortService } from "@spt/services/TraderAssortService";
 import { TraderPurchasePersisterService } from "@spt/services/TraderPurchasePersisterService";
 import { TimeUtil } from "@spt/utils/TimeUtil";
-import { ICloner } from "@spt/utils/cloners/ICloner";
+import type { ICloner } from "@spt/utils/cloners/ICloner";
 import { inject, injectable } from "tsyringe";
 
 @injectable()
@@ -30,6 +31,7 @@ export class TraderController {
         @inject("TraderAssortHelper") protected traderAssortHelper: TraderAssortHelper,
         @inject("ProfileHelper") protected profileHelper: ProfileHelper,
         @inject("TraderHelper") protected traderHelper: TraderHelper,
+        @inject("PaymentHelper") protected paymentHelper: PaymentHelper,
         @inject("TraderAssortService") protected traderAssortService: TraderAssortService,
         @inject("RagfairPriceService") protected ragfairPriceService: RagfairPriceService,
         @inject("TraderPurchasePersisterService")
@@ -65,7 +67,20 @@ export class TraderController {
 
             const trader = traders[traderId];
 
-            // Create dict of trader assorts on server start
+            // Adjust price by traderPriceMultipler config property
+            if (this.traderConfig.traderPriceMultipler !== 1) {
+                for (const barterItem of Object.values(trader.assort.barter_scheme)) {
+                    const barterSchemeItem = barterItem[0][0];
+
+                    if (barterSchemeItem && this.paymentHelper.isMoneyTpl(barterSchemeItem._tpl)) {
+                        barterSchemeItem.count += +(
+                            barterSchemeItem.count * this.traderConfig.traderPriceMultipler
+                        ).toFixed(2);
+                    }
+                }
+            }
+
+            // Create dict of pristine trader assorts on server start
             if (!this.traderAssortService.getPristineTraderAssort(traderId)) {
                 const assortsClone = this.cloner.clone(trader.assort);
                 this.traderAssortService.setPristineTraderAssort(traderId, assortsClone);

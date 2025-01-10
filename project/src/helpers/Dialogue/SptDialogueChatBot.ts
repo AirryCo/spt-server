@@ -1,7 +1,7 @@
 import { IDialogueChatBot } from "@spt/helpers/Dialogue/IDialogueChatBot";
 import { ProfileHelper } from "@spt/helpers/ProfileHelper";
 import { ISendMessageRequest } from "@spt/models/eft/dialog/ISendMessageRequest";
-import { IUserDialogInfo } from "@spt/models/eft/profile/ISptProfile";
+import { IUserDialogInfo } from "@spt/models/eft/profile/IUserDialogInfo";
 import { ConfigTypes } from "@spt/models/enums/ConfigTypes";
 import { GiftSentResult } from "@spt/models/enums/GiftSentResult";
 import { MemberCategory } from "@spt/models/enums/MemberCategory";
@@ -169,6 +169,16 @@ export class SptDialogueChatBot implements IDialogueChatBot {
             );
         }
 
+        if (requestInput === "givemesunshine") {
+            this.weatherConfig.overrideSeason = Season.SUMMER;
+
+            this.mailSendService.sendUserMessageToPlayer(
+                sessionId,
+                sptFriendUser,
+                this.randomUtil.getArrayValue([this.localisationService.getText("chatbot-summer_enabled")]),
+            );
+        }
+
         if (requestInput === "veryspooky") {
             const enableEventResult = this.seasonalEventService.forceSeasonalEvent(SeasonalEventType.HALLOWEEN);
             if (enableEventResult) {
@@ -176,7 +186,20 @@ export class SptDialogueChatBot implements IDialogueChatBot {
                     sessionId,
                     sptFriendUser,
                     this.randomUtil.getArrayValue([
-                        this.localisationService.getText("chatbot-halloween_event_enabled"),
+                        this.localisationService.getText("chatbot-forced_event_enabled", SeasonalEventType.HALLOWEEN),
+                    ]),
+                );
+            }
+        }
+
+        if (requestInput === "hohoho") {
+            const enableEventResult = this.seasonalEventService.forceSeasonalEvent(SeasonalEventType.CHRISTMAS);
+            if (enableEventResult) {
+                this.mailSendService.sendUserMessageToPlayer(
+                    sessionId,
+                    sptFriendUser,
+                    this.randomUtil.getArrayValue([
+                        this.localisationService.getText("chatbot-forced_event_enabled", SeasonalEventType.CHRISTMAS),
                     ]),
                 );
             }

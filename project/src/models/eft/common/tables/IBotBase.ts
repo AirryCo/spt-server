@@ -87,12 +87,14 @@ export interface IInfo {
     NicknameChangeDate: number;
     NeedWipeOptions: any[];
     lastCompletedWipe: ILastCompleted;
+    lastWipeTimestamp: number;
     Bans: IBan[];
     BannedState: boolean;
     BannedUntil: number;
     IsStreamerModeAvailable: boolean;
     lastCompletedEvent?: ILastCompleted;
     isMigratedSkills: boolean;
+    PrestigeLevel: number;
 }
 
 export interface IBotInfoSettings {
@@ -124,6 +126,7 @@ export interface ICustomization {
     Body: string;
     Feet: string;
     Hands: string;
+    DogTag: string;
 }
 
 export interface IHealth {
@@ -171,6 +174,7 @@ export interface IInventory {
     hideoutAreaStashes: Record<string, string>;
     fastPanel: Record<string, string>;
     favoriteItems: string[];
+    hideoutCustomizationStashId: string;
 }
 
 export interface IBaseJsonSkills {
@@ -346,7 +350,8 @@ export interface IHideout {
     Improvements: Record<string, IHideoutImprovement>;
     HideoutCounters: IHideoutCounters;
     Seed: number;
-    MannequinPoses: string[];
+    Customization: Record<string, string>;
+    MannequinPoses: Record<string, string>;
     sptUpdateLastRunTimestamp: number;
 }
 

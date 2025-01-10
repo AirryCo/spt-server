@@ -1,18 +1,21 @@
+import path from "node:path";
+import { ProgramStatics } from "@spt/ProgramStatics";
 import { OnLoad } from "@spt/di/OnLoad";
 import { ConfigTypes } from "@spt/models/enums/ConfigTypes";
 import { IHttpConfig } from "@spt/models/spt/config/IHttpConfig";
 import { IDatabaseTables } from "@spt/models/spt/server/IDatabaseTables";
-import { ILogger } from "@spt/models/spt/utils/ILogger";
+import type { ILogger } from "@spt/models/spt/utils/ILogger";
 import { ImageRouter } from "@spt/routers/ImageRouter";
 import { ConfigServer } from "@spt/servers/ConfigServer";
 import { DatabaseServer } from "@spt/servers/DatabaseServer";
 import { LocalisationService } from "@spt/services/LocalisationService";
 import { EncodingUtil } from "@spt/utils/EncodingUtil";
+import { FileSystem } from "@spt/utils/FileSystem";
 import { HashUtil } from "@spt/utils/HashUtil";
 import { ImporterUtil } from "@spt/utils/ImporterUtil";
 import { JsonUtil } from "@spt/utils/JsonUtil";
-import { VFS } from "@spt/utils/VFS";
 import { inject, injectable } from "tsyringe";
+import { Timer } from "./Timer";
 
 @injectable()
 export class DatabaseImporter implements OnLoad {
@@ -23,7 +26,7 @@ export class DatabaseImporter implements OnLoad {
 
     constructor(
         @inject("PrimaryLogger") protected logger: ILogger,
-        @inject("VFS") protected vfs: VFS,
+        @inject("FileSystem") protected fileSystem: FileSystem,
         @inject("JsonUtil") protected jsonUtil: JsonUtil,
         @inject("LocalisationService") protected localisationService: LocalisationService,
         @inject("DatabaseServer") protected databaseServer: DatabaseServer,
@@ -41,20 +44,20 @@ export class DatabaseImporter implements OnLoad {
      * @returns path to data
      */
     public getSptDataPath(): string {
-        return globalThis.G_RELEASE_CONFIGURATION ? "SPT_Data/Server/" : "./assets/";
+        return ProgramStatics.COMPILED ? "SPT_Data/Server/" : "assets/";
     }
 
     public async onLoad(): Promise<void> {
         this.filepath = this.getSptDataPath();
 
-        if (globalThis.G_RELEASE_CONFIGURATION) {
+        if (ProgramStatics.COMPILED) {
             try {
                 // Reading the dynamic SHA1 file
                 const file = "checks.dat";
                 const fileWithPath = `${this.filepath}${file}`;
-                if (this.vfs.exists(fileWithPath)) {
+                if (await this.fileSystem.exists(fileWithPath)) {
                     this.hashedFile = this.jsonUtil.deserialize(
-                        this.encodingUtil.fromBase64(this.vfs.readFile(fileWithPath)),
+                        this.encodingUtil.fromBase64(await this.fileSystem.read(fileWithPath)),
                         file,
                     );
                 } else {
@@ -70,16 +73,7 @@ export class DatabaseImporter implements OnLoad {
         await this.hydrateDatabase(this.filepath);
 
         const imageFilePath = `${this.filepath}images/`;
-        const directories = this.vfs.getDirs(imageFilePath);
-        this.loadImages(imageFilePath, directories, [
-            "/files/achievement/",
-            "/files/CONTENT/banners/",
-            "/files/handbook/",
-            "/files/Hideout/",
-            "/files/launcher/",
-            "/files/quest/icon/",
-            "/files/trader/avatar/",
-        ]);
+        await this.createRouteMappingAsync(imageFilePath, "files");
     }
 
     /**
@@ -88,22 +82,26 @@ export class DatabaseImporter implements OnLoad {
      */
     protected async hydrateDatabase(filepath: string): Promise<void> {
         this.logger.info(this.localisationService.getText("importing_database"));
+        const timer = new Timer();
 
         const dataToImport = await this.importerUtil.loadAsync<IDatabaseTables>(
             `${filepath}database/`,
             this.filepath,
-            (fileWithPath: string, data: string) => this.onReadValidate(fileWithPath, data),
+            async (fileWithPath: string, data: string) => await this.onReadValidate(fileWithPath, data),
         );
 
         const validation =
             this.valid === VaildationResult.FAILED || this.valid === VaildationResult.NOT_FOUND ? "." : "";
+
         this.logger.info(`${this.localisationService.getText("importing_database_finish")}${validation}`);
+        this.logger.debug(`Database import took ${timer.getTime("sec")}s`);
+
         this.databaseServer.setTables(dataToImport);
     }
 
-    protected onReadValidate(fileWithPath: string, data: string): void {
+    protected async onReadValidate(fileWithPath: string, data: string): Promise<void> {
         // Validate files
-        if (globalThis.G_RELEASE_CONFIGURATION && this.hashedFile && !this.validateFile(fileWithPath, data)) {
+        if (ProgramStatics.COMPILED && this.hashedFile && !(await this.validateFile(fileWithPath, data))) {
             this.valid = VaildationResult.FAILED;
         }
     }
@@ -112,7 +110,7 @@ export class DatabaseImporter implements OnLoad {
         return "spt-database";
     }
 
-    protected validateFile(filePathAndName: string, fileData: any): boolean {
+    protected async validateFile(filePathAndName: string, fileData: any): Promise<boolean> {
         try {
             const finalPath = filePathAndName.replace(this.filepath, "").replace(".json", "");
             let tempObject: any;
@@ -124,7 +122,7 @@ export class DatabaseImporter implements OnLoad {
                 }
             }
 
-            if (tempObject !== this.hashUtil.generateSha1ForData(fileData)) {
+            if (tempObject !== (await this.hashUtil.generateSha1ForDataAsync(fileData))) {
                 this.logger.debug(this.localisationService.getText("validation_error_file", filePathAndName));
                 return false;
             }
@@ -137,16 +135,17 @@ export class DatabaseImporter implements OnLoad {
     }
 
     /**
+     * @deprecated
      * Find and map files with image router inside a designated path
      * @param filepath Path to find files in
      */
-    public loadImages(filepath: string, directories: string[], routes: string[]): void {
+    public async loadImagesAsync(filepath: string, directories: string[], routes: string[]): Promise<void> {
         for (const directoryIndex in directories) {
             // Get all files in directory
-            const filesInDirectory = this.vfs.getFiles(`${filepath}${directories[directoryIndex]}`);
+            const filesInDirectory = await this.fileSystem.getFiles(`${filepath}${directories[directoryIndex]}`);
             for (const file of filesInDirectory) {
                 // Register each file in image router
-                const filename = this.vfs.stripExtension(file);
+                const filename = FileSystem.stripExtension(file);
                 const routeKey = `${routes[directoryIndex]}${filename}`;
                 let imagePath = `${filepath}${directories[directoryIndex]}/${file}`;
 
@@ -162,6 +161,21 @@ export class DatabaseImporter implements OnLoad {
 
         // Map icon file separately
         this.imageRouter.addRoute("/favicon.ico", `${filepath}icon.ico`);
+    }
+
+    /**
+     * Add routes into imageRouter
+     * @param directory Directory with files to add to router
+     * @param newBasePath new starting path
+     */
+    public async createRouteMappingAsync(directory: string, newBasePath: string): Promise<void> {
+        const directoryContent = await this.fileSystem.getFiles(directory, true);
+
+        for (const fileNameWithPath of directoryContent) {
+            const bsgPath = `/${newBasePath}/${FileSystem.stripExtension(fileNameWithPath)}`;
+            const sptPath = `${directory}${fileNameWithPath}`;
+            this.imageRouter.addRoute(bsgPath, sptPath);
+        }
     }
 
     /**

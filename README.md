@@ -42,7 +42,7 @@ To prepare the project for development you will need to:
 1. Run `git clone https://github.com/sp-tarkov/server.git server` to clone the repository.
 2. Run `git lfs pull` to download LFS files locally.
 3. Open the `project/mod.code-workspace` file in Visual Studio Code (VSC).
-4. Run `nvm use 20.11.1` in the VSC terminal.
+4. Run `nvm use 22.12.0` in the VSC terminal.
 5. Run `npm install` in the VSC terminal.
 
 ## Development
@@ -51,27 +51,30 @@ To prepare the project for development you will need to:
 
 The following commands are available after the initial setup. Run them with `npm run <command>`.
 
-| Command               | Description                                                               |
-|-----------------------|---------------------------------------------------------------------------|
-| `check:circular`      | Check for circular dependencies in the project.                           |
-| `lint`                | Check the project for coding standards issues using Biome.                |
-| `lint:fix`            | Automatically fix coding standards issues using Biome.                    |
-| `style`               | Check the project for formatting issues using Biome.                      |
-| `style:fix`           | Automatically fix formatting issues using Biome.                          |
-| `format`              | Automatically fix all coding standards and formatting issues using Biome. |
-| `test`                | Run all tests.                                                            |
-| `test:watch`          | Run tests in watch mode. Tests will re-run when files are changed.        |
-| `test:coverage`       | Run tests and generate a coverage report.                                 |
-| `test:ui`             | Run tests in UI mode. This will open a browser window to view tests.      |
-| `build:release`       | Build the project for release.                                            |
-| `build:debug`         | Build the project for debugging.                                          |
-| `build:bleeding`      | Build the project on the bleeding edge.                                   |
-| `build:bleedingmods`  | Build the project on the bleeding edge with mods.                         |
-| `run:build`           | Run the project in build mode.                                            |
-| `run:debug`           | Run the project in debug mode.                                            |
-| `run:profiler`        | Run the project in profiler mode.                                         |
-| `gen:types`           | Generate types for the project.                                           |
-| `gen:docs`            | Generate documentation for the project.                                   |
+| Command                | Description                                                               |
+|------------------------|---------------------------------------------------------------------------|
+| `check:circular`       | Check for circular dependencies in the project.                           |
+| `lint`                 | Check the project for coding standards issues using Biome.                |
+| `lint:fix`             | Automatically fix coding standards issues using Biome.                    |
+| `lint:types`           | Check for TypeScript compile errors using TSC.                            |
+| `style`                | Check the project for formatting issues using Biome.                      |
+| `style:fix`            | Automatically fix formatting issues using Biome.                          |
+| `format`               | Automatically fix all coding standards and formatting issues using Biome. |
+| `test`                 | Run all tests.                                                            |
+| `test:watch`           | Run tests in watch mode. Tests will re-run when files are changed.        |
+| `test:coverage`        | Run tests and generate a coverage report.                                 |
+| `test:ui`              | Run tests in UI mode. This will open a browser window to view tests.      |
+| `build:release`        | Build the project for release.                                            |
+| `build:debug`          | Build the project for debugging.                                          |
+| `build:bleeding`       | Build the project on the bleeding edge.                                   |
+| `build:bleedingmods`   | Build the project on the bleeding edge with mods.                         |
+| `run:build`            | Run the project in build mode.                                            |
+| `run:debug`            | Run the project in debug mode.                                            |
+| `run:profiler`         | Run the project in profiler mode.                                         |
+| `gen:types`            | Generate types for the project.                                           |
+| `gen:docs`             | Generate documentation for the project.                                   |
+| `gen:items`            | Dynamically generate ItemTpl and Weapons enums.                           |
+| `gen:productionquests` | Automatically update properties for production requirements.              |
 
 ### Debugging
 
@@ -91,7 +94,7 @@ We're really excited that you're interested in contributing! Before submitting y
   The default branch used for the latest stable release. This branch is protected and typically is only merged with release branches.
 - **3.10.X-DEV**
   Development for the next hotfix release. Hotfix releases include bug fixes and minor features that do not affect the coding structure of the project. Special care is taken to not break server mod stability. These always target the same version of EFT as the last minor release.
-- **3.11.0-DEV**
+- **4.0.0-DEV**
   Development for the next minor release of SPT. Minor releases target the latest version of EFT. Late in the minor release cycle the EFT version is frozen for stability to prepare for release. Larger changes to the project structure may be included in minor releases.
 
 ### Pull Request Guidelines

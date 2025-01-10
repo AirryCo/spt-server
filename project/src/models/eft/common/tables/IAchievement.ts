@@ -1,10 +1,10 @@
-import { IQuestConditionTypes, IQuestRewards } from "@spt/models/eft/common/tables/IQuest";
+import { IQuestConditionTypes, IQuestReward } from "@spt/models/eft/common/tables/IQuest";
 
 export interface IAchievement {
     id: string;
     imageUrl: string;
     assetPath: string;
-    rewards: IQuestRewards;
+    rewards: IQuestReward[];
     conditions: IQuestConditionTypes;
     instantComplete: boolean;
     showNotificationsInGame: boolean;

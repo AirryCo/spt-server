@@ -22,14 +22,14 @@ import { BonusType } from "@spt/models/enums/BonusType";
 import { ConfigTypes } from "@spt/models/enums/ConfigTypes";
 import { IInventoryConfig, IRewardDetails } from "@spt/models/spt/config/IInventoryConfig";
 import { IOwnerInventoryItems } from "@spt/models/spt/inventory/IOwnerInventoryItems";
-import { ILogger } from "@spt/models/spt/utils/ILogger";
+import type { ILogger } from "@spt/models/spt/utils/ILogger";
 import { ConfigServer } from "@spt/servers/ConfigServer";
 import { DatabaseServer } from "@spt/servers/DatabaseServer";
 import { FenceService } from "@spt/services/FenceService";
 import { LocalisationService } from "@spt/services/LocalisationService";
 import { HashUtil } from "@spt/utils/HashUtil";
 import { HttpResponseUtil } from "@spt/utils/HttpResponseUtil";
-import { ICloner } from "@spt/utils/cloners/ICloner";
+import type { ICloner } from "@spt/utils/cloners/ICloner";
 import { inject, injectable } from "tsyringe";
 
 @injectable()
@@ -148,7 +148,7 @@ export class InventoryHelper {
             }
         } catch (err) {
             // Callback failed
-            const message =
+            const message: string =
                 typeof err?.message === "string" ? err.message : this.localisationService.getText("http-unknown_error");
 
             this.httpResponse.appendErrorToOutput(output, message);
@@ -177,10 +177,14 @@ export class InventoryHelper {
             // Ensure item has upd object
             this.itemHelper.addUpdObjectToItem(item);
 
+            if (!item.upd) {
+                item.upd = {};
+            }
+
             if (foundInRaid) {
                 item.upd.SpawnedInSession = foundInRaid;
             } else {
-                delete item.upd.SpawnedInSession;
+                item.upd.SpawnedInSession = false;
             }
         }
     }
@@ -191,14 +195,17 @@ export class InventoryHelper {
      */
     protected removeTraderRagfairRelatedUpdProperties(upd: IUpd): void {
         if (upd.UnlimitedCount !== undefined) {
+            // biome-ignore lint/performance/noDelete: Delete is fine here since we're attempting to remove this fully here.
             delete upd.UnlimitedCount;
         }
 
         if (upd.BuyRestrictionCurrent !== undefined) {
+            // biome-ignore lint/performance/noDelete: Delete is fine here since we're attempting to remove this fully here.
             delete upd.BuyRestrictionCurrent;
         }
 
         if (upd.BuyRestrictionMax !== undefined) {
+            // biome-ignore lint/performance/noDelete: Delete is fine here since we're attempting to remove this fully here.
             delete upd.BuyRestrictionMax;
         }
     }
@@ -267,7 +274,7 @@ export class InventoryHelper {
                     findSlotResult.rotation,
                 );
             } catch (err) {
-                const errorText = typeof err === "string" ? ` -> ${err}` : err.message;
+                const errorText: string = typeof err === "string" ? ` -> ${err}` : err.message;
                 this.logger.error(
                     this.localisationService.getText("inventory-unable_to_fit_item_into_inventory", errorText),
                 );
@@ -312,7 +319,7 @@ export class InventoryHelper {
                     findSlotResult.rotation,
                 );
             } catch (err) {
-                const errorText = typeof err === "string" ? ` -> ${err}` : err.message;
+                const errorText: string = typeof err === "string" ? ` -> ${err}` : err.message;
                 this.logger.error(this.localisationService.getText("inventory-fill_container_failed", errorText));
 
                 return;
@@ -997,6 +1004,7 @@ export class InventoryHelper {
                 } else {
                     // No location in request, delete it
                     if (itemToMove.location) {
+                        // biome-ignore lint/performance/noDelete: Delete is fine here as we're trying to remove the entire data property.
                         delete itemToMove.location;
                     }
                 }
@@ -1059,6 +1067,7 @@ export class InventoryHelper {
         } else {
             // Moved from slot with location to one without, clean up
             if (matchingInventoryItem.location) {
+                // biome-ignore lint/performance/noDelete: Delete is fine here as we're trying to remove the entire data property.
                 delete matchingInventoryItem.location;
             }
         }

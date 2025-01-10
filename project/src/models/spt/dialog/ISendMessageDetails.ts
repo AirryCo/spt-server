@@ -1,5 +1,7 @@
 import { IItem } from "@spt/models/eft/common/tables/IItem";
-import { IMessageContentRagfair, ISystemData, IUserDialogInfo } from "@spt/models/eft/profile/ISptProfile";
+import { IMessageContentRagfair } from "@spt/models/eft/profile/IMessageContentRagfair";
+import { ISystemData } from "@spt/models/eft/profile/ISystemData";
+import { IUserDialogInfo } from "@spt/models/eft/profile/IUserDialogInfo";
 import { MessageType } from "@spt/models/enums/MessageType";
 import { Traders } from "@spt/models/enums/Traders";
 

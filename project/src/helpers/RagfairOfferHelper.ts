@@ -12,7 +12,8 @@ import { IPmcData } from "@spt/models/eft/common/IPmcData";
 import { IItem } from "@spt/models/eft/common/tables/IItem";
 import { ITraderAssort } from "@spt/models/eft/common/tables/ITrader";
 import { IItemEventRouterResponse } from "@spt/models/eft/itemEvent/IItemEventRouterResponse";
-import { ISptProfile, ISystemData } from "@spt/models/eft/profile/ISptProfile";
+import { ISptProfile } from "@spt/models/eft/profile/ISptProfile";
+import { ISystemData } from "@spt/models/eft/profile/ISystemData";
 import { IRagfairOffer } from "@spt/models/eft/ragfair/IRagfairOffer";
 import { ISearchRequestData, OfferOwnerType } from "@spt/models/eft/ragfair/ISearchRequestData";
 import { BaseClasses } from "@spt/models/enums/BaseClasses";
@@ -24,7 +25,7 @@ import { Traders } from "@spt/models/enums/Traders";
 import { IBotConfig } from "@spt/models/spt/config/IBotConfig";
 import { IQuestConfig } from "@spt/models/spt/config/IQuestConfig";
 import { IRagfairConfig, ITieredFlea } from "@spt/models/spt/config/IRagfairConfig";
-import { ILogger } from "@spt/models/spt/utils/ILogger";
+import type { ILogger } from "@spt/models/spt/utils/ILogger";
 import { EventOutputHolder } from "@spt/routers/EventOutputHolder";
 import { ConfigServer } from "@spt/servers/ConfigServer";
 import { SaveServer } from "@spt/servers/SaveServer";
@@ -264,6 +265,11 @@ export class RagfairOfferHelper {
                         tieredFleaLimitTypes,
                         pmcData.Info.Level,
                     );
+
+                    // Do not add offer to build if user does not have access to it
+                    if (offer.locked) {
+                        continue;
+                    }
                 }
 
                 const key = offer.items[0]._tpl;

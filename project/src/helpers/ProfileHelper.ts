@@ -1,9 +1,15 @@
 import { ItemHelper } from "@spt/helpers/ItemHelper";
 import { IPmcData } from "@spt/models/eft/common/IPmcData";
 import { BanType, Common, ICounterKeyValue, IStats } from "@spt/models/eft/common/tables/IBotBase";
+import {
+    CustomisationSource,
+    CustomisationType,
+    ICustomisationStorage,
+} from "@spt/models/eft/common/tables/ICustomisationStorage";
 import { IItem } from "@spt/models/eft/common/tables/IItem";
+import { IQuestReward } from "@spt/models/eft/common/tables/IQuest";
 import { ISearchFriendResponse } from "@spt/models/eft/profile/ISearchFriendResponse";
-import { ISptProfile } from "@spt/models/eft/profile/ISptProfile";
+import { ISpt, ISptProfile } from "@spt/models/eft/profile/ISptProfile";
 import { IValidateNicknameRequestData } from "@spt/models/eft/profile/IValidateNicknameRequestData";
 import { AccountTypes } from "@spt/models/enums/AccountTypes";
 import { BonusType } from "@spt/models/enums/BonusType";
@@ -11,7 +17,7 @@ import { ConfigTypes } from "@spt/models/enums/ConfigTypes";
 import { GameEditions } from "@spt/models/enums/GameEditions";
 import { SkillTypes } from "@spt/models/enums/SkillTypes";
 import { IInventoryConfig } from "@spt/models/spt/config/IInventoryConfig";
-import { ILogger } from "@spt/models/spt/utils/ILogger";
+import type { ILogger } from "@spt/models/spt/utils/ILogger";
 import { ConfigServer } from "@spt/servers/ConfigServer";
 import { SaveServer } from "@spt/servers/SaveServer";
 import { DatabaseService } from "@spt/services/DatabaseService";
@@ -19,7 +25,7 @@ import { LocalisationService } from "@spt/services/LocalisationService";
 import { HashUtil } from "@spt/utils/HashUtil";
 import { TimeUtil } from "@spt/utils/TimeUtil";
 import { Watermark } from "@spt/utils/Watermark";
-import { ICloner } from "@spt/utils/cloners/ICloner";
+import type { ICloner } from "@spt/utils/cloners/ICloner";
 import { inject, injectable } from "tsyringe";
 
 @injectable()
@@ -184,8 +190,15 @@ export class ProfileHelper {
         return this.databaseService.getGlobals().config.exp.level.exp_table.length - 1;
     }
 
-    public getDefaultSptDataObject(): any {
-        return { version: this.watermark.getVersionTag(true) };
+    public getDefaultSptDataObject(): ISpt {
+        return {
+            version: this.watermark.getVersionTag(true),
+            freeRepeatableRefreshUsedCount: {},
+            migrations: {},
+            cultistRewards: new Map(),
+            mods: [],
+            receivedGifts: [],
+        };
     }
 
     /**
@@ -535,12 +548,47 @@ export class ProfileHelper {
     }
 
     /**
-     * Add an achievement to player profile
-     * @param pmcProfile Profile to add achievement to
+     * Add an achievement to player profile + check for and add any hideout customisation unlocks to profile
+     * @param fullProfile Profile to add achievement to
      * @param achievementId Id of achievement to add
      */
-    public addAchievementToProfile(pmcProfile: IPmcData, achievementId: string): void {
-        pmcProfile.Achievements[achievementId] = this.timeUtil.getTimestamp();
+    public addAchievementToProfile(fullProfile: ISptProfile, achievementId: string): void {
+        // Add achievement id to profile with timestamp it was unlocked
+        fullProfile.characters.pmc.Achievements[achievementId] = this.timeUtil.getTimestamp();
+
+        // Check for any customisation unlocks
+        const achievementDataDb = this.databaseService
+            .getTemplates()
+            .achievements.find((achievement) => achievement.id === achievementId);
+        if (!achievementDataDb) {
+            return;
+        }
+
+        // Get customisation reward object from achievement db
+        const customizationDirectReward = achievementDataDb.rewards.find(
+            (reward) => reward.type === "CustomizationDirect",
+        );
+        if (!customizationDirectReward) {
+            return;
+        }
+
+        const customisationDataDb = this.databaseService
+            .getHideout()
+            .customisation.globals.find((customisation) => customisation.itemId === customizationDirectReward.target);
+        if (!customisationDataDb) {
+            this.logger.error(
+                `Unable to find customisation data for ${customizationDirectReward.target} in profile ${fullProfile.info.id}`,
+            );
+
+            return;
+        }
+
+        // Reward found, add to profile
+        fullProfile.customisationUnlocks.push({
+            id: customizationDirectReward.target,
+            source: CustomisationSource.ACHIEVEMENT,
+            type: customisationDataDb.type as CustomisationType,
+        });
     }
 
     public hasAccessToRepeatableFreeRefreshSystem(pmcProfile: IPmcData): boolean {
@@ -584,7 +632,7 @@ export class ProfileHelper {
      * @returns An array of IItem objects representing the favorited data
      */
     public getOtherProfileFavorites(profile: IPmcData): IItem[] {
-        let fullFavorites = [];
+        let fullFavorites: IItem[] = [];
 
         for (const itemId of profile.Inventory.favoriteItems ?? []) {
             // When viewing another users profile, the client expects a full item with children, so get that
@@ -599,5 +647,83 @@ export class ProfileHelper {
         }
 
         return fullFavorites;
+    }
+
+    /**
+     * Store a hideout customisation unlock inside a profile
+     * @param fullProfile Profile to add unlock to
+     * @param reward reward given to player with customisation data
+     * @param source Source of reward, e.g. "unlockedInGame" for quests and "achievement" for achievements
+     */
+    public addHideoutCustomisationUnlock(
+        fullProfile: ISptProfile,
+        reward: IQuestReward,
+        source: CustomisationSource,
+    ): void {
+        fullProfile.customisationUnlocks ||= [];
+        if (fullProfile.customisationUnlocks?.some((unlock) => unlock.id === reward.target)) {
+            this.logger.warning(
+                `Profile: ${fullProfile.info.id} already has hideout customisaiton reward: ${reward.target}, skipping`,
+            );
+            return;
+        }
+
+        const customisationTemplateDb = this.databaseService.getTemplates().customization;
+        const matchingCustomisation = customisationTemplateDb[reward.target];
+
+        if (matchingCustomisation) {
+            const rewardToStore: ICustomisationStorage = {
+                id: reward.target,
+                source: source,
+                type: null,
+            };
+            switch (matchingCustomisation._parent) {
+                case "675ff48ce8d2356707079617": {
+                    // MannequinPose
+                    rewardToStore.type = CustomisationType.MANNEQUIN_POSE;
+                    break;
+                }
+                case "6751848eba5968fd800a01d6": {
+                    // Gestures
+                    rewardToStore.type = CustomisationType.GESTURE;
+                    break;
+                }
+                case "67373f170eca6e03ab0d5391": {
+                    // Floor
+                    rewardToStore.type = CustomisationType.FLOOR;
+                    break;
+                }
+                case "6746fafabafff8500804880e": {
+                    // DogTags
+                    rewardToStore.type = CustomisationType.DOG_TAG;
+                    break;
+                }
+                case "673b3f595bf6b605c90fcdc2": {
+                    // Ceiling
+                    rewardToStore.type = CustomisationType.CEILING;
+                    break;
+                }
+                case "67373f1e5a5ee73f2a081baf": {
+                    // Wall
+                    rewardToStore.type = CustomisationType.WALL;
+                    break;
+                }
+                default:
+                    this.logger.error(
+                        `Unhandled customisation unlock type: ${matchingCustomisation._parent} not added to profile`,
+                    );
+                    return;
+            }
+
+            fullProfile.customisationUnlocks.push(rewardToStore);
+        }
+
+        // const rewardToStore: ICustomisationStorage = {
+        //     id: matchingHideoutCustomisation.itemId,
+        //     source: source,
+        //     type: matchingHideoutCustomisation.type as CustomisationType,
+        // };
+
+        // fullProfile.customisationUnlocks.push(rewardToStore);
     }
 }

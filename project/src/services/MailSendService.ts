@@ -4,19 +4,15 @@ import { NotificationSendHelper } from "@spt/helpers/NotificationSendHelper";
 import { NotifierHelper } from "@spt/helpers/NotifierHelper";
 import { TraderHelper } from "@spt/helpers/TraderHelper";
 import { IItem } from "@spt/models/eft/common/tables/IItem";
-import {
-    IDialogue,
-    IMessage,
-    IMessageContentRagfair,
-    IMessageItems,
-    ISystemData,
-    IUserDialogInfo,
-} from "@spt/models/eft/profile/ISptProfile";
+import { IMessageContentRagfair } from "@spt/models/eft/profile/IMessageContentRagfair";
+import { IDialogue, IMessage, IMessageItems } from "@spt/models/eft/profile/ISptProfile";
+import { ISystemData } from "@spt/models/eft/profile/ISystemData";
+import { IUserDialogInfo } from "@spt/models/eft/profile/IUserDialogInfo";
 import { BaseClasses } from "@spt/models/enums/BaseClasses";
 import { MessageType } from "@spt/models/enums/MessageType";
 import { Traders } from "@spt/models/enums/Traders";
 import { IProfileChangeEvent, ISendMessageDetails } from "@spt/models/spt/dialog/ISendMessageDetails";
-import { ILogger } from "@spt/models/spt/utils/ILogger";
+import type { ILogger } from "@spt/models/spt/utils/ILogger";
 import { SaveServer } from "@spt/servers/SaveServer";
 import { DatabaseService } from "@spt/services/DatabaseService";
 import { LocalisationService } from "@spt/services/LocalisationService";
@@ -174,7 +170,10 @@ export class MailSendService {
 
         // Add items to message
         if (items.length > 0) {
-            details.items = items;
+            const rootItemParentID = this.hashUtil.generate();
+
+            details.items = this.itemHelper.adoptOrphanedItems(rootItemParentID, items);
+
             details.itemsMaxStorageLifetimeSeconds = maxStorageTimeSeconds ?? 172800; // 48 hours if no value supplied
         }
 
@@ -351,11 +350,13 @@ export class MailSendService {
 
         // Clean up empty system data
         if (!message.systemData) {
+            // biome-ignore lint/performance/noDelete: Delete is fine here as we're trying to remove the entire data property.
             delete message.systemData;
         }
 
         // Clean up empty template id
         if (!message.templateId) {
+            // biome-ignore lint/performance/noDelete: Delete is fine here as we're trying to remove the entire data property.
             delete message.templateId;
         }
 
@@ -459,6 +460,7 @@ export class MailSendService {
 
             // Remove empty data property if no rewards
             if (itemsToSendToPlayer.data.length === 0) {
+                // biome-ignore lint/performance/noDelete: Delete is fine here as we're trying to remove the empty data property.
                 delete itemsToSendToPlayer.data;
             }
         }

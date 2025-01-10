@@ -1,4 +1,3 @@
-import { formatInTimeZone } from "date-fns-tz";
 import { injectable } from "tsyringe";
 
 /**
@@ -110,7 +109,10 @@ export class TimeUtil {
      * @returns {string} The current time as 'HH:MM' in UTC.
      */
     public getTimeMailFormat(): string {
-        return formatInTimeZone(new Date(), "UTC", "HH:mm");
+        const now = new Date();
+        const utcHours = now.getUTCHours().toString().padStart(2, "0");
+        const utcMinutes = now.getUTCMinutes().toString().padStart(2, "0");
+        return `${utcHours}:${utcMinutes}`;
     }
 
     /**
@@ -119,7 +121,11 @@ export class TimeUtil {
      * @returns {string} The current date as 'DD.MM.YYYY' in UTC.
      */
     public getDateMailFormat(): string {
-        return formatInTimeZone(new Date(), "UTC", "dd.MM.yyyy");
+        const now = new Date();
+        const utcDay = now.getUTCDate().toString().padStart(2, "0");
+        const utcMonth = (now.getUTCMonth() + 1).toString().padStart(2, "0");
+        const utcYear = now.getUTCFullYear().toString();
+        return `${utcDay}.${utcMonth}.${utcYear}`;
     }
 
     /**

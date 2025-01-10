@@ -29,6 +29,7 @@ export interface IOtherProfileCustomization {
     body: string;
     feet: string;
     hands: string;
+    dogtag: string;
 }
 
 export interface IOtherProfileEquipment {

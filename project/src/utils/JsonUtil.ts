@@ -1,10 +1,10 @@
-import { ILogger } from "@spt/models/spt/utils/ILogger";
+import type { ILogger } from "@spt/models/spt/utils/ILogger";
+import { FileSystem } from "@spt/utils/FileSystem";
 import { HashUtil } from "@spt/utils/HashUtil";
-import { VFS } from "@spt/utils/VFS";
-import fixJson from "json-fixer";
 import { parse, stringify } from "json5";
 import { jsonc } from "jsonc";
 import { IParseOptions, IStringifyOptions, Reviver } from "jsonc/lib/interfaces";
+import { jsonrepair } from "jsonrepair";
 import { inject, injectable } from "tsyringe";
 
 @injectable()
@@ -14,7 +14,7 @@ export class JsonUtil {
     protected jsonCachePath = "./user/cache/jsonCache.json";
 
     constructor(
-        @inject("VFS") protected vfs: VFS,
+        @inject("FileSystem") protected fileSystem: FileSystem,
         @inject("HashUtil") protected hashUtil: HashUtil,
         @inject("PrimaryLogger") protected logger: ILogger,
     ) {}
@@ -126,25 +126,23 @@ export class JsonUtil {
         }
     }
 
-    public async deserializeWithCacheCheckAsync<T>(jsonString: string, filePath: string): Promise<T | undefined> {
-        return new Promise((resolve) => {
-            resolve(this.deserializeWithCacheCheck<T>(jsonString, filePath));
-        });
-    }
-
     /**
      * Take json from file and convert into object
      * Perform valadation on json during process if json file has not been processed before
      * @param jsonString String to turn into object
      * @param filePath Path to json file being processed
-     * @returns Object
+     * @returns A promise that resolves with the object if successful, if not returns undefined
      */
-    public deserializeWithCacheCheck<T>(jsonString: string, filePath: string): T | undefined {
-        this.ensureJsonCacheExists(this.jsonCachePath);
-        this.hydrateJsonCache(this.jsonCachePath);
+    public async deserializeWithCacheCheck<T>(
+        jsonString: string,
+        filePath: string,
+        writeHashes = true,
+    ): Promise<T | undefined> {
+        await this.ensureJsonCacheExists(this.jsonCachePath);
+        await this.hydrateJsonCache(this.jsonCachePath);
 
         // Generate hash of string
-        const generatedHash = this.hashUtil.generateSha1ForData(jsonString);
+        const generatedHash = await this.hashUtil.generateSha1ForDataAsync(jsonString);
 
         if (!this.fileHashes) {
             throw new Error("Unable to deserialize with Cache, file hashes have not been hydrated yet");
@@ -153,14 +151,21 @@ export class JsonUtil {
         let savedHash = this.fileHashes[filePath];
         if (!savedHash || savedHash !== generatedHash) {
             try {
-                const { data, changed } = fixJson(jsonString);
+                const fixedJsonString = jsonrepair(jsonString);
+                const data = this.deserialize<T>(fixedJsonString);
+                const changed = jsonString !== fixedJsonString;
+
                 if (changed) {
                     // data invalid, return it
-                    this.logger.error(`${filePath} - Detected faulty json, please fix your json file using VSCodium`);
+                    this.logger.error(`${filePath} - Detected faulty JSON, please fix using a validator`);
                 } else {
                     // data valid, save hash and call function again
                     this.fileHashes[filePath] = generatedHash;
-                    this.vfs.writeFile(this.jsonCachePath, this.serialize(this.fileHashes, true));
+
+                    if (writeHashes) {
+                        await this.fileSystem.writeJson(this.jsonCachePath, this.fileHashes);
+                    }
+
                     savedHash = generatedHash;
                 }
                 return data as T;
@@ -181,14 +186,25 @@ export class JsonUtil {
     }
 
     /**
-     * Create file if nothing found
+     * Writes the file hashes to the cache path, to be used manually if writeHashes was set to false on deserializeWithCacheCheck
+     */
+    public async writeCache(): Promise<void> {
+        if (!this.fileHashes) {
+            return;
+        }
+
+        await this.fileSystem.writeJson(this.jsonCachePath, this.fileHashes);
+    }
+
+    /**
+     * Create file if nothing found asynchronously
      * @param jsonCachePath path to cache
      */
-    protected ensureJsonCacheExists(jsonCachePath: string): void {
+    protected async ensureJsonCacheExists(jsonCachePath: string): Promise<void> {
         if (!this.jsonCacheExists) {
-            if (!this.vfs.exists(jsonCachePath)) {
+            if (!(await this.fileSystem.exists(jsonCachePath))) {
                 // Create empty object at path
-                this.vfs.writeFile(jsonCachePath, "{}");
+                await this.fileSystem.writeJson(jsonCachePath, {});
             }
             this.jsonCacheExists = true;
         }
@@ -198,10 +214,10 @@ export class JsonUtil {
      * Read contents of json cache and add to class field
      * @param jsonCachePath Path to cache
      */
-    protected hydrateJsonCache(jsonCachePath: string): void {
+    protected async hydrateJsonCache(jsonCachePath: string): Promise<void> {
         // Get all file hashes
         if (!this.fileHashes) {
-            this.fileHashes = this.deserialize(this.vfs.readFile(`${jsonCachePath}`));
+            this.fileHashes = await this.fileSystem.readJson(`${jsonCachePath}`);
         }
     }
 

@@ -5,7 +5,6 @@ import { BotHelper } from "@spt/helpers/BotHelper";
 import { ProfileHelper } from "@spt/helpers/ProfileHelper";
 import { WeightedRandomHelper } from "@spt/helpers/WeightedRandomHelper";
 import { MinMax } from "@spt/models/common/MinMax";
-import { IWildBody } from "@spt/models/eft/common/IGlobals";
 import { IPmcData } from "@spt/models/eft/common/IPmcData";
 import {
     Common,
@@ -26,7 +25,7 @@ import { SideType } from "@spt/models/enums/SideType";
 import { IBotGenerationDetails } from "@spt/models/spt/bots/BotGenerationDetails";
 import { IBotConfig } from "@spt/models/spt/config/IBotConfig";
 import { IPmcConfig } from "@spt/models/spt/config/IPmcConfig";
-import { ILogger } from "@spt/models/spt/utils/ILogger";
+import type { ILogger } from "@spt/models/spt/utils/ILogger";
 import { ConfigServer } from "@spt/servers/ConfigServer";
 import { BotEquipmentFilterService } from "@spt/services/BotEquipmentFilterService";
 import { BotNameService } from "@spt/services/BotNameService";
@@ -36,7 +35,7 @@ import { SeasonalEventService } from "@spt/services/SeasonalEventService";
 import { HashUtil } from "@spt/utils/HashUtil";
 import { RandomUtil } from "@spt/utils/RandomUtil";
 import { TimeUtil } from "@spt/utils/TimeUtil";
-import { ICloner } from "@spt/utils/cloners/ICloner";
+import type { ICloner } from "@spt/utils/cloners/ICloner";
 import { inject, injectable } from "tsyringe";
 
 @injectable()
@@ -192,6 +191,7 @@ export class BotGenerator {
             botRoleLowercase,
             this.botConfig.botRolesThatMustHaveUniqueName,
         );
+        bot.Info.LowerNickname = bot.Info.Nickname.toLowerCase();
 
         // Only run when generating a 'fake' playerscav, not actual player scav
         if (!botGenerationDetails.isPlayerScav && this.shouldSimulatePlayerScav(botRoleLowercase)) {
@@ -433,20 +433,19 @@ export class BotGenerator {
         appearance: IAppearance,
         botGenerationDetails: IBotGenerationDetails,
     ): void {
+        // Choose random values by weight
         bot.Customization.Head = this.weightedRandomHelper.getWeightedValue<string>(appearance.head);
-        bot.Customization.Body = this.weightedRandomHelper.getWeightedValue<string>(appearance.body);
         bot.Customization.Feet = this.weightedRandomHelper.getWeightedValue<string>(appearance.feet);
-        bot.Customization.Hands = this.weightedRandomHelper.getWeightedValue<string>(appearance.hands);
+        bot.Customization.Body = this.weightedRandomHelper.getWeightedValue<string>(appearance.body);
 
-        const bodyGlobalDict = this.databaseService.getGlobals().config.Customization.SavageBody;
+        const bodyGlobalDictDb = this.databaseService.getGlobals().config.Customization.SavageBody;
         const chosenBodyTemplate = this.databaseService.getCustomization()[bot.Customization.Body];
 
-        // Find the body/hands mapping
-        const matchingBody: IWildBody = bodyGlobalDict[chosenBodyTemplate?._name];
-        if (matchingBody?.isNotRandom) {
-            // Has fixed hands for this body, set them
-            bot.Customization.Hands = matchingBody.hands;
-        }
+        // Some bodies have matching hands, look up body to see if this is the case
+        const chosenBody = bodyGlobalDictDb[chosenBodyTemplate?._name.trim()];
+        bot.Customization.Hands = chosenBody?.isNotRandom
+            ? chosenBody.hands // Has fixed hands for chosen body, update to match
+            : this.weightedRandomHelper.getWeightedValue<string>(appearance.hands); // Hands can be random, choose any from weighted dict
     }
 
     /**
@@ -701,30 +700,14 @@ export class BotGenerator {
      * @returns Bot with dogtag added
      */
     protected addDogtagToBot(bot: IBotBase): void {
-        const dogtagUpd: IUpd = {
-            SpawnedInSession: true,
-            Dogtag: {
-                AccountId: bot.sessionId,
-                ProfileId: bot._id,
-                Nickname: bot.Info.Nickname,
-                Side: bot.Info.Side,
-                Level: bot.Info.Level,
-                Time: new Date().toISOString(),
-                Status: "Killed by ",
-                KillerAccountId: "Unknown",
-                KillerProfileId: "Unknown",
-                KillerName: "Unknown",
-                WeaponName: "Unknown",
-            },
-        };
-
         const inventoryItem: IItem = {
             _id: this.hashUtil.generate(),
             _tpl: this.getDogtagTplByGameVersionAndSide(bot.Info.Side, bot.Info.GameVersion),
             parentId: bot.Inventory.equipment,
             slotId: "Dogtag",
-            location: undefined,
-            upd: dogtagUpd,
+            upd: {
+                SpawnedInSession: true,
+            },
         };
 
         bot.Inventory.items.push(inventoryItem);

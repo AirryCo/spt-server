@@ -9,7 +9,7 @@
         "transform": {
             "decoratorMetadata": true
         },
-        "target": "es2022",
+        "target": "esnext",
         "loose": true,
         "externalHelpers": false,
         "keepClassNames": true,
@@ -18,13 +18,9 @@
             "@spt/*": ["src/*"]
         }
     },
-    "exclude": ["node_modules/"],
     "module": {
         "type": "commonjs",
-        "strict": false,
-        "strictMode": false,
-        "lazy": false,
-        "noInterop": false
+        "strictMode": false
     },
     "sourceMaps": true,
     "minify": false

@@ -2,12 +2,13 @@ import { SaveLoadRouter } from "@spt/di/Router";
 import { ISptProfile, Info } from "@spt/models/eft/profile/ISptProfile";
 import { ConfigTypes } from "@spt/models/enums/ConfigTypes";
 import { ICoreConfig } from "@spt/models/spt/config/ICoreConfig";
-import { ILogger } from "@spt/models/spt/utils/ILogger";
+import type { ILogger } from "@spt/models/spt/utils/ILogger";
 import { ConfigServer } from "@spt/servers/ConfigServer";
 import { LocalisationService } from "@spt/services/LocalisationService";
+import { FileSystemSync } from "@spt/utils/FileSystemSync";
 import { HashUtil } from "@spt/utils/HashUtil";
 import { JsonUtil } from "@spt/utils/JsonUtil";
-import { VFS } from "@spt/utils/VFS";
+import { Timer } from "@spt/utils/Timer";
 import { inject, injectAll, injectable } from "tsyringe";
 
 @injectable()
@@ -19,7 +20,7 @@ export class SaveServer {
     protected saveMd5 = {};
 
     constructor(
-        @inject("VFS") protected vfs: VFS,
+        @inject("FileSystemSync") protected fileSystemSync: FileSystemSync,
         @injectAll("SaveLoadRouter") protected saveLoadRouters: SaveLoadRouter[],
         @inject("JsonUtil") protected jsonUtil: JsonUtil,
         @inject("HashUtil") protected hashUtil: HashUtil,
@@ -49,38 +50,32 @@ export class SaveServer {
      * Load all profiles in /user/profiles folder into memory (this.profiles)
      */
     public load(): void {
-        // get files to load
-        if (!this.vfs.exists(this.profileFilepath)) {
-            this.vfs.createDir(this.profileFilepath);
-        }
+        this.fileSystemSync.ensureDir(this.profileFilepath);
 
-        const files = this.vfs.getFiles(this.profileFilepath).filter((item) => {
-            return this.vfs.getFileExtension(item) === "json";
-        });
+        // get files to load
+        const files = this.fileSystemSync.getFiles(this.profileFilepath, false, ["json"]);
 
         // load profiles
-        const start = performance.now();
-        let loadTimeCount = 0;
+        const timer = new Timer();
         for (const file of files) {
-            this.loadProfile(this.vfs.stripExtension(file));
-            loadTimeCount += performance.now() - start;
+            this.loadProfile(FileSystemSync.getFileName(file));
         }
-
-        this.logger.debug(`${files.length} Profiles took: ${loadTimeCount.toFixed(2)}ms to load.`);
+        this.logger.debug(
+            `Loading ${files.length} profile${files.length > 1 ? "s" : ""} took ${timer.getTime("ms")}ms`,
+        );
     }
 
     /**
      * Save changes for each profile from memory into user/profiles json
      */
     public save(): void {
-        // Save every profile
-        let totalTime = 0;
+        const timer = new Timer();
         for (const sessionID in this.profiles) {
-            totalTime += this.saveProfile(sessionID);
+            this.saveProfile(sessionID);
         }
-
+        const profileCount = Object.keys(this.profiles).length;
         this.logger.debug(
-            `Saved ${Object.keys(this.profiles).length} profiles, took: ${totalTime.toFixed(2)}ms`,
+            `Saving ${profileCount} profile${profileCount > 1 ? "s" : ""} took ${timer.getTime("ms")}ms`,
             false,
         );
     }
@@ -160,9 +155,9 @@ export class SaveServer {
     public loadProfile(sessionID: string): void {
         const filename = `${sessionID}.json`;
         const filePath = `${this.profileFilepath}${filename}`;
-        if (this.vfs.exists(filePath)) {
+        if (this.fileSystemSync.exists(filePath)) {
             // File found, store in profiles[]
-            this.profiles[sessionID] = this.jsonUtil.deserialize(this.vfs.readFile(filePath), filename);
+            this.profiles[sessionID] = this.fileSystemSync.readJson(filePath);
         }
 
         // Run callbacks
@@ -175,9 +170,9 @@ export class SaveServer {
      * Save changes from in-memory profile to user/profiles json
      * Execute onBeforeSaveCallbacks callbacks prior to being saved to json
      * @param sessionID profile id (user/profiles/id.json)
-     * @returns time taken to save in MS
+     * @returns void
      */
-    public saveProfile(sessionID: string): number {
+    public saveProfile(sessionID: string): void {
         const filePath = `${this.profileFilepath}${sessionID}.json`;
 
         // Run pre-save callbacks before we save into json
@@ -191,7 +186,6 @@ export class SaveServer {
             }
         }
 
-        const start = performance.now();
         const jsonProfile = this.jsonUtil.serialize(
             this.profiles[sessionID],
             !this.configServer.getConfig<ICoreConfig>(ConfigTypes.CORE).features.compressProfile,
@@ -200,10 +194,8 @@ export class SaveServer {
         if (typeof this.saveMd5[sessionID] !== "string" || this.saveMd5[sessionID] !== fmd5) {
             this.saveMd5[sessionID] = String(fmd5);
             // save profile to disk
-            this.vfs.writeFile(filePath, jsonProfile);
+            this.fileSystemSync.write(filePath, jsonProfile);
         }
-
-        return Number(performance.now() - start);
     }
 
     /**
@@ -216,8 +208,8 @@ export class SaveServer {
 
         delete this.profiles[sessionID];
 
-        this.vfs.removeFile(file);
+        this.fileSystemSync.remove(file);
 
-        return !this.vfs.exists(file);
+        return !this.fileSystemSync.exists(file);
     }
 }

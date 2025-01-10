@@ -1,3 +1,4 @@
+import { IPreset } from "@spt/models/eft/common/IGlobals";
 import { IBaseConfig } from "@spt/models/spt/config/IBaseConfig";
 
 export interface IItemConfig extends IBaseConfig {
@@ -13,6 +14,8 @@ export interface IItemConfig extends IBaseConfig {
     /** Items that can only be found on bosses */
     bossItems: string[];
     handbookPriceOverride: Record<string, IHandbookPriceOverride>;
+    /** Presets to add to the globals.json `ItemPresets` dictionary on server start */
+    customItemGlobalPresets: IPreset[];
 }
 
 export interface IHandbookPriceOverride {

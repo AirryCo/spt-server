@@ -11,7 +11,7 @@ import {
     IRewardCountAndPriceDetails,
     IScavCaseRewardCountsAndPrices,
 } from "@spt/models/spt/hideout/ScavCaseRewardCountsAndPrices";
-import { ILogger } from "@spt/models/spt/utils/ILogger";
+import type { ILogger } from "@spt/models/spt/utils/ILogger";
 import { ConfigServer } from "@spt/servers/ConfigServer";
 import { DatabaseService } from "@spt/services/DatabaseService";
 import { ItemFilterService } from "@spt/services/ItemFilterService";
@@ -321,6 +321,7 @@ export class ScavCaseRewardGenerator {
 
             // Clean up upd object if it wasn't used
             if (!rootItem.upd) {
+                // biome-ignore lint/performance/noDelete: Delete is fine here, we're cleaning up this object without leaving an undefined.
                 delete rootItem.upd;
             }
 

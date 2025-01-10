@@ -86,6 +86,7 @@ export default {
     "5b6d9ce188a4501afc1b2b25": "THICC Weapon case",
     "5c0a840b86f7742ffa4f2482": "THICC Item case",
     "5d235bb686f77443f4331278": "SICC",
+    "61aa1e6984ea0800645777f9": "Long Weapon Box",
 
     // Grenade launchers, they are weird, so just number them
     "5e81ebcd8e146c7080625e15": "FN40GL 01",
@@ -95,4 +96,27 @@ export default {
     // Airdrop crates
     "66da1b49099cf6adcc07a36b": "Airdrop technical supply crate event 1",
     "66da1b546916142b3b022777": "Airdrop technical supply crate event 2",
+    "61a89e5445a2672acf66c877": "Airdrop technical supply crate event 3",
+
+    // Posters
+    "6759e7a44ff23436160d7ff5": "Girl poster 4",
+    "6759e8b1c3102563bd01c985": "Girl poster 5",
+    "6759e19a8367ee2b0c0f4b92": "Girl poster 1",
+    "675a046b8f547d6cae01922e": "Arena poster 2",
+    "6759e61067c8eb5cd10352f1": "Girl poster 2",
+    "6759e6c39422e1708e0e9b81": "Girl poster 3",
+
+    // Keys
+    "63a71f1a0aa9fb29da61c537": "City key 26",
+    "590de52486f774226a0c24c2": "Machinery tech key",
+    "590de4a286f77423d9312a32": "Folding automobile key",
+    "63a39e0f64283b5e9c56b282": "City key x",
+
+    "67499d2c69a58fceba104a43": "Lightkeeper btr quest rpg ammo case",
+    "67499d4deca8acb2d206163b": "BTR quest electronic jamming device",
+
+    "6764207f2fa5e32733055c4a": "Dogtag USEC Prestige 1",
+    "675dc9d37ae1a8792107ca96": "Dogtag BEAR Prestige 1",
+    "675dcb0545b1a2d108011b2b": "Dogtag BEAR Prestige 2",
+    "6764202ae307804338014c1a": "Dogtag USEC Prestige 2",
 };

@@ -120,5 +120,7 @@ export interface ISuitRequirements {
 export interface ItemRequirement {
     count: number;
     _tpl: string;
+    id: string;
     onlyFunctional: boolean;
+    type: string;
 }

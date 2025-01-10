@@ -2,7 +2,7 @@ import { HideoutHelper } from "@spt/helpers/HideoutHelper";
 import { InventoryHelper } from "@spt/helpers/InventoryHelper";
 import { ItemHelper } from "@spt/helpers/ItemHelper";
 import { ProfileHelper } from "@spt/helpers/ProfileHelper";
-import { QuestHelper } from "@spt/helpers/QuestHelper";
+import { QuestRewardHelper } from "@spt/helpers/QuestRewardHelper";
 import { TraderHelper } from "@spt/helpers/TraderHelper";
 import { IPmcData } from "@spt/models/eft/common/IPmcData";
 import { IBonus, IHideoutSlot } from "@spt/models/eft/common/tables/IBotBase";
@@ -18,15 +18,16 @@ import { QuestRewardType } from "@spt/models/enums/QuestRewardType";
 import { QuestStatus } from "@spt/models/enums/QuestStatus";
 import { ICoreConfig } from "@spt/models/spt/config/ICoreConfig";
 import { IRagfairConfig } from "@spt/models/spt/config/IRagfairConfig";
-import { ILogger } from "@spt/models/spt/utils/ILogger";
+import type { ILogger } from "@spt/models/spt/utils/ILogger";
 import { ConfigServer } from "@spt/servers/ConfigServer";
 import { DatabaseService } from "@spt/services/DatabaseService";
 import { LocalisationService } from "@spt/services/LocalisationService";
 import { HashUtil } from "@spt/utils/HashUtil";
 import { JsonUtil } from "@spt/utils/JsonUtil";
 import { TimeUtil } from "@spt/utils/TimeUtil";
+import { Timer } from "@spt/utils/Timer";
 import { Watermark } from "@spt/utils/Watermark";
-import { ICloner } from "@spt/utils/cloners/ICloner";
+import type { ICloner } from "@spt/utils/cloners/ICloner";
 import { inject, injectable } from "tsyringe";
 
 @injectable()
@@ -49,7 +50,7 @@ export class ProfileFixerService {
         @inject("HashUtil") protected hashUtil: HashUtil,
         @inject("ConfigServer") protected configServer: ConfigServer,
         @inject("PrimaryCloner") protected cloner: ICloner,
-        @inject("QuestHelper") protected questHelper: QuestHelper,
+        @inject("QuestRewardHelper") protected questRewardHelper: QuestRewardHelper,
     ) {
         this.coreConfig = this.configServer.getConfig(ConfigTypes.CORE);
         this.ragfairConfig = this.configServer.getConfig(ConfigTypes.RAGFAIR);
@@ -78,29 +79,31 @@ export class ProfileFixerService {
     /**
      * Resolve any dialogue attachments that were accidentally created using the player's equipment ID as
      * the stash root object ID
-     * @param fullProfile 
+     * @param fullProfile
      */
     public checkForAndFixDialogueAttachments(fullProfile: ISptProfile): void {
         for (const traderDialogues of Object.values(fullProfile.dialogues)) {
-            for (const message of traderDialogues?.messages) {
-                // Skip any messages without attached items
-                if (!message.items?.data || !message.items?.stash) {
-                    continue;
-                }
+            if (traderDialogues?.messages) {
+                for (const message of traderDialogues.messages) {
+                    // Skip any messages without attached items
+                    if (!message.items?.data || !message.items?.stash) {
+                        continue;
+                    }
 
-                // Skip any messages that don't have a stashId collision with the player's equipment ID
-                if (message.items?.stash !== fullProfile.characters?.pmc?.Inventory?.equipment) {
-                    continue;
-                }
+                    // Skip any messages that don't have a stashId collision with the player's equipment ID
+                    if (message.items?.stash !== fullProfile.characters?.pmc?.Inventory?.equipment) {
+                        continue;
+                    }
 
-                // Otherwise we need to generate a new unique stash ID for this message's attachments
-                message.items.stash = this.hashUtil.generate();
-                message.items.data = this.itemHelper.adoptOrphanedItems(message.items.stash, message.items.data);
+                    // Otherwise we need to generate a new unique stash ID for this message's attachments
+                    message.items.stash = this.hashUtil.generate();
+                    message.items.data = this.itemHelper.adoptOrphanedItems(message.items.stash, message.items.data);
 
-                // Because `adoptOrphanedItems` sets the slotId to `hideout`, we need to re-set it to `main` to work with mail
-                for (const item of message.items.data) {
-                    if (item.slotId === "hideout") {
-                        item.slotId = "main";
+                    // Because `adoptOrphanedItems` sets the slotId to `hideout`, we need to re-set it to `main` to work with mail
+                    for (const item of message.items.data) {
+                        if (item.slotId === "hideout") {
+                            item.slotId = "main";
+                        }
                     }
                 }
             }
@@ -308,7 +311,7 @@ export class ProfileFixerService {
      * @param pmcProfile The profile to validate quest productions for
      */
     protected verifyQuestProductionUnlocks(pmcProfile: IPmcData): void {
-        const start = performance.now();
+        const timer = new Timer();
 
         const quests = this.databaseService.getQuests();
         const profileQuests = pmcProfile.Quests;
@@ -324,20 +327,29 @@ export class ProfileFixerService {
                 const productionRewards = quest.rewards.Started?.filter(
                     (reward) => reward.type === QuestRewardType.PRODUCTIONS_SCHEME,
                 );
-                productionRewards?.forEach((reward) => this.verifyQuestProductionUnlock(pmcProfile, reward, quest));
+
+                if (productionRewards) {
+                    for (const reward of productionRewards) {
+                        this.verifyQuestProductionUnlock(pmcProfile, reward, quest);
+                    }
+                }
             }
 
             // For successful quests, check for unlocks in the `Success` rewards
-            if (profileQuest.status == QuestStatus.Success) {
+            if (profileQuest.status === QuestStatus.Success) {
                 const productionRewards = quest.rewards.Success?.filter(
                     (reward) => reward.type === QuestRewardType.PRODUCTIONS_SCHEME,
                 );
-                productionRewards?.forEach((reward) => this.verifyQuestProductionUnlock(pmcProfile, reward, quest));
+
+                if (productionRewards) {
+                    for (const reward of productionRewards) {
+                        this.verifyQuestProductionUnlock(pmcProfile, reward, quest);
+                    }
+                }
             }
         }
 
-        const validateTime = performance.now() - start;
-        this.logger.debug(`Quest Production Unlock validation took: ${validateTime.toFixed(2)}ms`);
+        this.logger.debug(`Quest production unlock validation took ${timer.getTime("ms")}ms`);
     }
 
     /**
@@ -352,7 +364,10 @@ export class ProfileFixerService {
         productionUnlockReward: IQuestReward,
         questDetails: IQuest,
     ): void {
-        const matchingProductions = this.questHelper.getRewardProductionMatch(productionUnlockReward, questDetails);
+        const matchingProductions = this.questRewardHelper.getRewardProductionMatch(
+            productionUnlockReward,
+            questDetails,
+        );
         if (matchingProductions.length !== 1) {
             this.logger.error(
                 this.localisationService.getText("quest-unable_to_find_matching_hideout_production", {

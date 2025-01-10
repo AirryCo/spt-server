@@ -10,12 +10,12 @@ import { IWorkoutData } from "@spt/models/eft/health/IWorkoutData";
 import { IItemEventRouterResponse } from "@spt/models/eft/itemEvent/IItemEventRouterResponse";
 import { IProcessBuyTradeRequestData } from "@spt/models/eft/trade/IProcessBuyTradeRequestData";
 import { Traders } from "@spt/models/enums/Traders";
-import { ILogger } from "@spt/models/spt/utils/ILogger";
+import type { ILogger } from "@spt/models/spt/utils/ILogger";
 import { EventOutputHolder } from "@spt/routers/EventOutputHolder";
 import { LocalisationService } from "@spt/services/LocalisationService";
 import { PaymentService } from "@spt/services/PaymentService";
 import { HttpResponseUtil } from "@spt/utils/HttpResponseUtil";
-import { ICloner } from "@spt/utils/cloners/ICloner";
+import type { ICloner } from "@spt/utils/cloners/ICloner";
 import { inject, injectable } from "tsyringe";
 
 @injectable()
@@ -49,10 +49,7 @@ export class HealthController {
         // Update medkit used (hpresource)
         const healingItemToUse = pmcData.Inventory.items.find((item) => item._id === request.item);
         if (!healingItemToUse) {
-            const errorMessage = this.localisationService.getText(
-                "health-healing_item_not_found",
-                healingItemToUse._id,
-            );
+            const errorMessage = this.localisationService.getText("health-healing_item_not_found", request.item);
             this.logger.error(errorMessage);
 
             return this.httpResponse.appendErrorToOutput(output, errorMessage);
@@ -253,6 +250,7 @@ export class HealthController {
 
                 // Remove empty effect object
                 if (Object.keys(pmcData.Health.BodyParts[bodyPartKey].Effects).length === 0) {
+                    // biome-ignore lint/performance/noDelete: Delete is fine here as we entirely want to get rid of the effect.
                     delete pmcData.Health.BodyParts[bodyPartKey].Effects;
                 }
             }

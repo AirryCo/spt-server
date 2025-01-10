@@ -1,7 +1,9 @@
+import { ProgramStatics } from "@spt/ProgramStatics";
 import { ClientLogController } from "@spt/controllers/ClientLogController";
 import { ModLoadOrder } from "@spt/loaders/ModLoadOrder";
 import { INullResponseData } from "@spt/models/eft/httpResponse/INullResponseData";
 import { ConfigTypes } from "@spt/models/enums/ConfigTypes";
+import { EntryType } from "@spt/models/enums/EntryType";
 import { IBsgLogging, ICoreConfig, IRelease } from "@spt/models/spt/config/ICoreConfig";
 import { IClientLogRequest } from "@spt/models/spt/logging/IClientLogRequest";
 import { ConfigServer } from "@spt/servers/ConfigServer";
@@ -34,7 +36,7 @@ export class ClientLogCallbacks {
     public releaseNotes(): string {
         const data: IRelease = this.configServer.getConfig<ICoreConfig>(ConfigTypes.CORE).release;
 
-        data.betaDisclaimerText = globalThis.G_MODS_ENABLED
+        data.betaDisclaimerText = ProgramStatics.MODS
             ? this.localisationService.getText("release-beta-disclaimer-mods-enabled")
             : this.localisationService.getText("release-beta-disclaimer");
 
@@ -47,8 +49,10 @@ export class ClientLogCallbacks {
         data.illegalPluginsExceptionText = this.localisationService.getText("release-illegal-plugins-exception");
         data.releaseSummaryText = this.localisationService.getText("release-summary");
 
-        data.isBeta = globalThis.G_WATERMARK_ENABLED;
-        data.isModdable = globalThis.G_MODS_ENABLED;
+        data.isBeta =
+            ProgramStatics.ENTRY_TYPE === EntryType.BLEEDING_EDGE ||
+            ProgramStatics.ENTRY_TYPE === EntryType.BLEEDING_EDGE_MODS;
+        data.isModdable = ProgramStatics.MODS;
         data.isModded = this.modLoadOrder.getLoadOrder().length > 0;
 
         return this.httpResponse.noBody(data);

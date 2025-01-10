@@ -15,14 +15,14 @@ import {
     IRepeatableQuestConfig,
 } from "@spt/models/spt/config/IQuestConfig";
 import { IQuestTypePool } from "@spt/models/spt/repeatable/IQuestTypePool";
-import { ILogger } from "@spt/models/spt/utils/ILogger";
+import type { ILogger } from "@spt/models/spt/utils/ILogger";
 import { ConfigServer } from "@spt/servers/ConfigServer";
 import { DatabaseService } from "@spt/services/DatabaseService";
 import { LocalisationService } from "@spt/services/LocalisationService";
+import { HashUtil } from "@spt/utils/HashUtil";
 import { MathUtil } from "@spt/utils/MathUtil";
-import { ObjectId } from "@spt/utils/ObjectId";
 import { ProbabilityObjectArray, RandomUtil } from "@spt/utils/RandomUtil";
-import { ICloner } from "@spt/utils/cloners/ICloner";
+import type { ICloner } from "@spt/utils/cloners/ICloner";
 import { inject, injectable } from "tsyringe";
 
 @injectable()
@@ -32,12 +32,12 @@ export class RepeatableQuestGenerator {
 
     constructor(
         @inject("PrimaryLogger") protected logger: ILogger,
+        @inject("HashUtil") protected hashUtil: HashUtil,
         @inject("RandomUtil") protected randomUtil: RandomUtil,
         @inject("MathUtil") protected mathUtil: MathUtil,
         @inject("DatabaseService") protected databaseService: DatabaseService,
         @inject("ItemHelper") protected itemHelper: ItemHelper,
         @inject("LocalisationService") protected localisationService: LocalisationService,
-        @inject("ObjectId") protected objectId: ObjectId,
         @inject("RepeatableQuestHelper") protected repeatableQuestHelper: RepeatableQuestHelper,
         @inject("RepeatableQuestRewardGenerator")
         protected repeatableQuestRewardGenerator: RepeatableQuestRewardGenerator,
@@ -308,7 +308,7 @@ export class RepeatableQuestGenerator {
         }
 
         const availableForFinishCondition = quest.conditions.AvailableForFinish[0];
-        availableForFinishCondition.counter.id = this.objectId.generate();
+        availableForFinishCondition.counter.id = this.hashUtil.generate();
         availableForFinishCondition.counter.conditions = [];
 
         // Only add specific location condition if specific map selected
@@ -327,7 +327,7 @@ export class RepeatableQuestGenerator {
             ),
         );
         availableForFinishCondition.value = desiredKillCount;
-        availableForFinishCondition.id = this.objectId.generate();
+        availableForFinishCondition.id = this.hashUtil.generate();
         quest.location = this.getQuestLocationByMapId(locationKey);
 
         quest.rewards = this.repeatableQuestRewardGenerator.generateReward(
@@ -373,7 +373,7 @@ export class RepeatableQuestGenerator {
      */
     protected generateEliminationLocation(location: string[]): IQuestConditionCounterCondition {
         const propsObject: IQuestConditionCounterCondition = {
-            id: this.objectId.generate(),
+            id: this.hashUtil.generate(),
             dynamicLocale: true,
             target: location,
             conditionType: "Location",
@@ -399,7 +399,7 @@ export class RepeatableQuestGenerator {
         allowedWeaponCategory: string,
     ): IQuestConditionCounterCondition {
         const killConditionProps: IQuestConditionCounterCondition = {
-            id: this.objectId.generate(),
+            id: this.hashUtil.generate(),
             dynamicLocale: true,
             target: target, // e,g, "AnyPmc"
             value: 1,
@@ -632,7 +632,7 @@ export class RepeatableQuestGenerator {
         }
 
         return {
-            id: this.objectId.generate(),
+            id: this.hashUtil.generate(),
             index: 0,
             parentId: "",
             dynamicLocale: true,
@@ -692,22 +692,22 @@ export class RepeatableQuestGenerator {
         const quest = this.generateRepeatableTemplate("Exploration", traderId, repeatableConfig.side, sessionId);
 
         const exitStatusCondition: IQuestConditionCounterCondition = {
-            id: this.objectId.generate(),
+            id: this.hashUtil.generate(),
             dynamicLocale: true,
             status: ["Survived"],
             conditionType: "ExitStatus",
         };
         const locationCondition: IQuestConditionCounterCondition = {
-            id: this.objectId.generate(),
+            id: this.hashUtil.generate(),
             dynamicLocale: true,
             target: locationTarget,
             conditionType: "Location",
         };
 
-        quest.conditions.AvailableForFinish[0].counter.id = this.objectId.generate();
+        quest.conditions.AvailableForFinish[0].counter.id = this.hashUtil.generate();
         quest.conditions.AvailableForFinish[0].counter.conditions = [exitStatusCondition, locationCondition];
         quest.conditions.AvailableForFinish[0].value = numExtracts;
-        quest.conditions.AvailableForFinish[0].id = this.objectId.generate();
+        quest.conditions.AvailableForFinish[0].id = this.hashUtil.generate();
         quest.location = this.getQuestLocationByMapId(locationKey);
 
         if (requiresSpecificExtract) {
@@ -831,7 +831,7 @@ export class RepeatableQuestGenerator {
      */
     protected generateExplorationExitCondition(exit: IExit): IQuestConditionCounterCondition {
         return {
-            id: this.objectId.generate(),
+            id: this.hashUtil.generate(),
             dynamicLocale: true,
             exitName: exit.Name,
             conditionType: "ExitName",
@@ -858,7 +858,7 @@ export class RepeatableQuestGenerator {
         const questClone = this.cloner.clone<IRepeatableQuest>(
             this.databaseService.getTemplates().repeatableQuests.templates[type],
         );
-        questClone._id = this.objectId.generate();
+        questClone._id = this.hashUtil.generate();
         questClone.traderId = traderId;
 
         /*  in locale, these id correspond to the text of quests
@@ -903,7 +903,7 @@ export class RepeatableQuestGenerator {
             .replace("{traderId}", desiredTraderId)
             .replace("{templateId}", questClone.templateId);
 
-        questClone.questStatus.id = this.objectId.generate();
+        questClone.questStatus.id = this.hashUtil.generate();
         questClone.questStatus.uid = sessionId; // Needs to match user id
         questClone.questStatus.qid = questClone._id; // Needs to match quest id
 

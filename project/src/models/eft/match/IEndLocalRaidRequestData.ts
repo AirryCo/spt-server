@@ -39,6 +39,8 @@ export interface ILocationTransit {
     dayTime: string;
     /** The location player last visited */
     sptLastVisitedLocation: string;
+    /** Name of exit taken */
+    sptExitName?: string;
 }
 
 export interface ITransitProfile {

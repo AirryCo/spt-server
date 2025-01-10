@@ -17,7 +17,7 @@ import { HideoutAreas } from "@spt/models/enums/HideoutAreas";
 import { ItemTpl } from "@spt/models/enums/ItemTpl";
 import { SkillTypes } from "@spt/models/enums/SkillTypes";
 import { IHideoutConfig } from "@spt/models/spt/config/IHideoutConfig";
-import { ILogger } from "@spt/models/spt/utils/ILogger";
+import type { ILogger } from "@spt/models/spt/utils/ILogger";
 import { EventOutputHolder } from "@spt/routers/EventOutputHolder";
 import { ConfigServer } from "@spt/servers/ConfigServer";
 import { DatabaseService } from "@spt/services/DatabaseService";
@@ -26,7 +26,7 @@ import { PlayerService } from "@spt/services/PlayerService";
 import { HashUtil } from "@spt/utils/HashUtil";
 import { HttpResponseUtil } from "@spt/utils/HttpResponseUtil";
 import { TimeUtil } from "@spt/utils/TimeUtil";
-import { ICloner } from "@spt/utils/cloners/ICloner";
+import type { ICloner } from "@spt/utils/cloners/ICloner";
 import { inject, injectable } from "tsyringe";
 
 @injectable()
@@ -180,8 +180,11 @@ export class HideoutHelper {
                 break;
             case BonusType.TEXT_BONUS:
                 // Delete values before they're added to profile
+                // biome-ignore lint/performance/noDelete: Delete is fine here as we entirely want to get rid of the data.
                 delete bonus.passive;
+                // biome-ignore lint/performance/noDelete: Delete is fine here as we entirely want to get rid of the data.
                 delete bonus.production;
+                // biome-ignore lint/performance/noDelete: Delete is fine here as we entirely want to get rid of the data.
                 delete bonus.visible;
                 break;
         }
@@ -781,6 +784,7 @@ export class HideoutHelper {
             }
 
             // Filter ran out / used up
+            // biome-ignore lint/performance/noDelete: Delete is fine here, as we're seeking to entirely delete the water filter.
             delete waterFilterArea.slots[i].item;
             // Update remaining resources to be subtracted
             filterDrainRate = Math.abs(resourceValue);
@@ -919,6 +923,7 @@ export class HideoutHelper {
                     break; // Break here to avoid updating all filters
                 }
 
+                // biome-ignore lint/performance/noDelete: Delete is fine here, as we're seeking to entirely delete the air filter.
                 delete airFilterArea.slots[i].item;
                 // Update remaining resources to be subtracted
                 filterDrainRate = Math.abs(resourceValue);

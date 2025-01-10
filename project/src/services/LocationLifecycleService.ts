@@ -11,6 +11,7 @@ import { TraderHelper } from "@spt/helpers/TraderHelper";
 import { ILocationBase } from "@spt/models/eft/common/ILocationBase";
 import { IPmcData } from "@spt/models/eft/common/IPmcData";
 import { Common, IQuestStatus, ITraderInfo } from "@spt/models/eft/common/tables/IBotBase";
+import { CustomisationSource } from "@spt/models/eft/common/tables/ICustomisationStorage";
 import { IItem } from "@spt/models/eft/common/tables/IItem";
 import {
     IEndLocalRaidRequestData,
@@ -19,6 +20,7 @@ import {
 } from "@spt/models/eft/match/IEndLocalRaidRequestData";
 import { IStartLocalRaidRequestData } from "@spt/models/eft/match/IStartLocalRaidRequestData";
 import { IStartLocalRaidResponseData } from "@spt/models/eft/match/IStartLocalRaidResponseData";
+import { ISptProfile } from "@spt/models/eft/profile/ISptProfile";
 import { ConfigTypes } from "@spt/models/enums/ConfigTypes";
 import { ExitStatus } from "@spt/models/enums/ExitStatis";
 import { MessageType } from "@spt/models/enums/MessageType";
@@ -31,7 +33,7 @@ import { IPmcConfig } from "@spt/models/spt/config/IPmcConfig";
 import { IRagfairConfig } from "@spt/models/spt/config/IRagfairConfig";
 import { ITraderConfig } from "@spt/models/spt/config/ITraderConfig";
 import { IRaidChanges } from "@spt/models/spt/location/IRaidChanges";
-import { ILogger } from "@spt/models/spt/utils/ILogger";
+import type { ILogger } from "@spt/models/spt/utils/ILogger";
 import { ConfigServer } from "@spt/servers/ConfigServer";
 import { SaveServer } from "@spt/servers/SaveServer";
 import { BotGenerationCacheService } from "@spt/services/BotGenerationCacheService";
@@ -47,8 +49,9 @@ import { RaidTimeAdjustmentService } from "@spt/services/RaidTimeAdjustmentServi
 import { HashUtil } from "@spt/utils/HashUtil";
 import { RandomUtil } from "@spt/utils/RandomUtil";
 import { TimeUtil } from "@spt/utils/TimeUtil";
-import { ICloner } from "@spt/utils/cloners/ICloner";
+import type { ICloner } from "@spt/utils/cloners/ICloner";
 import { inject, injectable } from "tsyringe";
+import { TransitionType } from "../models/enums/TransitionType";
 
 @injectable()
 export class LocationLifecycleService {
@@ -106,8 +109,9 @@ export class LocationLifecycleService {
             serverSettings: this.databaseService.getLocationServices(), // TODO - is this per map or global?
             profile: { insuredItems: playerProfile.InsuredItems },
             locationLoot: this.generateLocationAndLoot(request.location, !request.sptSkipLootGeneration),
+            transitionType: TransitionType.None,
             transition: {
-                isLocationTransition: false,
+                transitionType: TransitionType.None,
                 transitionRaidId: this.hashUtil.generate(),
                 transitionCount: 0,
                 visitedLocations: [],
@@ -126,7 +130,7 @@ export class LocationLifecycleService {
             ?.getValue<ILocationTransit>();
         if (transitionData) {
             this.logger.success(`Player: ${sessionId} is in transit to ${request.location}`);
-            result.transition.isLocationTransition = true;
+            result.transition.transitionType = TransitionType.Common;
             result.transition.transitionRaidId = transitionData.transitionRaidId;
             result.transition.transitionCount += 1;
 
@@ -271,12 +275,12 @@ export class LocationLifecycleService {
             return locationBaseClone;
         }
 
-        // If new spawn system is enabled, clear the spawn waves
+        // If new spawn system is enabled, clear the spawn waves to prevent x2 spawns
         if (locationBaseClone.NewSpawn) {
             locationBaseClone.waves = [];
         }
 
-        // We only need the base data
+        // Only requested base data, not loot
         if (!generateLoot) {
             return locationBaseClone;
         }
@@ -305,6 +309,7 @@ export class LocationLifecycleService {
             name.toLowerCase(),
         );
 
+        // Push chosen spawn points into returned object
         for (const spawnPoint of dynamicSpawnPoints) {
             locationBaseClone.Loot.push(spawnPoint);
         }
@@ -365,6 +370,7 @@ export class LocationLifecycleService {
             request.locationTransit.sptLastVisitedLocation = locationName;
             // TODO - Persist each players last visited location history over multiple transits, e.g using InMemoryCacheService, need to take care to not let data get stored forever
             // Store transfer data for later use in `startLocalRaid()` when next raid starts
+            request.locationTransit.sptExitName = request.results.exitName;
             this.applicationContext.addValue(ContextVariableType.TRANSIT_INFO, request.locationTransit);
         }
 
@@ -376,7 +382,7 @@ export class LocationLifecycleService {
 
         this.handlePostRaidPmc(
             sessionId,
-            pmcProfile,
+            fullProfile,
             scavProfile,
             isDead,
             isSurvived,
@@ -598,6 +604,11 @@ export class LocationLifecycleService {
         // Copy scav fence values to PMC profile
         pmcProfile.TradersInfo[Traders.FENCE] = scavProfile.TradersInfo[Traders.FENCE];
 
+        if (this.profileHasConditionCounters(scavProfile)) {
+            // Scav quest progress needs to be moved to pmc so player can see it in menu / hand them in
+            this.migrateScavQuestProgressToPmcProfile(scavProfile, pmcProfile);
+        }
+
         // Must occur after encyclopedia updated
         this.mergePmcAndScavEncyclopedias(scavProfile, pmcProfile);
 
@@ -619,16 +630,16 @@ export class LocationLifecycleService {
     /**
      *
      * @param sessionId Player id
-     * @param pmcProfile Pmc profile
+     * @param fullProfile Full player profile
      * @param scavProfile Scav profile
      * @param isDead Player died/got left behind in raid
      * @param isSurvived Not same as opposite of `isDead`, specific status
-     * @param request
-     * @param locationName
+     * @param request Client request
+     * @param locationName name of location exited
      */
     protected handlePostRaidPmc(
         sessionId: string,
-        pmcProfile: IPmcData,
+        fullProfile: ISptProfile,
         scavProfile: IPmcData,
         isDead: boolean,
         isSurvived: boolean,
@@ -636,6 +647,7 @@ export class LocationLifecycleService {
         request: IEndLocalRaidRequestData,
         locationName: string,
     ): void {
+        const pmcProfile = fullProfile.characters.pmc;
         const postRaidProfile = request.results.profile;
         const preRaidProfileQuestDataClone = this.cloner.clone(pmcProfile.Quests);
 
@@ -652,6 +664,10 @@ export class LocationLifecycleService {
         pmcProfile.Encyclopedia = postRaidProfile.Encyclopedia;
         pmcProfile.TaskConditionCounters = postRaidProfile.TaskConditionCounters;
         pmcProfile.SurvivorClass = postRaidProfile.SurvivorClass;
+
+        // MUST occur prior to profile achievements being overwritten by post-raid achievements
+        this.processAchievementCustomisationRewards(fullProfile, postRaidProfile.Achievements);
+
         pmcProfile.Achievements = postRaidProfile.Achievements;
         pmcProfile.Quests = this.processPostRaidQuests(postRaidProfile.Quests);
 
@@ -711,6 +727,44 @@ export class LocationLifecycleService {
         }
 
         this.handleInsuredItemLostEvent(sessionId, pmcProfile, request, locationName);
+    }
+
+    /**
+     * Check for and add any customisations found via the gained achievements this raid
+     * @param fullProfile Profile to add customisations to
+     * @param postRaidAchievements Achievements gained this raid
+     */
+    protected processAchievementCustomisationRewards(
+        fullProfile: ISptProfile,
+        postRaidAchievements: Record<string, number>,
+    ): void {
+        const preRaidAchievementIds = Object.keys(fullProfile.characters.pmc.Achievements);
+        const postRaidAchievementIds = Object.keys(postRaidAchievements);
+        const achievementIdsAcquiredThisRaid = postRaidAchievementIds.filter(
+            (id) => !preRaidAchievementIds.includes(id),
+        );
+
+        // Get achievement data from db
+        const achievementsDb = this.databaseService.getTemplates().achievements;
+
+        // Map the achievement ids player obtained in raid with matching achievement data from db
+        const achievements = achievementIdsAcquiredThisRaid.map((achievementId) =>
+            achievementsDb.find((achievementDb) => achievementDb.id === achievementId),
+        );
+        if (!achievements) {
+            // No achievements found
+            return;
+        }
+
+        // Get only customisation rewards from above achievements
+        const customisationRewards = achievements
+            .filter((achievement) => achievement?.rewards.some((reward) => reward.type === "CustomizationDirect"))
+            .flatMap((achievement) => achievement?.rewards);
+
+        // Insert customisations into profile
+        for (const reward of customisationRewards) {
+            this.profileHelper.addHideoutCustomisationUnlock(fullProfile, reward, CustomisationSource.ACHIEVEMENT);
+        }
     }
 
     /**
@@ -1073,5 +1127,57 @@ export class LocationLifecycleService {
         const merged = extend(extend({}, primary.Encyclopedia), secondary.Encyclopedia);
         primary.Encyclopedia = merged;
         secondary.Encyclopedia = merged;
+    }
+
+    /**
+     * Does provided profile contain any condition counters
+     * @param profile Profile to check for condition counters
+     * @returns Profile has condition counters
+     */
+    protected profileHasConditionCounters(profile: IPmcData): boolean {
+        if (!profile.TaskConditionCounters) {
+            return false;
+        }
+
+        return Object.keys(profile.TaskConditionCounters).length > 0;
+    }
+
+    /**
+     * Scav quest progress isnt transferred automatically from scav to pmc, we do this manually
+     * @param scavProfile Scav profile with quest progress post-raid
+     * @param pmcProfile Server pmc profile to copy scav quest progress into
+     */
+    protected migrateScavQuestProgressToPmcProfile(scavProfile: IPmcData, pmcProfile: IPmcData): void {
+        for (const scavQuest of scavProfile.Quests) {
+            const pmcQuest = pmcProfile.Quests.find((quest) => quest.qid === scavQuest.qid);
+            if (!pmcQuest) {
+                this.logger.warning(
+                    this.localisationService.getText(
+                        "inraid-unable_to_migrate_pmc_quest_not_found_in_profile",
+                        scavQuest.qid,
+                    ),
+                );
+                continue;
+            }
+
+            // Get counters related to scav quest
+            const matchingCounters = Object.values(scavProfile.TaskConditionCounters).filter(
+                (counter) => counter.sourceId === scavQuest.qid,
+            );
+
+            if (!matchingCounters) {
+                continue;
+            }
+
+            // insert scav quest counters into pmc profile
+            for (const counter of matchingCounters) {
+                pmcProfile.TaskConditionCounters[counter.id] = counter;
+            }
+
+            // Find Matching PMC Quest
+            // Update Status and StatusTimer properties
+            pmcQuest.status = scavQuest.status;
+            pmcQuest.statusTimers = scavQuest.statusTimers;
+        }
     }
 }

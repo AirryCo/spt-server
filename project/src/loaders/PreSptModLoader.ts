@@ -1,6 +1,5 @@
-import { execSync } from "node:child_process";
-import os from "node:os";
 import path from "node:path";
+import { ProgramStatics } from "@spt/ProgramStatics";
 import { ModLoadOrder } from "@spt/loaders/ModLoadOrder";
 import { ModTypeCheck } from "@spt/loaders/ModTypeCheck";
 import { IModDetails } from "@spt/models/eft/profile/ISptProfile";
@@ -10,12 +9,12 @@ import { IPreSptLoadModAsync } from "@spt/models/external/IPreSptLoadModAsync";
 import { ICoreConfig } from "@spt/models/spt/config/ICoreConfig";
 import { IModLoader } from "@spt/models/spt/mod/IModLoader";
 import { IPackageJsonData } from "@spt/models/spt/mod/IPackageJsonData";
-import { ILogger } from "@spt/models/spt/utils/ILogger";
+import type { ILogger } from "@spt/models/spt/utils/ILogger";
 import { ConfigServer } from "@spt/servers/ConfigServer";
 import { LocalisationService } from "@spt/services/LocalisationService";
 import { ModCompilerService } from "@spt/services/ModCompilerService";
+import { FileSystemSync } from "@spt/utils/FileSystemSync";
 import { JsonUtil } from "@spt/utils/JsonUtil";
-import { VFS } from "@spt/utils/VFS";
 import { maxSatisfying, satisfies, valid, validRange } from "semver";
 import { DependencyContainer, inject, injectable } from "tsyringe";
 
@@ -33,7 +32,7 @@ export class PreSptModLoader implements IModLoader {
 
     constructor(
         @inject("PrimaryLogger") protected logger: ILogger,
-        @inject("VFS") protected vfs: VFS,
+        @inject("FileSystemSync") protected fileSystemSync: FileSystemSync,
         @inject("JsonUtil") protected jsonUtil: JsonUtil,
         @inject("ModCompilerService") protected modCompilerService: ModCompilerService,
         @inject("LocalisationService") protected localisationService: LocalisationService,
@@ -44,12 +43,12 @@ export class PreSptModLoader implements IModLoader {
         this.sptConfig = this.configServer.getConfig<ICoreConfig>(ConfigTypes.CORE);
 
         const packageJsonPath: string = path.join(__dirname, "../../package.json");
-        this.serverDependencies = JSON.parse(this.vfs.readFile(packageJsonPath)).dependencies;
+        this.serverDependencies = this.fileSystemSync.readJson(packageJsonPath)?.dependencies;
         this.skippedMods = new Set();
     }
 
     public async load(container: DependencyContainer): Promise<void> {
-        if (globalThis.G_MODS_ENABLED) {
+        if (ProgramStatics.MODS) {
             this.container = container;
             await this.importModsAsync();
             await this.executeModsAsync();
@@ -102,28 +101,28 @@ export class PreSptModLoader implements IModLoader {
     }
 
     protected async importModsAsync(): Promise<void> {
-        if (!this.vfs.exists(this.basepath)) {
+        if (!this.fileSystemSync.exists(this.basepath)) {
             // no mods folder found
             this.logger.info(this.localisationService.getText("modloader-user_mod_folder_missing"));
-            this.vfs.createDir(this.basepath);
+            this.fileSystemSync.ensureDir(this.basepath);
             return;
         }
 
         /**
          * array of mod folder names
          */
-        const mods: string[] = this.vfs.getDirs(this.basepath);
+        const mods: string[] = this.fileSystemSync.getDirectories(this.basepath);
 
         this.logger.info(this.localisationService.getText("modloader-loading_mods", mods.length));
 
         // Mod order
-        if (!this.vfs.exists(this.modOrderPath)) {
+        if (!this.fileSystemSync.exists(this.modOrderPath)) {
             this.logger.info(this.localisationService.getText("modloader-mod_order_missing"));
 
             // Write file with empty order array to disk
-            this.vfs.writeFile(this.modOrderPath, this.jsonUtil.serializeAdvanced({ order: [] }, undefined, 4));
+            this.fileSystemSync.writeJson(this.modOrderPath, { order: [] });
         } else {
-            const modOrder = this.vfs.readFile(this.modOrderPath, { encoding: "utf8" });
+            const modOrder = this.fileSystemSync.read(this.modOrderPath);
             try {
                 const modOrderArray = this.jsonUtil.deserialize<any>(modOrder, this.modOrderPath).order;
                 for (const [index, mod] of modOrderArray.entries()) {
@@ -147,15 +146,6 @@ export class PreSptModLoader implements IModLoader {
             if (this.shouldSkipMod(modToValidate)) {
                 // skip error checking and dependency install for mods already marked as skipped.
                 continue;
-            }
-
-            // if the mod has library dependencies check if these dependencies are bundled in the server, if not install them
-            if (
-                modToValidate.dependencies &&
-                Object.keys(modToValidate.dependencies).length > 0 &&
-                !this.vfs.exists(`${this.basepath}${modFolderName}/node_modules`)
-            ) {
-                this.autoInstallDependencies(`${this.basepath}${modFolderName}`, modToValidate);
             }
 
             // Returns if any mod dependency is not satisfied
@@ -273,7 +263,7 @@ export class PreSptModLoader implements IModLoader {
         const loadedMods = new Map<string, IPackageJsonData>();
 
         for (const mod of mods) {
-            loadedMods.set(mod, this.jsonUtil.deserialize(this.vfs.readFile(`${this.getModPath(mod)}/package.json`)));
+            loadedMods.set(mod, this.fileSystemSync.readJson(`${this.getModPath(mod)}/package.json`));
         }
 
         return loadedMods;
@@ -285,7 +275,7 @@ export class PreSptModLoader implements IModLoader {
      * @returns True if compatible
      */
     protected isModCombatibleWithSpt(mod: IPackageJsonData): boolean {
-        const sptVersion = globalThis.G_SPTVERSION || this.sptConfig.sptVersion;
+        const sptVersion = ProgramStatics.SPT_VERSION || this.sptConfig.sptVersion;
         const modName = `${mod.author}-${mod.name}`;
 
         // Error and prevent loading If no sptVersion property exists
@@ -379,8 +369,8 @@ export class PreSptModLoader implements IModLoader {
     public sortModsLoadOrder(): string[] {
         // if loadorder.json exists: load it, otherwise generate load order
         const loadOrderPath = `${this.basepath}loadorder.json`;
-        if (this.vfs.exists(loadOrderPath)) {
-            return this.jsonUtil.deserialize(this.vfs.readFile(loadOrderPath), loadOrderPath);
+        if (this.fileSystemSync.exists(loadOrderPath)) {
+            return this.fileSystemSync.readJson(loadOrderPath);
         }
 
         return this.modLoadOrder.getLoadOrder();
@@ -393,11 +383,11 @@ export class PreSptModLoader implements IModLoader {
     protected async addModAsync(mod: string, pkg: IPackageJsonData): Promise<void> {
         const modPath = this.getModPath(mod);
 
-        const typeScriptFiles = this.vfs.getFilesOfType(`${modPath}src`, ".ts");
+        const typeScriptFiles = this.fileSystemSync.getFiles(`${modPath}src`, true, ["ts"], true);
 
         if (typeScriptFiles.length > 0) {
-            if (globalThis.G_MODS_TRANSPILE_TS) {
-                // compile ts into js if ts files exist and globalThis.G_MODS_TRANSPILE_TS is set to true
+            if (ProgramStatics.COMPILED) {
+                // compile ts into js if ts files exist and the program is compiled
                 await this.modCompilerService.compileMod(mod, modPath, typeScriptFiles);
             } else {
                 // rename the mod entry point to .ts if it's set to .js because G_MODS_TRANSPILE_TS is set to false
@@ -427,74 +417,6 @@ export class PreSptModLoader implements IModLoader {
      */
     protected shouldSkipMod(pkg: IPackageJsonData): boolean {
         return this.skippedMods.has(`${pkg.author}-${pkg.name}`);
-    }
-
-    protected autoInstallDependencies(modPath: string, pkg: IPackageJsonData): void {
-        const dependenciesToInstall = new Map<string, string>();
-
-        for (const [depName, depVersion] of Object.entries(pkg.dependencies)) {
-            // currently not checking for version mismatches, but we could check it, just don't know what we would do afterwards, some options would be:
-            // 1 - throw an error
-            // 2 - use the server's version (which is what's currently happening by not checking the version)
-            // 3 - use the mod's version (don't know the reprecursions this would have, or if it would even work)
-
-            // if a mod's dependency does not exist in the server's dependencies we can add it to the list of dependencies to install.
-            if (!this.serverDependencies[depName]) {
-                dependenciesToInstall.set(depName, depVersion);
-            }
-        }
-
-        // If the mod has no extra dependencies return as there's nothing that needs to be done.
-        if (dependenciesToInstall.size === 0) {
-            return;
-        }
-
-        // If this feature flag is set to false, we warn the user he has a mod that requires extra dependencies and might not work, point them in the right direction on how to enable this feature.
-        if (!this.sptConfig.features.autoInstallModDependencies) {
-            this.logger.warning(
-                this.localisationService.getText("modloader-installing_external_dependencies_disabled", {
-                    name: pkg.name,
-                    author: pkg.author,
-                    configPath: path.join(
-                        globalThis.G_RELEASE_CONFIGURATION ? "SPT_Data/Server/configs" : "assets/configs",
-                        "core.json",
-                    ),
-                    configOption: "autoInstallModDependencies",
-                }),
-            );
-
-            this.skippedMods.add(`${pkg.author}-${pkg.name}`);
-            return;
-        }
-
-        // Temporarily rename package.json because otherwise npm, pnpm and any other package manager will forcefully download all packages in dependencies without any way of disabling this behavior
-        this.vfs.rename(`${modPath}/package.json`, `${modPath}/package.json.bak`);
-        this.vfs.writeFile(`${modPath}/package.json`, "{}");
-
-        this.logger.info(
-            this.localisationService.getText("modloader-installing_external_dependencies", {
-                name: pkg.name,
-                author: pkg.author,
-            }),
-        );
-
-        const pnpmPath = path.join(
-            process.cwd(),
-            globalThis.G_RELEASE_CONFIGURATION ? "SPT_Data/Server/@pnpm/exe" : "node_modules/@pnpm/exe",
-            os.platform() === "win32" ? "pnpm.exe" : "pnpm",
-        );
-
-        let command = `"${pnpmPath}" install `;
-        for (const [depName, depVersion] of dependenciesToInstall) {
-            command += `${depName}@${depVersion} `;
-        }
-
-        this.logger.debug(`Running command: ${command}`);
-        execSync(command, { cwd: modPath });
-
-        // Delete the new blank package.json then rename the backup back to the original name
-        this.vfs.removeFile(`${modPath}/package.json`);
-        this.vfs.rename(`${modPath}/package.json.bak`, `${modPath}/package.json`);
     }
 
     protected areModDependenciesFulfilled(pkg: IPackageJsonData, loadedMods: Map<string, IPackageJsonData>): boolean {
@@ -567,8 +489,8 @@ export class PreSptModLoader implements IModLoader {
         const modIsCalledUser = modName.toLowerCase() === "user";
         const modIsCalledSrc = modName.toLowerCase() === "src";
         const modIsCalledDb = modName.toLowerCase() === "db";
-        const hasBepinExFolderStructure = this.vfs.exists(`${modPath}/plugins`);
-        const containsDll = this.vfs.getFiles(`${modPath}`).find((x) => x.includes(".dll"));
+        const hasBepinExFolderStructure = this.fileSystemSync.exists(`${modPath}/plugins`);
+        const containsDll = this.fileSystemSync.getFiles(`${modPath}`, true, ["dll"]).length > 0;
 
         if (modIsCalledSrc || modIsCalledDb || modIsCalledUser) {
             this.logger.error(this.localisationService.getText("modloader-not_correct_mod_folder", modName));
@@ -582,13 +504,13 @@ export class PreSptModLoader implements IModLoader {
 
         // Check if config exists
         const modPackagePath = `${modPath}/package.json`;
-        if (!this.vfs.exists(modPackagePath)) {
+        if (!this.fileSystemSync.exists(modPackagePath)) {
             this.logger.error(this.localisationService.getText("modloader-missing_package_json", modName));
             return false;
         }
 
         // Validate mod
-        const config = this.jsonUtil.deserialize<IPackageJsonData>(this.vfs.readFile(modPackagePath), modPackagePath);
+        const config = this.fileSystemSync.readJson(modPackagePath) as IPackageJsonData;
         const checks = ["name", "author", "version", "license"];
         let issue = false;
 
@@ -616,10 +538,10 @@ export class PreSptModLoader implements IModLoader {
                 issue = true;
             }
 
-            if (!this.vfs.exists(`${modPath}/${config.main}`)) {
+            if (!this.fileSystemSync.exists(`${modPath}/${config.main}`)) {
                 // If TS file exists with same name, dont perform check as we'll generate JS from TS file
                 const tsFileName = config.main.replace(".js", ".ts");
-                const tsFileExists = this.vfs.exists(`${modPath}/${tsFileName}`);
+                const tsFileExists = this.fileSystemSync.exists(`${modPath}/${tsFileName}`);
 
                 if (!tsFileExists) {
                     this.logger.error(

@@ -1,9 +1,9 @@
 import { ConfigTypes } from "@spt/models/enums/ConfigTypes";
 import { IItemConfig } from "@spt/models/spt/config/IItemConfig";
-import { ILogger } from "@spt/models/spt/utils/ILogger";
+import type { ILogger } from "@spt/models/spt/utils/ILogger";
 import { ConfigServer } from "@spt/servers/ConfigServer";
 import { DatabaseServer } from "@spt/servers/DatabaseServer";
-import { ICloner } from "@spt/utils/cloners/ICloner";
+import type { ICloner } from "@spt/utils/cloners/ICloner";
 import { inject, injectable } from "tsyringe";
 
 /** Centralise the handling of blacklisting items, uses blacklist found in config/item.json, stores items that should not be used by players / broken items */
@@ -29,7 +29,9 @@ export class ItemFilterService {
      */
     public isItemBlacklisted(tpl: string): boolean {
         if (this.itemBlacklistCache.size === 0) {
-            this.itemConfig.blacklist.forEach((item) => this.itemBlacklistCache.add(item));
+            for (const item of this.itemConfig.blacklist) {
+                this.itemBlacklistCache.add(item);
+            }
         }
 
         return this.itemBlacklistCache.has(tpl);
@@ -42,7 +44,9 @@ export class ItemFilterService {
      */
     public isLootableItemBlacklisted(tpl: string): boolean {
         if (this.lootableItemBlacklistCache.size === 0) {
-            this.itemConfig.lootableItemBlacklist.forEach((item) => this.itemBlacklistCache.add(item));
+            for (const item of this.itemConfig.lootableItemBlacklist) {
+                this.itemBlacklistCache.add(item);
+            }
         }
 
         return this.lootableItemBlacklistCache.has(tpl);

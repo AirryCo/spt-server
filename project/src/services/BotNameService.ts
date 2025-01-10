@@ -6,10 +6,10 @@ import { ConfigTypes } from "@spt/models/enums/ConfigTypes";
 import { IBotGenerationDetails } from "@spt/models/spt/bots/BotGenerationDetails";
 import { IBotConfig } from "@spt/models/spt/config/IBotConfig";
 import { IPmcConfig } from "@spt/models/spt/config/IPmcConfig";
-import { ILogger } from "@spt/models/spt/utils/ILogger";
+import type { ILogger } from "@spt/models/spt/utils/ILogger";
 import { ConfigServer } from "@spt/servers/ConfigServer";
 import { RandomUtil } from "@spt/utils/RandomUtil";
-import { ICloner } from "@spt/utils/cloners/ICloner";
+import type { ICloner } from "@spt/utils/cloners/ICloner";
 import { inject, injectable } from "tsyringe";
 import { DatabaseService } from "./DatabaseService";
 import { LocalisationService } from "./LocalisationService";
@@ -94,7 +94,7 @@ export class BotNameService {
                         // 5 attempts to generate a name, pool probably isn't big enough
                         const genericName = `${botGenerationDetails.side} ${this.randomUtil.getInt(100000, 999999)}`;
                         this.logger.debug(
-                            `Failed to find unique name for: ${name} after 5 attempts, using: ${genericName}`,
+                            `Failed to find unique name for: ${botRole} ${botGenerationDetails.side} after 5 attempts, using: ${genericName}`,
                         );
                         return genericName;
                     }

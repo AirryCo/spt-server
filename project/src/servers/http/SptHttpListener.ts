@@ -1,14 +1,16 @@
 import { IncomingHttpHeaders, IncomingMessage, ServerResponse } from "node:http";
+import util from "node:util";
 import zlib from "node:zlib";
+import { ProgramStatics } from "@spt/ProgramStatics";
 import { Serializer } from "@spt/di/Serializer";
-import { ILogger } from "@spt/models/spt/utils/ILogger";
+import { EntryType } from "@spt/models/enums/EntryType";
+import type { ILogger } from "@spt/models/spt/utils/ILogger";
 import { HttpRouter } from "@spt/routers/HttpRouter";
 import { IHttpListener } from "@spt/servers/http/IHttpListener";
 import { LocalisationService } from "@spt/services/LocalisationService";
 import { HttpResponseUtil } from "@spt/utils/HttpResponseUtil";
 import { JsonUtil } from "@spt/utils/JsonUtil";
 import { inject, injectAll, injectable } from "tsyringe";
-import util from "node:util";
 
 const zlibInflate = util.promisify(zlib.inflate);
 const zlibDeflate = util.promisify(zlib.deflate);
@@ -91,7 +93,7 @@ export class SptHttpListener implements IHttpListener {
         sessionID: string,
         req: IncomingMessage,
         resp: ServerResponse,
-        body: Buffer,
+        body: Buffer | undefined,
         output: string,
     ): Promise<void> {
         const bodyInfo = this.getBodyInfo(body);
@@ -132,15 +134,15 @@ export class SptHttpListener implements IHttpListener {
      */
     protected logRequest(req: IncomingMessage, output: string): void {
         //
-        if (globalThis.G_LOG_REQUESTS) {
+        if (ProgramStatics.ENTRY_TYPE !== EntryType.RELEASE) {
             const log = new Response(req.method, output);
             this.requestsLogger.info(`RESPONSE=${this.jsonUtil.serialize(log)}`);
         }
     }
 
-    public async getResponse(sessionID: string, req: IncomingMessage, body: Buffer): Promise<string> {
+    public async getResponse(sessionID: string, req: IncomingMessage, body: Buffer | undefined): Promise<string> {
         const info = this.getBodyInfo(body, req.url);
-        if (globalThis.G_LOG_REQUESTS) {
+        if (ProgramStatics.ENTRY_TYPE !== EntryType.RELEASE) {
             // Parse quest info into object
             const data = typeof info === "object" ? info : this.jsonUtil.deserialize(info);
 
@@ -158,7 +160,7 @@ export class SptHttpListener implements IHttpListener {
         return output;
     }
 
-    protected getBodyInfo(body: Buffer, requestUrl = undefined): any {
+    protected getBodyInfo(body: Buffer | undefined, requestUrl = undefined): any {
         const text = body ? body.toString() : "{}";
         const info = text ? this.jsonUtil.deserialize<any>(text, requestUrl) : {};
         return info;

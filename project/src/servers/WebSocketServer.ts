@@ -1,16 +1,18 @@
 import http, { IncomingMessage } from "node:http";
+import { ProgramStatics } from "@spt/ProgramStatics";
 import { HttpServerHelper } from "@spt/helpers/HttpServerHelper";
-import { ILogger } from "@spt/models/spt/utils/ILogger";
+import type { ILogger } from "@spt/models/spt/utils/ILogger";
 import { IWebSocketConnectionHandler } from "@spt/servers/ws/IWebSocketConnectionHandler";
 import { LocalisationService } from "@spt/services/LocalisationService";
 import { JsonUtil } from "@spt/utils/JsonUtil";
 import { RandomUtil } from "@spt/utils/RandomUtil";
 import { inject, injectAll, injectable } from "tsyringe";
-import { Server, WebSocket } from "ws";
+import { WebSocketServer as Server } from "ws";
+import { SPTWebSocket } from "./ws/SPTWebsocket";
 
 @injectable()
 export class WebSocketServer {
-    protected webSocketServer: Server;
+    protected webSocketServer: Server | undefined;
 
     constructor(
         @inject("PrimaryLogger") protected logger: ILogger,
@@ -21,12 +23,12 @@ export class WebSocketServer {
         @injectAll("WebSocketConnectionHandler") protected webSocketConnectionHandlers: IWebSocketConnectionHandler[],
     ) {}
 
-    public getWebSocketServer(): Server {
+    public getWebSocketServer(): Server | undefined {
         return this.webSocketServer;
     }
 
     public setupWebSocket(httpServer: http.Server): void {
-        this.webSocketServer = new Server({ server: httpServer });
+        this.webSocketServer = new Server({ server: httpServer, WebSocket: SPTWebSocket });
 
         this.webSocketServer.addListener("listening", () => {
             this.logger.success(
@@ -37,7 +39,9 @@ export class WebSocketServer {
             );
         });
 
-        this.webSocketServer.addListener("connection", this.wsOnConnection.bind(this));
+        this.webSocketServer.addListener("connection", async (ws: SPTWebSocket, msg) => {
+            await this.wsOnConnection(ws, msg);
+        });
     }
 
     protected getRandomisedMessage(): string {
@@ -45,23 +49,24 @@ export class WebSocketServer {
             return this.localisationService.getRandomTextThatMatchesPartialKey("server_start_meme_");
         }
 
-        return globalThis.G_RELEASE_CONFIGURATION
+        return ProgramStatics.COMPILED
             ? `${this.localisationService.getText("server_start_success")}!`
             : this.localisationService.getText("server_start_success");
     }
 
-    protected wsOnConnection(ws: WebSocket, req: IncomingMessage): void {
+    protected async wsOnConnection(ws: SPTWebSocket, req: IncomingMessage): Promise<void> {
         const socketHandlers = this.webSocketConnectionHandlers.filter((wsh) => req.url.includes(wsh.getHookUrl()));
         if ((socketHandlers?.length ?? 0) === 0) {
             const message = `Socket connection received for url ${req.url}, but there is not websocket handler configured for it`;
             this.logger.warning(message);
-            ws.send(this.jsonUtil.serialize({ error: message }));
-            ws.close();
+            await ws.sendAsync(this.jsonUtil.serialize({ error: message }));
+            await ws.closeAsync();
             return;
         }
-        socketHandlers.forEach((wsh) => {
-            wsh.onConnection(ws, req);
+
+        for (const wsh of socketHandlers) {
+            await wsh.onConnection(ws, req);
             this.logger.info(`WebSocketHandler "${wsh.getSocketId()}" connected`);
-        });
+        }
     }
 }

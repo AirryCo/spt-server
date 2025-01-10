@@ -12,22 +12,21 @@ import { ELocationName } from "@spt/models/enums/ELocationName";
 import { HideoutAreas } from "@spt/models/enums/HideoutAreas";
 import { QuestStatus } from "@spt/models/enums/QuestStatus";
 import { SkillTypes } from "@spt/models/enums/SkillTypes";
-import { Traders } from "@spt/models/enums/Traders";
 import { IQuestConfig, IRepeatableQuestConfig } from "@spt/models/spt/config/IQuestConfig";
 import { IGetRepeatableByIdResult } from "@spt/models/spt/quests/IGetRepeatableByIdResult";
 import { IQuestTypePool } from "@spt/models/spt/repeatable/IQuestTypePool";
-import { ILogger } from "@spt/models/spt/utils/ILogger";
+import type { ILogger } from "@spt/models/spt/utils/ILogger";
 import { EventOutputHolder } from "@spt/routers/EventOutputHolder";
 import { ConfigServer } from "@spt/servers/ConfigServer";
 import { DatabaseService } from "@spt/services/DatabaseService";
 import { LocalisationService } from "@spt/services/LocalisationService";
 import { PaymentService } from "@spt/services/PaymentService";
 import { ProfileFixerService } from "@spt/services/ProfileFixerService";
+import { HashUtil } from "@spt/utils/HashUtil";
 import { HttpResponseUtil } from "@spt/utils/HttpResponseUtil";
-import { ObjectId } from "@spt/utils/ObjectId";
 import { RandomUtil } from "@spt/utils/RandomUtil";
 import { TimeUtil } from "@spt/utils/TimeUtil";
-import { ICloner } from "@spt/utils/cloners/ICloner";
+import type { ICloner } from "@spt/utils/cloners/ICloner";
 import { inject, injectable } from "tsyringe";
 
 @injectable()
@@ -36,6 +35,7 @@ export class RepeatableQuestController {
 
     constructor(
         @inject("PrimaryLogger") protected logger: ILogger,
+        @inject("HashUtil") protected hashUtil: HashUtil,
         @inject("DatabaseService") protected databaseService: DatabaseService,
         @inject("TimeUtil") protected timeUtil: TimeUtil,
         @inject("RandomUtil") protected randomUtil: RandomUtil,
@@ -45,7 +45,6 @@ export class RepeatableQuestController {
         @inject("LocalisationService") protected localisationService: LocalisationService,
         @inject("EventOutputHolder") protected eventOutputHolder: EventOutputHolder,
         @inject("PaymentService") protected paymentService: PaymentService,
-        @inject("ObjectId") protected objectId: ObjectId,
         @inject("RepeatableQuestGenerator") protected repeatableQuestGenerator: RepeatableQuestGenerator,
         @inject("RepeatableQuestHelper") protected repeatableQuestHelper: RepeatableQuestHelper,
         @inject("QuestHelper") protected questHelper: QuestHelper,
@@ -337,11 +336,11 @@ export class RepeatableQuestController {
         randomQuests = randomQuests.concat(this.randomUtil.drawRandomFromList(dailiesPool, numberOfQuests, false));
 
         for (const element of randomQuests) {
-            element._id = this.objectId.generate();
+            element._id = this.hashUtil.generate();
             const conditions = element.conditions.AvailableForFinish;
             for (const condition of conditions) {
                 if ("counter" in condition._props) {
-                    condition._props.counter.id = this.objectId.generate();
+                    condition._props.counter.id = this.hashUtil.generate();
                 }
             }
         }

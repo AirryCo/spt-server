@@ -13,7 +13,7 @@ export class CustomizationItemEventRouter extends ItemEventRouterDefinition {
     }
 
     public override getHandledRoutes(): HandledRoute[] {
-        return [new HandledRoute("CustomizationWear", false), new HandledRoute("CustomizationBuy", false)];
+        return [new HandledRoute("CustomizationBuy", false), new HandledRoute("CustomizationSet", false)];
     }
 
     public override async handleItemEvent(
@@ -23,10 +23,10 @@ export class CustomizationItemEventRouter extends ItemEventRouterDefinition {
         sessionID: string,
     ): Promise<IItemEventRouterResponse> {
         switch (url) {
-            case "CustomizationWear":
-                return this.customizationCallbacks.wearClothing(pmcData, body, sessionID);
             case "CustomizationBuy":
                 return this.customizationCallbacks.buyClothing(pmcData, body, sessionID);
+            case "CustomizationSet":
+                return this.customizationCallbacks.setClothing(pmcData, body, sessionID);
         }
     }
 }

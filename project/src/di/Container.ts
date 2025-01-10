@@ -22,6 +22,7 @@ import { ModCallbacks } from "@spt/callbacks/ModCallbacks";
 import { NoteCallbacks } from "@spt/callbacks/NoteCallbacks";
 import { NotifierCallbacks } from "@spt/callbacks/NotifierCallbacks";
 import { PresetCallbacks } from "@spt/callbacks/PresetCallbacks";
+import { PrestigeCallbacks } from "@spt/callbacks/PrestigeCallbacks";
 import { ProfileCallbacks } from "@spt/callbacks/ProfileCallbacks";
 import { QuestCallbacks } from "@spt/callbacks/QuestCallbacks";
 import { RagfairCallbacks } from "@spt/callbacks/RagfairCallbacks";
@@ -51,6 +52,7 @@ import { MatchController } from "@spt/controllers/MatchController";
 import { NoteController } from "@spt/controllers/NoteController";
 import { NotifierController } from "@spt/controllers/NotifierController";
 import { PresetController } from "@spt/controllers/PresetController";
+import { PrestigeController } from "@spt/controllers/PrestigeController";
 import { ProfileController } from "@spt/controllers/ProfileController";
 import { QuestController } from "@spt/controllers/QuestController";
 import { RagfairController } from "@spt/controllers/RagfairController";
@@ -111,6 +113,7 @@ import { ProbabilityHelper } from "@spt/helpers/ProbabilityHelper";
 import { ProfileHelper } from "@spt/helpers/ProfileHelper";
 import { QuestConditionHelper } from "@spt/helpers/QuestConditionHelper";
 import { QuestHelper } from "@spt/helpers/QuestHelper";
+import { QuestRewardHelper } from "@spt/helpers/QuestRewardHelper";
 import { RagfairHelper } from "@spt/helpers/RagfairHelper";
 import { RagfairOfferHelper } from "@spt/helpers/RagfairOfferHelper";
 import { RagfairSellHelper } from "@spt/helpers/RagfairSellHelper";
@@ -131,7 +134,6 @@ import { ModTypeCheck } from "@spt/loaders/ModTypeCheck";
 import { PostDBModLoader } from "@spt/loaders/PostDBModLoader";
 import { PostSptModLoader } from "@spt/loaders/PostSptModLoader";
 import { PreSptModLoader } from "@spt/loaders/PreSptModLoader";
-import { IAsyncQueue } from "@spt/models/spt/utils/IAsyncQueue";
 import { ILogger } from "@spt/models/spt/utils/ILogger";
 import { EventOutputHolder } from "@spt/routers/EventOutputHolder";
 import { HttpRouter } from "@spt/routers/HttpRouter";
@@ -181,6 +183,7 @@ import { LauncherStaticRouter } from "@spt/routers/static/LauncherStaticRouter";
 import { LocationStaticRouter } from "@spt/routers/static/LocationStaticRouter";
 import { MatchStaticRouter } from "@spt/routers/static/MatchStaticRouter";
 import { NotifierStaticRouter } from "@spt/routers/static/NotifierStaticRouter";
+import { PrestigeStaticRouter } from "@spt/routers/static/PrestigeStaticRouter";
 import { ProfileStaticRouter } from "@spt/routers/static/ProfileStaticRouter";
 import { QuestStaticRouter } from "@spt/routers/static/QuestStaticRouter";
 import { RagfairStaticRouter } from "@spt/routers/static/RagfairStaticRouter";
@@ -206,6 +209,7 @@ import { BotLootCacheService } from "@spt/services/BotLootCacheService";
 import { BotNameService } from "@spt/services/BotNameService";
 import { BotWeaponModLimitService } from "@spt/services/BotWeaponModLimitService";
 import { CircleOfCultistService } from "@spt/services/CircleOfCultistService";
+import { CreateProfileService } from "@spt/services/CreateProfileService";
 import { CustomLocationWaveService } from "@spt/services/CustomLocationWaveService";
 import { DatabaseService } from "@spt/services/DatabaseService";
 import { FenceService } from "@spt/services/FenceService";
@@ -252,10 +256,11 @@ import { OnLoadModService } from "@spt/services/mod/onLoad/OnLoadModService";
 import { OnUpdateModService } from "@spt/services/mod/onUpdate/OnUpdateModService";
 import { StaticRouterModService } from "@spt/services/mod/staticRouter/StaticRouterModService";
 import { App } from "@spt/utils/App";
-import { AsyncQueue } from "@spt/utils/AsyncQueue";
 import { CompareUtil } from "@spt/utils/CompareUtil";
 import { DatabaseImporter } from "@spt/utils/DatabaseImporter";
 import { EncodingUtil } from "@spt/utils/EncodingUtil";
+import { FileSystem } from "@spt/utils/FileSystem";
+import { FileSystemSync } from "@spt/utils/FileSystemSync";
 import { HashUtil } from "@spt/utils/HashUtil";
 import { HttpFileUtil } from "@spt/utils/HttpFileUtil";
 import { HttpResponseUtil } from "@spt/utils/HttpResponseUtil";
@@ -265,7 +270,6 @@ import { MathUtil } from "@spt/utils/MathUtil";
 import { ObjectId } from "@spt/utils/ObjectId";
 import { RandomUtil } from "@spt/utils/RandomUtil";
 import { TimeUtil } from "@spt/utils/TimeUtil";
-import { VFS } from "@spt/utils/VFS";
 import { Watermark, WatermarkLocale } from "@spt/utils/Watermark";
 import type { ICloner } from "@spt/utils/cloners/ICloner";
 import { JsonCloner } from "@spt/utils/cloners/JsonCloner";
@@ -329,16 +333,16 @@ export class Container {
         depContainer.register("StaticRouterModService", { useValue: new StaticRouterModService(depContainer) });
 
         depContainer.registerType("OnLoad", "DatabaseImporter");
+        depContainer.registerType("OnLoad", "GameCallbacks"); // Must occur prior to PresetCallbacks and TraderCallbacks
         depContainer.registerType("OnLoad", "PostDBModLoader");
         depContainer.registerType("OnLoad", "HandbookCallbacks");
         depContainer.registerType("OnLoad", "HttpCallbacks");
-        depContainer.registerType("OnLoad", "PresetCallbacks");
         depContainer.registerType("OnLoad", "SaveCallbacks");
-        depContainer.registerType("OnLoad", "TraderCallbacks"); // must occur prior to RagfairCallbacks
-        depContainer.registerType("OnLoad", "RagfairPriceService");
-        depContainer.registerType("OnLoad", "RagfairCallbacks");
+        depContainer.registerType("OnLoad", "TraderCallbacks"); // Must occur prior to RagfairCallbacks
         depContainer.registerType("OnLoad", "ModCallbacks");
-        depContainer.registerType("OnLoad", "GameCallbacks");
+        depContainer.registerType("OnLoad", "PresetCallbacks");
+        depContainer.registerType("OnLoad", "RagfairPriceService"); // Must occur after to GameCallbacks
+        depContainer.registerType("OnLoad", "RagfairCallbacks");
         depContainer.registerType("OnUpdate", "DialogueCallbacks");
         depContainer.registerType("OnUpdate", "HideoutCallbacks");
         depContainer.registerType("OnUpdate", "TraderCallbacks");
@@ -368,6 +372,7 @@ export class Container {
         depContainer.registerType("StaticRoutes", "NotifierStaticRouter");
         depContainer.registerType("StaticRoutes", "ProfileStaticRouter");
         depContainer.registerType("StaticRoutes", "TraderStaticRouter");
+        depContainer.registerType("StaticRoutes", "PrestigeStaticRouter");
         depContainer.registerType("DynamicRoutes", "BotDynamicRouter");
         depContainer.registerType("DynamicRoutes", "BundleDynamicRouter");
         depContainer.registerType("DynamicRoutes", "CustomizationDynamicRouter");
@@ -438,10 +443,10 @@ export class Container {
         depContainer.register<ObjectId>("ObjectId", ObjectId);
         depContainer.register<RandomUtil>("RandomUtil", RandomUtil, { lifecycle: Lifecycle.Singleton });
         depContainer.register<TimeUtil>("TimeUtil", TimeUtil, { lifecycle: Lifecycle.Singleton });
-        depContainer.register<VFS>("VFS", VFS, { lifecycle: Lifecycle.Singleton });
+        depContainer.register<FileSystem>("FileSystem", FileSystem, { lifecycle: Lifecycle.Singleton });
+        depContainer.register<FileSystemSync>("FileSystemSync", FileSystemSync, { lifecycle: Lifecycle.Singleton });
         depContainer.register<WatermarkLocale>("WatermarkLocale", WatermarkLocale, { lifecycle: Lifecycle.Singleton });
         depContainer.register<Watermark>("Watermark", Watermark, { lifecycle: Lifecycle.Singleton });
-        depContainer.register<IAsyncQueue>("AsyncQueue", AsyncQueue, { lifecycle: Lifecycle.Singleton });
         depContainer.register<HttpFileUtil>("HttpFileUtil", HttpFileUtil, { lifecycle: Lifecycle.Singleton });
         depContainer.register<ModLoadOrder>("ModLoadOrder", ModLoadOrder, { lifecycle: Lifecycle.Singleton });
         depContainer.register<ModTypeCheck>("ModTypeCheck", ModTypeCheck, { lifecycle: Lifecycle.Singleton });
@@ -525,6 +530,7 @@ export class Container {
         depContainer.register<LocationStaticRouter>("LocationStaticRouter", { useClass: LocationStaticRouter });
         depContainer.register<MatchStaticRouter>("MatchStaticRouter", { useClass: MatchStaticRouter });
         depContainer.register<NotifierStaticRouter>("NotifierStaticRouter", { useClass: NotifierStaticRouter });
+        depContainer.register<PrestigeStaticRouter>("PrestigeStaticRouter", { useClass: PrestigeStaticRouter });
         depContainer.register<ProfileStaticRouter>("ProfileStaticRouter", { useClass: ProfileStaticRouter });
         depContainer.register<QuestStaticRouter>("QuestStaticRouter", { useClass: QuestStaticRouter });
         depContainer.register<RagfairStaticRouter>("RagfairStaticRouter", { useClass: RagfairStaticRouter });
@@ -602,6 +608,7 @@ export class Container {
         depContainer.register<PresetHelper>("PresetHelper", PresetHelper, { lifecycle: Lifecycle.Singleton });
         depContainer.register<ProfileHelper>("ProfileHelper", { useClass: ProfileHelper });
         depContainer.register<QuestHelper>("QuestHelper", { useClass: QuestHelper });
+        depContainer.register<QuestRewardHelper>("QuestRewardHelper", { useClass: QuestRewardHelper });
         depContainer.register<QuestConditionHelper>("QuestConditionHelper", QuestConditionHelper);
         depContainer.register<RagfairHelper>("RagfairHelper", { useClass: RagfairHelper });
         depContainer.register<RagfairSortHelper>("RagfairSortHelper", { useClass: RagfairSortHelper });
@@ -692,6 +699,7 @@ export class Container {
         depContainer.register<WishlistCallbacks>("WishlistCallbacks", { useClass: WishlistCallbacks });
         depContainer.register<AchievementCallbacks>("AchievementCallbacks", { useClass: AchievementCallbacks });
         depContainer.register<BuildsCallbacks>("BuildsCallbacks", { useClass: BuildsCallbacks });
+        depContainer.register<PrestigeCallbacks>("PrestigeCallbacks", { useClass: PrestigeCallbacks });
     }
 
     private static registerServices(depContainer: DependencyContainer): void {
@@ -813,6 +821,9 @@ export class Container {
         depContainer.register<PostDbLoadService>("PostDbLoadService", PostDbLoadService, {
             lifecycle: Lifecycle.Singleton,
         });
+        depContainer.register<CreateProfileService>("CreateProfileService", CreateProfileService, {
+            lifecycle: Lifecycle.Singleton,
+        });
     }
 
     private static registerServers(depContainer: DependencyContainer): void {
@@ -875,5 +886,6 @@ export class Container {
         depContainer.register<WeatherController>("WeatherController", { useClass: WeatherController });
         depContainer.register<WishlistController>("WishlistController", WishlistController);
         depContainer.register<AchievementController>("AchievementController", AchievementController);
+        depContainer.register<PrestigeController>("PrestigeController", PrestigeController);
     }
 }

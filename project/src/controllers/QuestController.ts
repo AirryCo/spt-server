@@ -3,6 +3,7 @@ import { ItemHelper } from "@spt/helpers/ItemHelper";
 import { ProfileHelper } from "@spt/helpers/ProfileHelper";
 import { QuestConditionHelper } from "@spt/helpers/QuestConditionHelper";
 import { QuestHelper } from "@spt/helpers/QuestHelper";
+import { QuestRewardHelper } from "@spt/helpers/QuestRewardHelper";
 import { TraderHelper } from "@spt/helpers/TraderHelper";
 import { IPmcData } from "@spt/models/eft/common/IPmcData";
 import { IItem } from "@spt/models/eft/common/tables/IItem";
@@ -17,7 +18,7 @@ import { ConfigTypes } from "@spt/models/enums/ConfigTypes";
 import { MessageType } from "@spt/models/enums/MessageType";
 import { QuestStatus } from "@spt/models/enums/QuestStatus";
 import { IQuestConfig } from "@spt/models/spt/config/IQuestConfig";
-import { ILogger } from "@spt/models/spt/utils/ILogger";
+import type { ILogger } from "@spt/models/spt/utils/ILogger";
 import { EventOutputHolder } from "@spt/routers/EventOutputHolder";
 import { ConfigServer } from "@spt/servers/ConfigServer";
 import { DatabaseService } from "@spt/services/DatabaseService";
@@ -27,7 +28,7 @@ import { MailSendService } from "@spt/services/MailSendService";
 import { PlayerService } from "@spt/services/PlayerService";
 import { HttpResponseUtil } from "@spt/utils/HttpResponseUtil";
 import { TimeUtil } from "@spt/utils/TimeUtil";
-import { ICloner } from "@spt/utils/cloners/ICloner";
+import type { ICloner } from "@spt/utils/cloners/ICloner";
 import { inject, injectable } from "tsyringe";
 
 @injectable()
@@ -46,6 +47,7 @@ export class QuestController {
         @inject("ProfileHelper") protected profileHelper: ProfileHelper,
         @inject("TraderHelper") protected traderHelper: TraderHelper,
         @inject("QuestHelper") protected questHelper: QuestHelper,
+        @inject("QuestRewardHelper") protected questRewardHelper: QuestRewardHelper,
         @inject("QuestConditionHelper") protected questConditionHelper: QuestConditionHelper,
         @inject("PlayerService") protected playerService: PlayerService,
         @inject("LocaleService") protected localeService: LocaleService,
@@ -112,7 +114,7 @@ export class QuestController {
         );
 
         // Apply non-item rewards to profile + return item rewards
-        const startedQuestRewardItems = this.questHelper.applyQuestReward(
+        const startedQuestRewardItems = this.questRewardHelper.applyQuestReward(
             pmcData,
             acceptedQuest.qid,
             QuestStatus.Started,
