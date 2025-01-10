@@ -4,7 +4,7 @@
         "generateWeatherAmountHours": 24,
         "clouds": {
             "values": [-1, -0.8, -0.5, 0.1, 0, 0.15, 0.4, 1],
-            "weights": [100, 22, 22, 15, 15, 15, 5, 4]
+            "weights": [80, 22, 22, 15, 15, 15, 5, 4]
         },
         "windSpeed": {
             "values": [0, 1, 2, 3, 4],
@@ -20,7 +20,7 @@
         },
         "rain": {
             "values": [1, 2, 3, 4, 5],
-            "weights": [25, 1, 1, 1, 1]
+            "weights": [20, 1, 1, 1, 1]
         },
         "rainIntensity": {
             "min": 0,
