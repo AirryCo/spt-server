@@ -228,13 +228,6 @@
             "startTimestamp": 1341615600000,
             "endTimestamp": "",
             "yearly": true
-        },
-        "674647f38466ebb03408b291": {
-            "name": "Thats a Great Plan Walter",
-            "season": "None",
-            "startTimestamp": 1341615600000,
-            "endTimestamp": "",
-            "yearly": false
         }
     },
     "repeatableQuests": [

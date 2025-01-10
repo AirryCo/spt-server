@@ -8339,7 +8339,7 @@
         {
             "enabled": true,
             "name": "newyears",
-            "type": "NEW_YEARS",
+            "type": "NEWYEARS",
             "startDay": "1",
             "startMonth": "1",
             "endDay": "7",
@@ -8348,7 +8348,7 @@
         {
             "enabled": true,
             "name": "April fools",
-            "type": "APRIL_FOOLS",
+            "type": "APRILFOOLS",
             "startDay": "1",
             "startMonth": "4",
             "endDay": "2",
