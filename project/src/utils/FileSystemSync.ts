@@ -40,13 +40,14 @@ export class FileSystemSync {
         }
 
         for (const dirent of dirents) {
-            const srcItem = path.join(src, dirent.name);
-            const destItem = path.join(dest, dirent.name);
+            const srcPath = path.join(dirent.parentPath, dirent.name);
+            const srcPathRel = path.relative(src, srcPath);
+            const destPath = path.join(dest, srcPathRel);
 
             if (!dirent.isDirectory()) {
-                this.copyFile(srcItem, destItem, extensionsWhitelist);
+                this.copyFile(srcPath, destPath, extensionsWhitelist);
             } else {
-                fsExtra.ensureDirSync(destItem); // Ensures that empty subdirectories are copied.
+                fsExtra.ensureDirSync(destPath); // Ensures that empty subdirectories are copied.
             }
         }
     }

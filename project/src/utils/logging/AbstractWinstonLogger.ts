@@ -132,7 +132,9 @@ export abstract class AbstractWinstonLogger implements ILogger {
                 new transports.Console({
                     format: format.combine(
                         format.colorize({ all: true, colors: { custom: textColor } }),
-                        format.printf(({ message }) => message),
+                        format.printf(({ message }) => {
+                            return `${message}`;
+                        }),
                     ),
                 }),
             ],

@@ -40,13 +40,14 @@ export class FileSystem {
         const tasks: Promise<void>[] = [];
 
         for (const dirent of dirents) {
-            const srcItem = path.join(src, dirent.name);
-            const destItem = path.join(dest, dirent.name);
+            const srcPath = path.join(dirent.parentPath, dirent.name);
+            const srcPathRel = path.relative(src, srcPath);
+            const destPath = path.join(dest, srcPathRel);
 
             if (!dirent.isDirectory()) {
-                tasks.push(this.copyFile(srcItem, destItem, extensionsWhitelist));
+                tasks.push(this.copyFile(srcPath, destPath, extensionsWhitelist));
             } else {
-                tasks.push(fsExtra.ensureDir(destItem)); // Ensures that an empty directories are copied.
+                tasks.push(fsExtra.ensureDir(destPath)); // Ensures that an empty directories are copied.
             }
         }
 
