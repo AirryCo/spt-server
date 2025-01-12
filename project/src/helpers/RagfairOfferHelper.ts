@@ -216,6 +216,10 @@ export class RagfairOfferHelper {
 
         for (const desiredItemTpl of Object.keys(searchRequest.buildItems)) {
             const matchingOffers = this.ragfairOfferService.getOffersOfType(desiredItemTpl);
+            if (!matchingOffers) {
+                // No offers found for this item, skip
+                continue;
+            }
             for (const offer of matchingOffers) {
                 // Dont show pack offers
                 if (offer.sellInOnePiece) {

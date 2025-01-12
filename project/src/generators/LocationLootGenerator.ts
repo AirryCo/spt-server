@@ -429,6 +429,9 @@ export class LocationLootGenerator {
         const tplsToAddToContainer = tplsForced.concat(chosenTpls);
         for (const tplToAdd of tplsToAddToContainer) {
             const chosenItemWithChildren = this.createStaticLootItem(tplToAdd, staticAmmoDist, parentId);
+            if (!chosenItemWithChildren) {
+                continue;
+            }
 
             const items = this.locationConfig.tplsToStripChildItemsFrom.includes(tplToAdd)
                 ? [chosenItemWithChildren.items[0]] // Strip children from parent
@@ -956,6 +959,11 @@ export class LocationLootGenerator {
         parentId?: string,
     ): IContainerItem {
         const itemTemplate = this.itemHelper.getItem(chosenTpl)[1];
+        if (!itemTemplate._props) {
+            this.logger.error(`Unable to process item: ${chosenTpl}. it lacks _props`);
+
+            return undefined;
+        }
         let width = itemTemplate._props.Width;
         let height = itemTemplate._props.Height;
         let items: IItem[] = [{ _id: this.hashUtil.generate(), _tpl: chosenTpl }];
