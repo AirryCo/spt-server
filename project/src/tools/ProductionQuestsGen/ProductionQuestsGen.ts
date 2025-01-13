@@ -13,7 +13,7 @@
 import * as path from "node:path";
 import { OnLoad } from "@spt/di/OnLoad";
 import { IHideoutProduction, IRequirement } from "@spt/models/eft/hideout/IHideoutProduction";
-import { QuestRewardType } from "@spt/models/enums/QuestRewardType";
+import { RewardType } from "@spt/models/enums/RewardType";
 import type { ILogger } from "@spt/models/spt/utils/ILogger";
 import { DatabaseServer } from "@spt/servers/DatabaseServer";
 import { FileSystemSync } from "@spt/utils/FileSystemSync";
@@ -129,7 +129,7 @@ export class ProductionQuestsGen {
         for (const quest of Object.values(this.databaseServer.getTables().templates.quests)) {
             for (const rewardState of Object.values(quest.rewards)) {
                 for (const reward of rewardState) {
-                    if (reward.type !== QuestRewardType.PRODUCTIONS_SCHEME) continue;
+                    if (reward.type !== RewardType.PRODUCTIONS_SCHEME) continue;
 
                     // Make the assumption all productions only output a single item template
                     const output: QuestProductionOutput = {

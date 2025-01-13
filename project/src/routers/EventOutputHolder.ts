@@ -91,7 +91,7 @@ export class EventOutputHolder {
         this.cleanUpCompleteCraftsInProfile(pmcData.Hideout.Production);
     }
 
-    protected resetMoneyTransferLimit(limit: IMoneyTransferLimits) {
+    protected resetMoneyTransferLimit(limit: IMoneyTransferLimits): void {
         if (limit.nextResetTime < this.timeUtil.getTimestamp()) {
             limit.nextResetTime += limit.resetInterval;
             limit.remainingLimit = limit.totalLimit;

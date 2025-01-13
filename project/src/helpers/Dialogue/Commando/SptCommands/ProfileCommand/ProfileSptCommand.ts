@@ -24,6 +24,7 @@ export class ProfileSptCommand implements ISptCommand {
      */
     private static commandRegex =
         /^spt profile (?<command>level|skill)((?<=.*skill) (?<skill>[\w]+)){0,1} (?<quantity>(?!0+)[0-9]+)$/;
+    private static examineRegex = /^spt profile (?<command>examine)/;
 
     protected savedCommand: SavedCommand;
 
@@ -43,11 +44,11 @@ export class ProfileSptCommand implements ISptCommand {
     }
 
     public getCommandHelp(): string {
-        return "spt profile\n========\nSets the profile level or skill to the desired level through the message system.\n\n\tspt profile level [desired level]\n\t\tEx: spt profile level 20\n\n\tspt profile skill [skill name] [quantity]\n\t\tEx: spt profile skill metabolism 51";
+        return "spt profile\n========\nSets the profile level or skill to the desired level or examine all items in EFT through the message system.\n\n\tspt profile level [desired level]\n\t\tEx: spt profile level 20\n\n\tspt profile skill [skill name] [quantity]\n\t\tEx: spt profile skill metabolism 51\n\n\tspt profile examine\n\t\tEx: spt profile examine";
     }
 
     public performAction(commandHandler: IUserDialogInfo, sessionId: string, request: ISendMessageRequest): string {
-        if (!ProfileSptCommand.commandRegex.test(request.text)) {
+        if (!ProfileSptCommand.commandRegex.test(request.text) && !ProfileSptCommand.examineRegex.test(request.text)) {
             this.mailSendService.sendUserMessageToPlayer(
                 sessionId,
                 commandHandler,
@@ -56,7 +57,8 @@ export class ProfileSptCommand implements ISptCommand {
             return request.dialogId;
         }
 
-        const result = ProfileSptCommand.commandRegex.exec(request.text);
+        const result =
+            ProfileSptCommand.commandRegex.exec(request.text) ?? ProfileSptCommand.examineRegex.exec(request.text);
 
         const command: string = result.groups.command;
         const skill: string = result.groups.skill;
@@ -98,6 +100,10 @@ export class ProfileSptCommand implements ISptCommand {
                     return request.dialogId;
                 }
                 event = this.handleSkillCommand(enumSkill, quantity);
+                break;
+            }
+            case "examine": {
+                event = this.handleExamineCommand();
                 break;
             }
             default:
@@ -143,6 +149,16 @@ export class ProfileSptCommand implements ISptCommand {
             _id: this.hashUtil.generate(),
             Type: ProfileChangeEventType.PROFILE_LEVEL,
             value: exp,
+            entity: undefined,
+        };
+        return event;
+    }
+
+    protected handleExamineCommand(): IProfileChangeEvent {
+        const event: IProfileChangeEvent = {
+            _id: this.hashUtil.generate(),
+            Type: ProfileChangeEventType.EXAMINE_ALL_ITEMS,
+            value: undefined,
             entity: undefined,
         };
         return event;

@@ -7,7 +7,7 @@ import { QuestHelper } from "@spt/helpers/QuestHelper";
 import { TraderHelper } from "@spt/helpers/TraderHelper";
 import { CustomisationSource } from "@spt/models/eft/common/tables/ICustomisationStorage";
 import { IPrestige } from "@spt/models/eft/common/tables/IPrestige";
-import { IQuestReward } from "@spt/models/eft/common/tables/IQuest";
+import { IReward } from "@spt/models/eft/common/tables/IReward";
 import { IAddItemDirectRequest } from "@spt/models/eft/inventory/IAddItemDirectRequest";
 import { IAddItemsDirectRequest } from "@spt/models/eft/inventory/IAddItemsDirectRequest";
 import { IObtainPrestigeRequest } from "@spt/models/eft/prestige/IObtainPrestigeRequest";
@@ -145,7 +145,7 @@ export class PrestigeController {
         }
     }
 
-    protected addPrestigeRewardsToProfile(sessionId: string, newProfile: ISptProfile, rewards: IQuestReward[]) {
+    protected addPrestigeRewardsToProfile(sessionId: string, newProfile: ISptProfile, rewards: IReward[]) {
         for (const reward of rewards) {
             switch (reward.type) {
                 case "CustomizationDirect": {

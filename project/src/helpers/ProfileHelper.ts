@@ -7,7 +7,7 @@ import {
     ICustomisationStorage,
 } from "@spt/models/eft/common/tables/ICustomisationStorage";
 import { IItem } from "@spt/models/eft/common/tables/IItem";
-import { IQuestReward } from "@spt/models/eft/common/tables/IQuest";
+import { IReward } from "@spt/models/eft/common/tables/IReward";
 import { ISearchFriendResponse } from "@spt/models/eft/profile/ISearchFriendResponse";
 import { ISpt, ISptProfile } from "@spt/models/eft/profile/ISptProfile";
 import { IValidateNicknameRequestData } from "@spt/models/eft/profile/IValidateNicknameRequestData";
@@ -655,11 +655,7 @@ export class ProfileHelper {
      * @param reward reward given to player with customisation data
      * @param source Source of reward, e.g. "unlockedInGame" for quests and "achievement" for achievements
      */
-    public addHideoutCustomisationUnlock(
-        fullProfile: ISptProfile,
-        reward: IQuestReward,
-        source: CustomisationSource,
-    ): void {
+    public addHideoutCustomisationUnlock(fullProfile: ISptProfile, reward: IReward, source: CustomisationSource): void {
         fullProfile.customisationUnlocks ||= [];
         if (fullProfile.customisationUnlocks?.some((unlock) => unlock.id === reward.target)) {
             this.logger.warning(

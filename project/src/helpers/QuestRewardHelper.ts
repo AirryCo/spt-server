@@ -6,14 +6,14 @@ import { TraderHelper } from "@spt/helpers/TraderHelper";
 import { IPmcData } from "@spt/models/eft/common/IPmcData";
 import { CustomisationSource } from "@spt/models/eft/common/tables/ICustomisationStorage";
 import { IItem } from "@spt/models/eft/common/tables/IItem";
-import { IQuest, IQuestReward } from "@spt/models/eft/common/tables/IQuest";
+import { IQuest } from "@spt/models/eft/common/tables/IQuest";
+import { IReward } from "@spt/models/eft/common/tables/IReward";
 import { IHideoutProduction } from "@spt/models/eft/hideout/IHideoutProduction";
 import { IItemEventRouterResponse } from "@spt/models/eft/itemEvent/IItemEventRouterResponse";
-import { QuestRewardType } from "@spt/models/enums/QuestRewardType";
 import { QuestStatus } from "@spt/models/enums/QuestStatus";
+import { RewardType } from "@spt/models/enums/RewardType";
 import { SkillTypes } from "@spt/models/enums/SkillTypes";
 import type { ILogger } from "@spt/models/spt/utils/ILogger";
-import { EventOutputHolder } from "@spt/routers/EventOutputHolder";
 import { DatabaseService } from "@spt/services/DatabaseService";
 import { LocalisationService } from "@spt/services/LocalisationService";
 import { HashUtil } from "@spt/utils/HashUtil";
@@ -27,7 +27,6 @@ export class QuestRewardHelper {
         @inject("HashUtil") protected hashUtil: HashUtil,
         @inject("ItemHelper") protected itemHelper: ItemHelper,
         @inject("DatabaseService") protected databaseService: DatabaseService,
-        @inject("EventOutputHolder") protected eventOutputHolder: EventOutputHolder,
         @inject("ProfileHelper") protected profileHelper: ProfileHelper,
         @inject("PaymentHelper") protected paymentHelper: PaymentHelper,
         @inject("LocalisationService") protected localisationService: LocalisationService,
@@ -80,46 +79,46 @@ export class QuestRewardHelper {
         // e.g. 'Success' or 'AvailableForFinish'
         const questStateAsString = QuestStatus[state];
         const gameVersion = pmcProfile.Info.GameVersion;
-        for (const reward of <IQuestReward[]>questDetails.rewards[questStateAsString]) {
+        for (const reward of <IReward[]>questDetails.rewards[questStateAsString]) {
             // Handle quest reward availability for different game versions, notAvailableInGameEditions currently not used
             if (!this.questRewardIsForGameEdition(reward, gameVersion)) {
                 continue;
             }
 
             switch (reward.type) {
-                case QuestRewardType.SKILL:
+                case RewardType.SKILL:
                     this.profileHelper.addSkillPointsToPlayer(
                         profileData,
                         reward.target as SkillTypes,
                         Number(reward.value),
                     );
                     break;
-                case QuestRewardType.EXPERIENCE:
+                case RewardType.EXPERIENCE:
                     this.profileHelper.addExperienceToPmc(sessionId, Number.parseInt(<string>reward.value)); // this must occur first as the output object needs to take the modified profile exp value
                     break;
-                case QuestRewardType.TRADER_STANDING:
+                case RewardType.TRADER_STANDING:
                     this.traderHelper.addStandingToTrader(
                         sessionId,
                         reward.target,
                         Number.parseFloat(<string>reward.value),
                     );
                     break;
-                case QuestRewardType.TRADER_UNLOCK:
+                case RewardType.TRADER_UNLOCK:
                     this.traderHelper.setTraderUnlockedState(reward.target, true, sessionId);
                     break;
-                case QuestRewardType.ITEM:
+                case RewardType.ITEM:
                     // Handled by getQuestRewardItems() below
                     break;
-                case QuestRewardType.ASSORTMENT_UNLOCK:
+                case RewardType.ASSORTMENT_UNLOCK:
                     // Handled by getAssort(), locked assorts are stripped out by `assortHelper.stripLockedLoyaltyAssort()` before being sent to player
                     break;
-                case QuestRewardType.ACHIEVEMENT:
+                case RewardType.ACHIEVEMENT:
                     this.profileHelper.addAchievementToProfile(fullProfile, reward.target);
                     break;
-                case QuestRewardType.STASH_ROWS:
+                case RewardType.STASH_ROWS:
                     this.profileHelper.addStashRowsBonusToProfile(sessionId, Number.parseInt(<string>reward.value)); // Add specified stash rows from quest reward - requires client restart
                     break;
-                case QuestRewardType.PRODUCTIONS_SCHEME:
+                case RewardType.PRODUCTIONS_SCHEME:
                     this.findAndAddHideoutProductionIdToProfile(
                         pmcProfile,
                         reward,
@@ -128,10 +127,10 @@ export class QuestRewardHelper {
                         questResponse,
                     );
                     break;
-                case QuestRewardType.POCKETS:
+                case RewardType.POCKETS:
                     this.profileHelper.replaceProfilePocketTpl(pmcProfile, reward.target);
                     break;
-                case QuestRewardType.CUSTOMIZATION_DIRECT:
+                case RewardType.CUSTOMIZATION_DIRECT:
                     this.profileHelper.addHideoutCustomisationUnlock(
                         fullProfile,
                         reward,
@@ -159,7 +158,7 @@ export class QuestRewardHelper {
      * @param gameVersion Version of game to check reward against
      * @returns True if it has requirement, false if it doesnt pass check
      */
-    public questRewardIsForGameEdition(reward: IQuestReward, gameVersion: string) {
+    public questRewardIsForGameEdition(reward: IReward, gameVersion: string): boolean {
         if (reward.availableInGameEditions?.length > 0 && !reward.availableInGameEditions?.includes(gameVersion)) {
             // Reward has edition whitelist and game version isnt in it
             return false;
@@ -229,7 +228,7 @@ export class QuestRewardHelper {
      * @returns Updated quest
      */
     public applyMoneyBoost(quest: IQuest, bonusPercent: number, questStatus: QuestStatus): IQuest {
-        const rewards: IQuestReward[] = quest.rewards?.[QuestStatus[questStatus]] ?? [];
+        const rewards: IReward[] = quest.rewards?.[QuestStatus[questStatus]] ?? [];
         const currencyRewards = rewards.filter(
             (reward) => reward.type === "Item" && this.paymentHelper.isMoneyTpl(reward.items[0]._tpl),
         );
@@ -255,7 +254,7 @@ export class QuestRewardHelper {
      */
     protected findAndAddHideoutProductionIdToProfile(
         pmcData: IPmcData,
-        craftUnlockReward: IQuestReward,
+        craftUnlockReward: IReward,
         questDetails: IQuest,
         sessionID: string,
         response: IItemEventRouterResponse,
@@ -284,7 +283,7 @@ export class QuestRewardHelper {
      * @param questDetails Quest with craft unlock reward
      * @returns Hideout craft
      */
-    public getRewardProductionMatch(craftUnlockReward: IQuestReward, questDetails: IQuest): IHideoutProduction[] {
+    public getRewardProductionMatch(craftUnlockReward: IReward, questDetails: IQuest): IHideoutProduction[] {
         // Get hideout crafts and find those that match by areatype/required level/end product tpl - hope for just one match
         const craftingRecipes = this.databaseService.getHideout().production.recipes;
 
@@ -324,7 +323,7 @@ export class QuestRewardHelper {
         }
 
         // Iterate over all rewards with the desired status, flatten out items that have a type of Item
-        const questRewards = quest.rewards[QuestStatus[status]].flatMap((reward: IQuestReward) =>
+        const questRewards = quest.rewards[QuestStatus[status]].flatMap((reward: IReward) =>
             reward.type === "Item" && this.questRewardIsForGameEdition(reward, gameVersion)
                 ? this.processReward(reward)
                 : [],
@@ -338,7 +337,7 @@ export class QuestRewardHelper {
      * @param questReward Reward item to fix
      * @returns Fixed rewards
      */
-    protected processReward(questReward: IQuestReward): IItem[] {
+    protected processReward(questReward: IReward): IItem[] {
         /** item with mods to return */
         let rewardItems: IItem[] = [];
         let targets: IItem[] = [];
@@ -407,10 +406,10 @@ export class QuestRewardHelper {
 
     /**
      * Add missing mod items to a quest armor reward
-     * @param originalRewardRootItem Original armor reward item from IQuestReward.items object
+     * @param originalRewardRootItem Original armor reward item from IReward.items object
      * @param questReward Armor reward from quest
      */
-    protected generateArmorRewardChildSlots(originalRewardRootItem: IItem, questReward: IQuestReward): void {
+    protected generateArmorRewardChildSlots(originalRewardRootItem: IItem, questReward: IReward): void {
         // Look for a default preset from globals for armor
         const defaultPreset = this.presetHelper.getDefaultPreset(originalRewardRootItem._tpl);
         if (defaultPreset) {

@@ -6,7 +6,8 @@ import { TraderHelper } from "@spt/helpers/TraderHelper";
 import { IPmcData } from "@spt/models/eft/common/IPmcData";
 import { Common, IQuestStatus } from "@spt/models/eft/common/tables/IBotBase";
 import { IItem } from "@spt/models/eft/common/tables/IItem";
-import { IQuest, IQuestCondition, IQuestReward } from "@spt/models/eft/common/tables/IQuest";
+import { IQuest, IQuestCondition } from "@spt/models/eft/common/tables/IQuest";
+import { IReward } from "@spt/models/eft/common/tables/IReward";
 import { IItemEventRouterResponse } from "@spt/models/eft/itemEvent/IItemEventRouterResponse";
 import { IAcceptQuestRequestData } from "@spt/models/eft/quests/IAcceptQuestRequestData";
 import { ICompleteQuestRequestData } from "@spt/models/eft/quests/ICompleteQuestRequestData";
@@ -1058,7 +1059,7 @@ export class QuestHelper {
         for (const quest of modifiedQuests) {
             // Remove any reward that doesn't pass the game edition check
             for (const rewardType of Object.keys(quest.rewards)) {
-                quest.rewards[rewardType] = quest.rewards[rewardType].filter((reward: IQuestReward) =>
+                quest.rewards[rewardType] = quest.rewards[rewardType].filter((reward: IReward) =>
                     this.questRewardHelper.questRewardIsForGameEdition(reward, gameVersion),
                 );
             }

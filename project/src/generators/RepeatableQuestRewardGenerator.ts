@@ -2,12 +2,13 @@ import { HandbookHelper } from "@spt/helpers/HandbookHelper";
 import { ItemHelper } from "@spt/helpers/ItemHelper";
 import { PresetHelper } from "@spt/helpers/PresetHelper";
 import { IItem } from "@spt/models/eft/common/tables/IItem";
-import { IQuestReward, IQuestRewards } from "@spt/models/eft/common/tables/IQuest";
+import { IQuestRewards } from "@spt/models/eft/common/tables/IQuest";
+import { IReward } from "@spt/models/eft/common/tables/IReward";
 import { ITemplateItem } from "@spt/models/eft/common/tables/ITemplateItem";
 import { BaseClasses } from "@spt/models/enums/BaseClasses";
 import { ConfigTypes } from "@spt/models/enums/ConfigTypes";
 import { Money } from "@spt/models/enums/Money";
-import { QuestRewardType } from "@spt/models/enums/QuestRewardType";
+import { RewardType } from "@spt/models/enums/RewardType";
 import { Traders } from "@spt/models/enums/Traders";
 import {
     IBaseQuestConfig,
@@ -104,7 +105,7 @@ export class RepeatableQuestRewardGenerator {
                 availableInGameEditions: [],
                 index: rewardIndex,
                 value: rewardParams.rewardXP,
-                type: QuestRewardType.EXPERIENCE,
+                type: RewardType.EXPERIENCE,
             });
             rewardIndex++;
         }
@@ -166,14 +167,14 @@ export class RepeatableQuestRewardGenerator {
 
         // Add rep reward to rewards array
         if (rewardParams.rewardReputation > 0) {
-            const reward: IQuestReward = {
+            const reward: IReward = {
                 id: this.hashUtil.generate(),
                 unknown: false,
                 gameMode: [],
                 availableInGameEditions: [],
                 target: traderId,
                 value: rewardParams.rewardReputation,
-                type: QuestRewardType.TRADER_STANDING,
+                type: RewardType.TRADER_STANDING,
                 index: rewardIndex,
             };
             rewards.Success.push(reward);
@@ -185,14 +186,14 @@ export class RepeatableQuestRewardGenerator {
         // Chance of adding skill reward
         if (this.randomUtil.getChance100(rewardParams.skillRewardChance * 100)) {
             const targetSkill = this.randomUtil.getArrayValue(questConfig.possibleSkillRewards);
-            const reward: IQuestReward = {
+            const reward: IReward = {
                 id: this.hashUtil.generate(),
                 unknown: false,
                 gameMode: [],
                 availableInGameEditions: [],
                 target: targetSkill,
                 value: rewardParams.skillPointReward,
-                type: QuestRewardType.SKILL,
+                type: RewardType.SKILL,
                 index: rewardIndex,
             };
             rewards.Success.push(reward);
@@ -340,12 +341,12 @@ export class RepeatableQuestRewardGenerator {
      * Choose a random Weapon preset that fits inside of a rouble amount limit
      * @param roublesBudget
      * @param rewardIndex
-     * @returns IQuestReward
+     * @returns IReward
      */
     protected getRandomWeaponPresetWithinBudget(
         roublesBudget: number,
         rewardIndex: number,
-    ): { weapon: IQuestReward; price: number } | undefined {
+    ): { weapon: IReward; price: number } | undefined {
         // Add a random default preset weapon as reward
         const defaultPresetPool = new ExhaustableArray(
             Object.values(this.presetHelper.getDefaultWeaponPresets()),
@@ -517,9 +518,9 @@ export class RepeatableQuestRewardGenerator {
      * @param preset Optional array of preset items
      * @returns {object}                    Object of "Reward"-item-type
      */
-    protected generateItemReward(tpl: string, count: number, index: number, foundInRaid = true): IQuestReward {
+    protected generateItemReward(tpl: string, count: number, index: number, foundInRaid = true): IReward {
         const id = this.hashUtil.generate();
-        const questRewardItem: IQuestReward = {
+        const questRewardItem: IReward = {
             id: this.hashUtil.generate(),
             unknown: false,
             gameMode: [],
@@ -529,7 +530,7 @@ export class RepeatableQuestRewardGenerator {
             value: count,
             isEncoded: false,
             findInRaid: foundInRaid,
-            type: QuestRewardType.ITEM,
+            type: RewardType.ITEM,
             items: [],
         };
 
@@ -554,9 +555,9 @@ export class RepeatableQuestRewardGenerator {
         index: number,
         preset?: IItem[],
         foundInRaid = true,
-    ): IQuestReward {
+    ): IReward {
         const id = this.hashUtil.generate();
-        const questRewardItem: IQuestReward = {
+        const questRewardItem: IReward = {
             id: this.hashUtil.generate(),
             unknown: false,
             gameMode: [],
@@ -566,7 +567,7 @@ export class RepeatableQuestRewardGenerator {
             value: count,
             isEncoded: false,
             findInRaid: foundInRaid,
-            type: QuestRewardType.ITEM,
+            type: RewardType.ITEM,
             items: [],
         };
 
@@ -667,7 +668,7 @@ export class RepeatableQuestRewardGenerator {
         return true;
     }
 
-    protected getMoneyReward(traderId: string, rewardRoubles: number, rewardIndex: number): IQuestReward {
+    protected getMoneyReward(traderId: string, rewardRoubles: number, rewardIndex: number): IReward {
         // Determine currency based on trader
         // PK and Fence use Euros, everyone else is Roubles
         const currency = traderId === Traders.PEACEKEEPER || traderId === Traders.FENCE ? Money.EUROS : Money.ROUBLES;

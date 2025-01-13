@@ -6,7 +6,8 @@ import { QuestRewardHelper } from "@spt/helpers/QuestRewardHelper";
 import { TraderHelper } from "@spt/helpers/TraderHelper";
 import { IPmcData } from "@spt/models/eft/common/IPmcData";
 import { IBonus, IHideoutSlot } from "@spt/models/eft/common/tables/IBotBase";
-import { IQuest, IQuestReward } from "@spt/models/eft/common/tables/IQuest";
+import { IQuest } from "@spt/models/eft/common/tables/IQuest";
+import { IReward } from "@spt/models/eft/common/tables/IReward";
 import { IPmcDataRepeatableQuest, IRepeatableQuest } from "@spt/models/eft/common/tables/IRepeatableQuests";
 import { ITemplateItem } from "@spt/models/eft/common/tables/ITemplateItem";
 import { IStageBonus } from "@spt/models/eft/hideout/IHideoutArea";
@@ -14,7 +15,7 @@ import { IEquipmentBuild, IMagazineBuild, ISptProfile, IWeaponBuild } from "@spt
 import { BonusType } from "@spt/models/enums/BonusType";
 import { ConfigTypes } from "@spt/models/enums/ConfigTypes";
 import { HideoutAreas } from "@spt/models/enums/HideoutAreas";
-import { QuestRewardType } from "@spt/models/enums/QuestRewardType";
+import { RewardType } from "@spt/models/enums/RewardType";
 import { QuestStatus } from "@spt/models/enums/QuestStatus";
 import { ICoreConfig } from "@spt/models/spt/config/ICoreConfig";
 import { IRagfairConfig } from "@spt/models/spt/config/IRagfairConfig";
@@ -325,7 +326,7 @@ export class ProfileFixerService {
             // For started or successful quests, check for unlocks in the `Started` rewards
             if (profileQuest.status === QuestStatus.Started || profileQuest.status === QuestStatus.Success) {
                 const productionRewards = quest.rewards.Started?.filter(
-                    (reward) => reward.type === QuestRewardType.PRODUCTIONS_SCHEME,
+                    (reward) => reward.type === RewardType.PRODUCTIONS_SCHEME,
                 );
 
                 if (productionRewards) {
@@ -338,7 +339,7 @@ export class ProfileFixerService {
             // For successful quests, check for unlocks in the `Success` rewards
             if (profileQuest.status === QuestStatus.Success) {
                 const productionRewards = quest.rewards.Success?.filter(
-                    (reward) => reward.type === QuestRewardType.PRODUCTIONS_SCHEME,
+                    (reward) => reward.type === RewardType.PRODUCTIONS_SCHEME,
                 );
 
                 if (productionRewards) {
@@ -361,7 +362,7 @@ export class ProfileFixerService {
      */
     protected verifyQuestProductionUnlock(
         pmcProfile: IPmcData,
-        productionUnlockReward: IQuestReward,
+        productionUnlockReward: IReward,
         questDetails: IQuest,
     ): void {
         const matchingProductions = this.questRewardHelper.getRewardProductionMatch(

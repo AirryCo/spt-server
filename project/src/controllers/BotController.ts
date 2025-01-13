@@ -182,8 +182,8 @@ export class BotController {
             this.pmcConfig.allPMCsHavePlayerNameWithRandomPrefixChance,
         );
 
-        const conditionPromises: Promise<void>[] = [];
-        for (const condition of request.conditions) {
+        // Map conditions to promises for bot generation
+        const conditionPromises = request.conditions.map(async (condition) => {
             const botGenerationDetails = this.getBotGenerationDetailsForWave(
                 condition,
                 pmcProfile,
@@ -193,14 +193,11 @@ export class BotController {
                 this.botHelper.isBotPmc(condition.Role),
             );
 
-            conditionPromises.push(this.generateWithBotDetails(condition, botGenerationDetails, sessionId));
-        }
+            // Generate bots for the current condition
+            await this.generateWithBotDetails(condition, botGenerationDetails, sessionId);
+        });
 
-        await Promise.all(conditionPromises)
-            .then((p) => Promise.all(p))
-            .catch((ex) => {
-                this.logger.error(ex);
-            });
+        await Promise.all(conditionPromises);
         return [];
     }
 
@@ -301,26 +298,36 @@ export class BotController {
 
         // Get number of bots we have in cache
         const botCacheCount = this.botGenerationCacheService.getCachedBotCount(cacheKey);
-        const botPromises: Promise<void>[] = [];
-        if (botCacheCount > botGenerationDetails.botCountToGenerate) {
+
+        if (botCacheCount >= botGenerationDetails.botCountToGenerate) {
+            this.logger.debug(`Cache already has sufficient bots: ${botCacheCount}`);
             return;
         }
 
         // We're below desired count, add bots to cache
+        const botsToGenerate = botGenerationDetails.botCountToGenerate - botCacheCount;
         const progressWriter = new ProgressWriter(botGenerationDetails.botCountToGenerate);
-        for (let i = 0; i < botGenerationDetails.botCountToGenerate; i++) {
-            const detailsClone = this.cloner.clone(botGenerationDetails);
-            botPromises.push(this.generateSingleBotAndStoreInCache(detailsClone, sessionId, cacheKey));
-            progressWriter.increment();
-        }
 
-        return await Promise.all(botPromises).then(() => {
-            this.logger.debug(
-                `Generated ${botGenerationDetails.botCountToGenerate} ${botGenerationDetails.role} (${
-                    botGenerationDetails.eventRole ?? botGenerationDetails.role ?? ""
-                }) ${botGenerationDetails.botDifficulty} bots`,
-            );
+        this.logger.debug(`Generating ${botsToGenerate} bots for cacheKey: ${cacheKey}`);
+
+        const botGenerationPromises = Array.from({ length: botsToGenerate }, async (_, i) => {
+            try {
+                const detailsClone = await this.cloner.cloneAsync(botGenerationDetails);
+                await this.generateSingleBotAndStoreInCache(detailsClone, sessionId, cacheKey);
+                progressWriter.increment();
+            } catch (error) {
+                this.logger.error(`Failed to generate bot #${i + 1}: ${error.message}`);
+            }
         });
+
+        // Use allSettled here, this allows us to continue even if one of the promises is rejected
+        await Promise.allSettled(botGenerationPromises);
+
+        this.logger.debug(
+            `Generated ${botGenerationDetails.botCountToGenerate} ${botGenerationDetails.role} (${
+                botGenerationDetails.eventRole ?? botGenerationDetails.role ?? ""
+            }) ${botGenerationDetails.botDifficulty} bots`,
+        );
     }
 
     /**
@@ -335,7 +342,7 @@ export class BotController {
         sessionId: string,
         cacheKey: string,
     ): Promise<void> {
-        const botToCache = this.botGenerator.prepareAndGenerateBot(sessionId, botGenerationDetails);
+        const botToCache = await this.botGenerator.prepareAndGenerateBot(sessionId, botGenerationDetails);
         this.botGenerationCacheService.storeBots(cacheKey, [botToCache]);
 
         // Store bot details in cache so post-raid PMC messages can use data
@@ -422,19 +429,18 @@ export class BotController {
 
         // Check cache for bot using above key
         if (!this.botGenerationCacheService.cacheHasBotWithKey(cacheKey)) {
-            const botPromises: Promise<void>[] = [];
-            // No bot in cache, generate new and return one
-            for (let i = 0; i < botGenerationDetails.botCountToGenerate; i++) {
-                botPromises.push(this.generateSingleBotAndStoreInCache(botGenerationDetails, sessionId, cacheKey));
-            }
+            // No bot in cache, generate new and store in cache
+            await Promise.all(
+                Array.from({ length: botGenerationDetails.botCountToGenerate }).map(
+                    async () => await this.generateSingleBotAndStoreInCache(botGenerationDetails, sessionId, cacheKey),
+                ),
+            );
 
-            await Promise.all(botPromises).then(() => {
-                this.logger.debug(
-                    `Generated ${botGenerationDetails.botCountToGenerate} ${botGenerationDetails.role} (${
-                        botGenerationDetails.eventRole ?? ""
-                    }) ${botGenerationDetails.botDifficulty} bots`,
-                );
-            });
+            this.logger.debug(
+                `Generated ${botGenerationDetails.botCountToGenerate} ${botGenerationDetails.role} (${
+                    botGenerationDetails.eventRole ?? ""
+                }) ${botGenerationDetails.botDifficulty} bots`,
+            );
         }
 
         const desiredBot = this.botGenerationCacheService.getBot(cacheKey);
