@@ -165,11 +165,11 @@ export class FileSystemSync {
      *
      * @param file The file path to write to.
      * @param jsonObject The object to write to the file.
-     * @param indentationSpaces The number of spaces to use for indentation.
+     * @param spacing The number of spaces or string used for spacing of the JSON file.
      * @returns void
      */
-    public writeJson(file: string, jsonObject: object, indentationSpaces?: 4): void {
-        const jsonString = JSON.stringify(jsonObject, null, indentationSpaces);
+    public writeJson(file: string, jsonObject: object, spacing: string | number = 4): void {
+        const jsonString = JSON.stringify(jsonObject, null, spacing);
         this.write(file, jsonString);
     }
 
