@@ -6,7 +6,6 @@ import { IProps, ITemplateItem } from "@spt/models/eft/common/tables/ITemplateIt
 import { BaseClasses } from "@spt/models/enums/BaseClasses";
 import { IBotLootCache, LootCacheType } from "@spt/models/spt/bots/IBotLootCache";
 import type { ILogger } from "@spt/models/spt/utils/ILogger";
-import { DatabaseServer } from "@spt/servers/DatabaseServer";
 import { LocalisationService } from "@spt/services/LocalisationService";
 import { RagfairPriceService } from "@spt/services/RagfairPriceService";
 import type { ICloner } from "@spt/utils/cloners/ICloner";
@@ -19,7 +18,6 @@ export class BotLootCacheService {
     constructor(
         @inject("PrimaryLogger") protected logger: ILogger,
         @inject("ItemHelper") protected itemHelper: ItemHelper,
-        @inject("DatabaseServer") protected databaseServer: DatabaseServer,
         @inject("PMCLootGenerator") protected pmcLootGenerator: PMCLootGenerator,
         @inject("LocalisationService") protected localisationService: LocalisationService,
         @inject("RagfairPriceService") protected ragfairPriceService: RagfairPriceService,

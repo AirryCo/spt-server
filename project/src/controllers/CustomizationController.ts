@@ -1,7 +1,11 @@
 import { ProfileHelper } from "@spt/helpers/ProfileHelper";
 import { IEmptyRequestData } from "@spt/models/eft/common/IEmptyRequestData";
 import type { IPmcData } from "@spt/models/eft/common/IPmcData";
-import type { ICustomisationStorage } from "@spt/models/eft/common/tables/ICustomisationStorage";
+import {
+    CustomisationSource,
+    CustomisationType,
+    type ICustomisationStorage,
+} from "@spt/models/eft/common/tables/ICustomisationStorage";
 import type { ISuit } from "@spt/models/eft/common/tables/ITrader";
 import type {
     IBuyClothingRequestData,
@@ -13,8 +17,6 @@ import type {
 } from "@spt/models/eft/customization/ICustomizationSetRequest";
 import type { IHideoutCustomisation } from "@spt/models/eft/hideout/IHideoutCustomisation";
 import type { IItemEventRouterResponse } from "@spt/models/eft/itemEvent/IItemEventRouterResponse";
-import { ISptProfile } from "@spt/models/eft/profile/ISptProfile";
-import { GameEditions } from "@spt/models/enums/GameEditions";
 import type { ILogger } from "@spt/models/spt/utils/ILogger";
 import { EventOutputHolder } from "@spt/routers/EventOutputHolder";
 import { SaveServer } from "@spt/servers/SaveServer";
@@ -106,6 +108,14 @@ export class CustomizationController {
 
         // Add clothing to profile
         this.saveServer.getProfile(sessionId).suits.push(suitId);
+
+        // TODO: Merge with function this.profileHelper.addHideoutCustomisationUnlock
+        const rewardToStore: ICustomisationStorage = {
+            id: suitId,
+            source: CustomisationSource.UNLOCKED_IN_GAME,
+            type: CustomisationType.SUITE,
+        };
+        this.saveServer.getProfile(sessionId).customisationUnlocks.push(rewardToStore);
 
         return output;
     }

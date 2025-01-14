@@ -5,8 +5,6 @@ import type { ICustomisationStorage } from "@spt/models/eft/common/tables/ICusto
 import type { ISuit } from "@spt/models/eft/common/tables/ITrader";
 import type { IBuyClothingRequestData } from "@spt/models/eft/customization/IBuyClothingRequestData";
 import type { ICustomizationSetRequest } from "@spt/models/eft/customization/ICustomizationSetRequest";
-import type { IGetSuitsResponse } from "@spt/models/eft/customization/IGetSuitsResponse";
-import type { IWearClothingRequestData } from "@spt/models/eft/customization/IWearClothingRequestData";
 import type { IHideoutCustomisation } from "@spt/models/eft/hideout/IHideoutCustomisation";
 import type { IGetBodyResponseData } from "@spt/models/eft/httpResponse/IGetBodyResponseData";
 import type { IItemEventRouterResponse } from "@spt/models/eft/itemEvent/IItemEventRouterResponse";
@@ -26,9 +24,12 @@ export class CustomizationCallbacks {
      * Handle client/trading/customization/storage
      * @returns IGetSuitsResponse
      */
-    public getSuits(url: string, info: IEmptyRequestData, sessionID: string): IGetBodyResponseData<IGetSuitsResponse> {
-        const result: IGetSuitsResponse = { _id: sessionID, suites: this.saveServer.getProfile(sessionID).suits };
-        return this.httpResponse.getBody(result);
+    public getCustomisationUnlocks(
+        url: string,
+        info: IEmptyRequestData,
+        sessionID: string,
+    ): IGetBodyResponseData<ICustomisationStorage[]> {
+        return this.httpResponse.getBody(this.saveServer.getProfile(sessionID).customisationUnlocks);
     }
 
     /**
