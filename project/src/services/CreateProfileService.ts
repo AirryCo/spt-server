@@ -278,6 +278,21 @@ export class CreateProfileService {
                     source: CustomisationSource.DEFAULT,
                     type: CustomisationType.DOG_TAG,
                 });
+
+                // Unheard Clothing (Cultist Hood)
+                fullProfile.customisationUnlocks.push({
+                    id: "666841a02537107dc508b704",
+                    source: CustomisationSource.DEFAULT,
+                    type: CustomisationType.SUITE,
+                });
+
+                // Unheard background
+                fullProfile.customisationUnlocks.push({
+                    id: "675850ba33627edb710b0592",
+                    source: CustomisationSource.DEFAULT,
+                    type: CustomisationType.ENVIRONMENT,
+                });
+
                 break;
         }
 

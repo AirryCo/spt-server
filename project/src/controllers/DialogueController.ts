@@ -28,6 +28,8 @@ import { inject, injectAll, injectable } from "tsyringe";
 
 @injectable()
 export class DialogueController {
+    protected coreConfig: ICoreConfig;
+
     constructor(
         @inject("PrimaryLogger") protected logger: ILogger,
         @inject("SaveServer") protected saveServer: SaveServer,
@@ -40,20 +42,7 @@ export class DialogueController {
         @inject("ConfigServer") protected configServer: ConfigServer,
         @injectAll("DialogueChatBot") protected dialogueChatBots: IDialogueChatBot[],
     ) {
-        const coreConfigs = this.configServer.getConfig<ICoreConfig>(ConfigTypes.CORE);
-        // if give command is disabled or commando commands are disabled
-        if (!coreConfigs.features?.chatbotFeatures?.commandoEnabled) {
-            const sptCommando = this.dialogueChatBots.find(
-                (c) => c.getChatBot()._id.toLocaleLowerCase() === coreConfigs.features?.chatbotFeatures.ids.commando,
-            );
-            this.dialogueChatBots.splice(this.dialogueChatBots.indexOf(sptCommando), 1);
-        }
-        if (!coreConfigs.features?.chatbotFeatures?.sptFriendEnabled) {
-            const sptFriend = this.dialogueChatBots.find(
-                (c) => c.getChatBot()._id.toLocaleLowerCase() === coreConfigs.features?.chatbotFeatures.ids.spt,
-            );
-            this.dialogueChatBots.splice(this.dialogueChatBots.indexOf(sptFriend), 1);
-        }
+        this.coreConfig = this.configServer.getConfig<ICoreConfig>(ConfigTypes.CORE);
     }
 
     public registerChatBot(chatBot: IDialogueChatBot): void {
@@ -79,7 +68,7 @@ export class DialogueController {
      */
     public getFriendList(sessionID: string): IGetFriendListDataResponse {
         // Add all chatbots to the friends list
-        const friends = this.dialogueChatBots.map((v) => v.getChatBot());
+        const friends = this.getActiveChatBots();
 
         // Add any friends the user has after the chatbots
         const profile = this.profileHelper.getFullProfile(sessionID);
@@ -93,6 +82,19 @@ export class DialogueController {
         }
 
         return { Friends: friends, Ignore: [], InIgnoreList: [] };
+    }
+
+    protected getActiveChatBots(): IUserDialogInfo[] {
+        const activeBots = [];
+
+        const chatBotConfig = this.coreConfig.features.chatbotFeatures;
+        for (const bot of this.dialogueChatBots) {
+            if (chatBotConfig.enabledBots[bot.getChatBot()._id]) {
+                activeBots.push(bot.getChatBot());
+            }
+        }
+
+        return activeBots;
     }
 
     /**

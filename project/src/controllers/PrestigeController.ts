@@ -64,15 +64,6 @@ export class PrestigeController {
      * Handle /client/prestige/obtain
      */
     public obtainPrestige(sessionId: string, request: IObtainPrestigeRequest[]): void {
-        // TODO
-        // DONE Reset profile back to default from template
-        // DONE Set prestige level in profile
-        // DONE Copy skills
-        // DONE Take items passed in from request and add to inventory
-        // Update dogtags to prestige type
-        // DONE Iterate over prestige.json rewards and add to profile
-        // DONE add achievement
-
         const prePrestigeProfileClone = this.cloner.clone(this.profileHelper.getFullProfile(sessionId));
         const prePrestigePmc = prePrestigeProfileClone.characters.pmc;
         const createRequest: IProfileCreateRequestData = {

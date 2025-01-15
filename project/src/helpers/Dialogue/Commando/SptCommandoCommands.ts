@@ -16,11 +16,12 @@ export class SptCommandoCommands implements IChatCommand {
         @injectAll("SptCommand") protected sptCommands: ISptCommand[],
     ) {
         const coreConfigs = this.configServer.getConfig<ICoreConfig>(ConfigTypes.CORE);
+        const commandoId = coreConfigs.features?.chatbotFeatures.ids.commando;
         // if give command is disabled or commando commands are disabled
         if (
             !(
                 coreConfigs.features?.chatbotFeatures?.commandoFeatures?.giveCommandEnabled &&
-                coreConfigs.features?.chatbotFeatures?.commandoEnabled
+                coreConfigs.features?.chatbotFeatures?.enabledBots[commandoId]
             )
         ) {
             const giveCommand = this.sptCommands.find((c) => c.getCommand().toLocaleLowerCase() === "give");
