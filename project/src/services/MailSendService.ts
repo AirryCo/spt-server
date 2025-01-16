@@ -393,7 +393,7 @@ export class MailSendService {
                     dt: dialogueMessage.dt,
                     type: dialogueMessage.type,
                     uid: dialogueMessage.uid,
-                    text: dialogueMessage.text
+                    text: dialogueMessage.text,
                 };
                 break;
             }
@@ -478,11 +478,16 @@ export class MailSendService {
                     reward.slotId = "main";
                 }
 
-                // Boxes can contain sub-items
+                // Ammo boxes should contain sub-items
                 if (this.itemHelper.isOfBaseclass(itemTemplate._id, BaseClasses.AMMO_BOX)) {
-                    const boxAndCartridges: IItem[] = [reward];
-                    this.itemHelper.addCartridgesToAmmoBox(boxAndCartridges, itemTemplate);
-
+                    const childItems = itemsToSendToPlayer.data?.filter((x) => x.parentId === reward._id);
+                    if (childItems.length > 0) {
+                        // Ammo box reward already has ammo, don't add
+                        itemsToSendToPlayer.data.push(reward);
+                    } else {
+                        const boxAndCartridges: IItem[] = [reward];
+                        this.itemHelper.addCartridgesToAmmoBox(boxAndCartridges, itemTemplate);
+                    }
                     // Push box + cartridge children into array
                     itemsToSendToPlayer.data.push(...boxAndCartridges);
                 } else {
