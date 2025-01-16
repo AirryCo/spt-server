@@ -161,10 +161,12 @@ export class BotGeneratorHelper {
             return maxResource;
         }
 
-        return this.randomUtil.getInt(
+        // Never let % value fall below 1
+        const percentOfValue = Math.max(
+            1,
             this.randomUtil.getPercentOfValue(randomizationValues.resourcePercent, maxResource, 0),
-            maxResource,
         );
+        return this.randomUtil.getInt(percentOfValue, maxResource);
     }
 
     /**

@@ -484,6 +484,24 @@ export class SeasonalEventService {
         if (event.settings?.adjustBotAppearances) {
             this.adjustBotAppearanceValues(event.type);
         }
+
+        const globals = this.databaseService.getGlobals();
+        globals.config.Airdrop.AirdropViewType = "NewYear";
+
+        const radioSettings = globals.AudioSettings.RadioBroadcastSettings;
+
+        radioSettings.EnabledBroadcast = true;
+        const christmasStation = radioSettings.RadioStations.find((x) => x.Station === "Christmas");
+        christmasStation.Enabled = true;
+
+        const rundansStation = radioSettings.RadioStations.find((x) => x.Station === "RunddansEvent");
+        rundansStation.Enabled = true;
+
+        globals.config.BTRSettings.MapsConfigs["TarkovStreets"].BtrSkin = "Tarcola";
+        globals.config.BTRSettings.MapsConfigs["Woods"].BtrSkin = "Tarcola";
+
+        globals.config.RunddansSettings.active = true;
+        globals.config.RunddansSettings.activePVE = true;
     }
 
     protected applyNewYearsEvent(event: ISeasonalEvent, globalConfig: IConfig) {

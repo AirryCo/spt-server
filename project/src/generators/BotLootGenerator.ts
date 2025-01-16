@@ -135,7 +135,7 @@ export class BotLootGenerator {
 
         const containersBotHasAvailable = this.getAvailableContainersBotCanStoreItemsIn(botInventory);
 
-        // This set is passed as a reference to fill up the containers that are already full, this aliviates
+        // This set is passed as a reference to fill up the containers that are already full, this alleviates
         // generation of the bots by avoiding checking the slots of containers we already know are full
         const containersIdFull = new Set<string>();
 

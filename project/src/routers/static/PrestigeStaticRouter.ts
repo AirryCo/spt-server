@@ -23,7 +23,7 @@ export class PrestigeStaticRouter extends StaticRouter {
             new RouteAction(
                 "/client/prestige/obtain",
                 async (url: string, info: any, sessionID: string, _output: string): Promise<INullResponseData> => {
-                    return this.prestigeCallbacks.obtainPrestige(url, info, sessionID);
+                    return await this.prestigeCallbacks.obtainPrestige(url, info, sessionID);
                 },
             ),
         ]);

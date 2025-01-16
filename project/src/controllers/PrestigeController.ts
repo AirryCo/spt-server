@@ -63,7 +63,7 @@ export class PrestigeController {
     /**
      * Handle /client/prestige/obtain
      */
-    public obtainPrestige(sessionId: string, request: IObtainPrestigeRequest[]): void {
+    public async obtainPrestige(sessionId: string, request: IObtainPrestigeRequest[]): Promise<void> {
         const prePrestigeProfileClone = this.cloner.clone(this.profileHelper.getFullProfile(sessionId));
         const prePrestigePmc = prePrestigeProfileClone.characters.pmc;
         const createRequest: IProfileCreateRequestData = {
@@ -73,14 +73,19 @@ export class PrestigeController {
             voiceId: Object.values(this.databaseService.getTemplates().customization).find(
                 (customisation) => customisation._name === prePrestigePmc.Info.Voice,
             )._id,
-            sptForcePrestigeLevel: prePrestigeProfileClone.characters.pmc.Info.PrestigeLevel + 1, // Current + 1
+            sptForcePrestigeLevel: prePrestigeProfileClone.characters.pmc.Info.PrestigeLevel + 1, // Current + 1,
         };
 
         // Reset profile
-        this.createProfileService.createProfile(sessionId, createRequest);
+        await this.createProfileService.createProfile(sessionId, createRequest);
 
         // Get freshly reset profile ready for editing
         const newProfile = this.profileHelper.getFullProfile(sessionId);
+        if (!newProfile) {
+            this.logger.error(`Unable to create get new profile for: ${sessionId}`);
+
+            return;
+        }
 
         // Skill copy
         const commonSKillsToCopy = prePrestigePmc.Skills.Common;
@@ -109,18 +114,29 @@ export class PrestigeController {
             }
         }
 
-        const indexToGet = Math.min(createRequest.sptForcePrestigeLevel - 1, 1); // Index starts at 0
-        const rewards = this.databaseService.getTemplates().prestige.elements[indexToGet].rewards;
-        this.addPrestigeRewardsToProfile(sessionId, newProfile, rewards);
+        const indexOfPrestigeObtained = Math.min(createRequest.sptForcePrestigeLevel - 1, 1); // Index starts at 0
+        // Assumes Prestige data is in descending order
+        const matchingPrestigeData = this.databaseService.getTemplates().prestige.elements[indexOfPrestigeObtained];
+
+        this.addPrestigeRewardsToProfile(sessionId, newProfile, matchingPrestigeData.rewards);
+
+        // Flag profile as having achieved this prestige level
+        newProfile.characters.pmc.Prestige[matchingPrestigeData.id] = this.timeUtil.getTimestamp();
 
         // Copy transferred items
         for (const transferRequest of request) {
             const item = prePrestigePmc.Inventory.items.find((item) => item._id === transferRequest.id);
+            if (!item) {
+                this.logger.error(
+                    `Unable to find item with id: ${transferRequest.id} in profile: ${sessionId}, skipping`,
+                );
+
+                continue;
+            }
             const addItemRequest: IAddItemDirectRequest = {
                 itemWithModsToAdd: [item],
-                foundInRaid: item.upd?.SpawnedInSession,
+                foundInRaid: item.upd?.SpawnedInSession ?? false,
                 useSortingTable: false,
-                callback: null,
             };
             this.inventoryHelper.addItemToStash(
                 sessionId,
@@ -134,6 +150,9 @@ export class PrestigeController {
         if (!newProfile.achievements["676091c0f457869a94017a23"]) {
             newProfile.achievements["676091c0f457869a94017a23"] = this.timeUtil.getTimestamp();
         }
+
+        // Force save of above changes to disk
+        await this.saveServer.saveProfile(sessionId);
     }
 
     protected addPrestigeRewardsToProfile(sessionId: string, newProfile: ISptProfile, rewards: IReward[]) {

@@ -71,8 +71,8 @@ export class SaveServer {
      */
     public async save(): Promise<void> {
         const timer = new Timer();
-        for (const sessionID in this.profiles) {
-            await this.saveProfile(sessionID);
+        for (const [sessionId] of this.profiles) {
+            await this.saveProfile(sessionId);
         }
         const profileCount = this.profiles.size;
         this.logger.debug(

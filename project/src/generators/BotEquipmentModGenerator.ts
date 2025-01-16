@@ -1155,7 +1155,7 @@ export class BotEquipmentModGenerator {
         return itemModPool[modSlot];
     }
 
-    protected getMatchingModFromPreset(request: IModToSpawnRequest, weaponTemplate: ITemplateItem) {
+    protected getMatchingModFromPreset(request: IModToSpawnRequest, weaponTemplate: ITemplateItem): IItem | undefined {
         const matchingPreset = this.getMatchingPreset(weaponTemplate, request.parentTemplate._id);
         return matchingPreset?._items.find((item) => item?.slotId?.toLowerCase() === request.modSlot.toLowerCase());
     }
