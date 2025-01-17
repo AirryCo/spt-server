@@ -36,7 +36,7 @@ export class MailSendService {
         @inject("LocalisationService") protected localisationService: LocalisationService,
         @inject("ItemHelper") protected itemHelper: ItemHelper,
         @inject("TraderHelper") protected traderHelper: TraderHelper,
-    ) { }
+    ) {}
 
     /**
      * Send a message from an NPC (e.g. prapor) to the player with or without items using direct message text, do not look up any locale
@@ -451,13 +451,14 @@ export class MailSendService {
                 parentItem.parentId = this.hashUtil.generate();
             }
 
+            // Prep return object
             itemsToSendToPlayer = { stash: parentItem.parentId, data: [] };
 
             // Ensure Ids are unique and cont collide with items in player inventory later
             messageDetails.items = this.itemHelper.replaceIDs(messageDetails.items);
 
+            // Ensure item exits in items db
             for (const reward of messageDetails.items) {
-                // Ensure item exists in items db
                 const itemTemplate = items[reward._tpl];
                 if (!itemTemplate) {
                     // Can happen when modded items are insured + mod is removed
@@ -481,15 +482,19 @@ export class MailSendService {
                 // Ammo boxes should contain sub-items
                 if (this.itemHelper.isOfBaseclass(itemTemplate._id, BaseClasses.AMMO_BOX)) {
                     const childItems = itemsToSendToPlayer.data?.filter((x) => x.parentId === reward._id);
-                    if (childItems.length > 0) {
-                        // Ammo box reward already has ammo, don't add
-                        itemsToSendToPlayer.data.push(reward);
-                    } else {
+                    if (childItems?.length === 0) {
+                        // No cartridges found, generate and add to rewards
                         const boxAndCartridges: IItem[] = [reward];
                         this.itemHelper.addCartridgesToAmmoBox(boxAndCartridges, itemTemplate);
+
+                        // Push box + cartridge children into array
+                        itemsToSendToPlayer.data.push(...boxAndCartridges);
+
+                        continue;
                     }
-                    // Push box + cartridge children into array
-                    itemsToSendToPlayer.data.push(...boxAndCartridges);
+
+                    // Ammo box reward already has ammo, don't do anything extra
+                    itemsToSendToPlayer.data.push(reward);
                 } else {
                     if ("StackSlots" in itemTemplate._props) {
                         this.logger.error(
