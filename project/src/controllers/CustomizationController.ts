@@ -74,7 +74,7 @@ export class CustomizationController {
      * @param sessionId Session id
      * @returns IItemEventRouterResponse
      */
-    public buyClothing(
+    public buyCustomisation(
         pmcData: IPmcData,
         buyClothingRequest: IBuyClothingRequestData,
         sessionId: string,
@@ -252,7 +252,7 @@ export class CustomizationController {
     }
 
     /** Handle CustomizationSet event */
-    public setClothing(
+    public setCustomisation(
         sessionId: string,
         request: ICustomizationSetRequest,
         pmcData: IPmcData,

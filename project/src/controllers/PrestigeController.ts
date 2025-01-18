@@ -88,6 +88,7 @@ export class PrestigeController {
         }
 
         // Skill copy
+        // TODO - Find what skills should be prestiged over
         const commonSKillsToCopy = prePrestigePmc.Skills.Common;
         for (const skillToCopy of commonSKillsToCopy) {
             // Set progress to max level 20
@@ -116,12 +117,16 @@ export class PrestigeController {
 
         const indexOfPrestigeObtained = Math.min(createRequest.sptForcePrestigeLevel - 1, 1); // Index starts at 0
         // Assumes Prestige data is in descending order
-        const matchingPrestigeData = this.databaseService.getTemplates().prestige.elements[indexOfPrestigeObtained];
+        const currentPrestigeData = this.databaseService.getTemplates().prestige.elements[indexOfPrestigeObtained];
+        const prestigeRewards = this.databaseService
+            .getTemplates()
+            .prestige.elements.slice(0, indexOfPrestigeObtained + 1)
+            .flatMap((prestige) => prestige.rewards);
 
-        this.addPrestigeRewardsToProfile(sessionId, newProfile, matchingPrestigeData.rewards);
+        this.addPrestigeRewardsToProfile(sessionId, newProfile, prestigeRewards);
 
         // Flag profile as having achieved this prestige level
-        newProfile.characters.pmc.Prestige[matchingPrestigeData.id] = this.timeUtil.getTimestamp();
+        newProfile.characters.pmc.Prestige[currentPrestigeData.id] = this.timeUtil.getTimestamp();
 
         // Copy transferred items
         for (const transferRequest of request) {

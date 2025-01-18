@@ -46,8 +46,12 @@ export class CustomizationCallbacks {
     /**
      * Handle CustomizationBuy event
      */
-    public buyClothing(pmcData: IPmcData, body: IBuyClothingRequestData, sessionID: string): IItemEventRouterResponse {
-        return this.customizationController.buyClothing(pmcData, body, sessionID);
+    public buyCustomisation(
+        pmcData: IPmcData,
+        body: IBuyClothingRequestData,
+        sessionID: string,
+    ): IItemEventRouterResponse {
+        return this.customizationController.buyCustomisation(pmcData, body, sessionID);
     }
 
     /** Handle client/hideout/customization/offer/list */
@@ -69,11 +73,11 @@ export class CustomizationCallbacks {
     }
 
     /** Handle CustomizationSet */
-    public setClothing(
+    public setCustomisation(
         pmcData: IPmcData,
         request: ICustomizationSetRequest,
         sessionID: string,
     ): IItemEventRouterResponse {
-        return this.customizationController.setClothing(sessionID, request, pmcData);
+        return this.customizationController.setCustomisation(sessionID, request, pmcData);
     }
 }

@@ -488,7 +488,7 @@ export class SeasonalEventService {
         const globals = this.databaseService.getGlobals();
         globals.config.Airdrop.AirdropViewType = "NewYear";
 
-        const radioSettings = globals.AudioSettings.RadioBroadcastSettings;
+        const radioSettings = globals.config.AudioSettings.RadioBroadcastSettings;
 
         radioSettings.EnabledBroadcast = true;
         const christmasStation = radioSettings.RadioStations.find((x) => x.Station === "Christmas");

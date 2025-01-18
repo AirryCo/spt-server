@@ -2,11 +2,9 @@ import type { Ixy, Ixyz } from "@spt/models/eft/common/Ixyz";
 import type { IItem } from "@spt/models/eft/common/tables/IItem";
 
 export interface IGlobals {
-    time: number;
     config: IConfig;
     LocationInfection: ILocationInfection;
     bot_presets: IBotPreset[];
-    AudioSettings: IAudioSettings;
     BotWeaponScatterings: IBotWeaponScattering[];
     ItemPresets: Record<string, IPreset>;
 }
@@ -127,6 +125,7 @@ export interface IProjectileExplosionParams {
 }
 
 export interface IConfig {
+    AudioSettings: IAudioSettings;
     ArtilleryShelling: IArtilleryShelling;
     content: IContent;
     AimPunchMagnitude: number;

@@ -314,6 +314,16 @@ export class CreateProfileService {
                 });
             }
         }
+
+        // Dev profile additions
+        if (fullProfile.info.edition.toLowerCase().includes("developer")) {
+            // CyberTark background
+            fullProfile.customisationUnlocks.push({
+                id: "67585108def253bd97084552",
+                source: CustomisationSource.DEFAULT,
+                type: CustomisationType.ENVIRONMENT,
+            });
+        }
     }
 
     protected getGameEdition(profile: ISptProfile): string {

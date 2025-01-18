@@ -9,6 +9,11 @@ import { PreSptModLoader } from "@spt/loaders/PreSptModLoader";
 import { IEmptyRequestData } from "@spt/models/eft/common/IEmptyRequestData";
 import { IPmcData } from "@spt/models/eft/common/IPmcData";
 import { IBodyPartHealth } from "@spt/models/eft/common/tables/IBotBase";
+import {
+    CustomisationSource,
+    CustomisationType,
+    ICustomisationStorage,
+} from "@spt/models/eft/common/tables/ICustomisationStorage";
 import { ICheckVersionResponse } from "@spt/models/eft/game/ICheckVersionResponse";
 import { ICurrentGroupResponse } from "@spt/models/eft/game/ICurrentGroupResponse";
 import { IGameConfigResponse } from "@spt/models/eft/game/IGameConfigResponse";
@@ -241,7 +246,13 @@ export class GameController {
             };
         }
 
+        const clothingToRemove: string[] = [];
+
         if (fullProfile.characters.pmc.Info.Side === "Bear") {
+            // Reset clothing customization back to default as customization changed in 4.0
+            fullProfile.characters.pmc.Customization.Body = "5cc0858d14c02e000c6bea66"; //Bear default clothing
+            fullProfile.characters.pmc.Customization.Feet = "5cc085bb14c02e000e67a5c5";
+            fullProfile.characters.pmc.Customization.Hands = "5cc0876314c02e000c6bea6b";
             fullProfile.characters.pmc.Customization.DogTag = "674731c8bafff850080488bb"; //Bear base dogtag
 
             if (fullProfile.characters.pmc.Info.GameVersion === "edge_of_darkness") {
@@ -251,9 +262,41 @@ export class GameController {
             if (fullProfile.characters.pmc.Info.GameVersion === "unheard_edition") {
                 fullProfile.characters.pmc.Customization.DogTag = "67471928d17d6431550563b5";
             }
+
+            for (const clothing of fullProfile.suits) {
+                // Default Bear clothing, dont need to add this
+                if (
+                    clothing === "5cd946231388ce000d572fe3" ||
+                    clothing === "5cd945d71388ce000a659dfb" ||
+                    clothing === "666841a02537107dc508b704"
+                ) {
+                    continue;
+                }
+
+                const traderClothing = this.databaseService
+                    .getTrader("5ac3b934156ae10c4430e83c")
+                    .suits?.find((item) => item.suiteId === clothing);
+
+                if (traderClothing) {
+                    const clothingToAdd: ICustomisationStorage = {
+                        id: traderClothing.suiteId,
+                        source: CustomisationSource.UNLOCKED_IN_GAME,
+                        type: CustomisationType.SUITE,
+                    };
+
+                    fullProfile.customisationUnlocks.push(clothingToAdd);
+                } else {
+                    // Modded clothing, this will have to be re-setup by the user in 4.0
+                    clothingToRemove.push(clothing);
+                }
+            }
         }
 
         if (fullProfile.characters.pmc.Info.Side === "Usec") {
+            // Reset clothing customization back to default as customization changed in 4.0
+            fullProfile.characters.pmc.Customization.Body = "5cde95d97d6c8b647a3769b0"; //Usec default clothing
+            fullProfile.characters.pmc.Customization.Feet = "5cde95ef7d6c8b04713c4f2d";
+            fullProfile.characters.pmc.Customization.Hands = "5cde95fa7d6c8b04737c2d13";
             fullProfile.characters.pmc.Customization.DogTag = "674731d1170146228c0d222a"; //Usec base dogtag
 
             if (fullProfile.characters.pmc.Info.GameVersion === "edge_of_darkness") {
@@ -263,6 +306,37 @@ export class GameController {
             if (fullProfile.characters.pmc.Info.GameVersion === "unheard_edition") {
                 fullProfile.characters.pmc.Customization.DogTag = "6747193f170146228c0d2226";
             }
+
+            for (const clothing of fullProfile.suits) {
+                // Default Usec clothing, dont need to add this
+                if (
+                    clothing === "5cde9ec17d6c8b04723cf479" ||
+                    clothing === "5cde9e957d6c8b0474535da7" ||
+                    clothing === "666841a02537107dc508b704"
+                ) {
+                    continue;
+                }
+
+                const traderClothing = this.databaseService
+                    .getTrader("5ac3b934156ae10c4430e83c")
+                    .suits?.find((item) => item.suiteId === clothing);
+
+                if (traderClothing) {
+                    const clothingToAdd: ICustomisationStorage = {
+                        id: traderClothing.suiteId,
+                        source: CustomisationSource.UNLOCKED_IN_GAME,
+                        type: CustomisationType.SUITE,
+                    };
+
+                    fullProfile.customisationUnlocks.push(clothingToAdd);
+                } else {
+                    // Modded clothing, this will have to be re-setup by the user in 4.0
+                    clothingToRemove.push(clothing);
+                }
+            }
+
+            // Filter out modded items, we dont need to keep any of those here as these will not appear as bought
+            fullProfile.suits = fullProfile.suits.filter((clothing) => !clothingToRemove.includes(clothing));
         }
     }
 

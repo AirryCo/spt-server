@@ -1441,6 +1441,7 @@ export class HideoutController {
     ): IItemEventRouterResponse {
         pmcData.Hideout.MannequinPoses ||= {};
         for (const [key, value] of Object.entries(request.poses)) {
+            pmcData.Hideout.MannequinPoses ||= {};
             pmcData.Hideout.MannequinPoses[key] = value;
         }
 

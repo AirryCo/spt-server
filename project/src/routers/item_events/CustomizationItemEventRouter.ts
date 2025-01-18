@@ -24,9 +24,9 @@ export class CustomizationItemEventRouter extends ItemEventRouterDefinition {
     ): Promise<IItemEventRouterResponse> {
         switch (url) {
             case "CustomizationBuy":
-                return this.customizationCallbacks.buyClothing(pmcData, body, sessionID);
+                return this.customizationCallbacks.buyCustomisation(pmcData, body, sessionID);
             case "CustomizationSet":
-                return this.customizationCallbacks.setClothing(pmcData, body, sessionID);
+                return this.customizationCallbacks.setCustomisation(pmcData, body, sessionID);
         }
     }
 }
