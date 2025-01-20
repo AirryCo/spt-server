@@ -216,11 +216,22 @@ export class GiftService {
         }
 
         if (giftId) {
-            const giftData = this.getGiftById(giftId);
             if (!this.profileHelper.playerHasRecievedMaxNumberOfGift(sessionId, giftId, 1)) {
                 // Hard-coded to send only one
                 this.sendGiftToPlayer(sessionId, giftId);
             }
+        }
+    }
+
+    /**
+     * Send player a gift with silent recieved check
+     * @param giftId Id of gift to send
+     * @param sessionId Session id of player to send to
+     * @param giftCount OPTIONAL How many to send
+     */
+    public sendGiftWithSilentReceivedCheck(giftId: string, sessionId: string, giftCount = 1) {
+        if (!this.profileHelper.playerHasRecievedMaxNumberOfGift(sessionId, giftId, giftCount)) {
+            this.sendGiftToPlayer(sessionId, giftId);
         }
     }
 }

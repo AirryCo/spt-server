@@ -74,6 +74,7 @@ export default {
     "5cbdaf89ae9215000e5b9c94": "6L23 Plum",
     "5e21a3c67e40bd02257a008a": "GEN M3 Banana",
     "6241c2c2117ad530666a5108": "GEN M3 AIRSOFT",
+    "61840d85568c120fdd2962a5": "MK16 FDE",
 
     // Lootable Containers
     "5914944186f774189e5e76c2": "Jacket 204Key",

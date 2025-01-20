@@ -147,7 +147,7 @@ export class RagfairController {
      * @param request Request data
      * @returns IRagfairOffer
      */
-    public getOfferById(sessionId: string, request: IGetRagfairOfferByIdRequest): IRagfairOffer {
+    public getOfferById(sessionId: string, request: IGetRagfairOfferByIdRequest): IRagfairOffer | undefined {
         const offers = this.ragfairOfferService.getOffers();
         const offerToReturn = offers.find((offer) => offer.intId === request.id);
 
@@ -335,7 +335,7 @@ export class RagfairController {
 
                     // Figure out how many items the requirementsCost is applying to, and what the per-item price is
                     const offerItemCount = Math.max(
-                        offer.sellInOnePiece ? offer.items[0].upd?.StackObjectsCount ?? 1 : 1,
+                        offer.sellInOnePiece ? (offer.items[0].upd?.StackObjectsCount ?? 1) : 1,
                     );
                     const perItemPrice = offer.requirementsCost / offerItemCount;
 
@@ -404,7 +404,7 @@ export class RagfairController {
     }
 
     /**
-     * Create a flea offer for a single item - uncludes an item with > 1 sized stack
+     * Create a flea offer for a single item - includes an item with > 1 sized stack
      * e.g. 1 ammo stack of 30 cartridges
      * @param sessionID Session id
      * @param offerRequest Offer request from client

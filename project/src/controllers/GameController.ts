@@ -186,6 +186,8 @@ export class GameController {
             if (pmcProfile.Inventory) {
                 this.sendPraporGiftsToNewProfiles(pmcProfile);
 
+                this.sendMechanicGiftsToNewProfile(pmcProfile);
+
                 this.profileFixerService.checkForOrphanedModdedItems(sessionID, fullProfile);
             }
 
@@ -630,6 +632,14 @@ export class GameController {
         if (currentTimeStamp > timeStampProfileCreated + oneDaySeconds * 2) {
             this.giftService.sendPraporStartingGift(pmcProfile.sessionId, 2);
         }
+    }
+
+    /**
+     * Mechanic sends players a measuring tape on profile start for some reason
+     * @param pmcProfile
+     */
+    protected sendMechanicGiftsToNewProfile(pmcProfile: IPmcData) {
+        this.giftService.sendGiftWithSilentReceivedCheck("MechanicGiftDay1", pmcProfile.sessionId, 1);
     }
 
     /**
