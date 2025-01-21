@@ -51,7 +51,8 @@ import { RandomUtil } from "@spt/utils/RandomUtil";
 import { TimeUtil } from "@spt/utils/TimeUtil";
 import type { ICloner } from "@spt/utils/cloners/ICloner";
 import { inject, injectable } from "tsyringe";
-import { TransitionType } from "../models/enums/TransitionType";
+import { TransitionType } from "@spt/models/enums/TransitionType";
+import { RewardHelper } from "@spt/helpers/RewardHelper";
 
 @injectable()
 export class LocationLifecycleService {
@@ -73,6 +74,7 @@ export class LocationLifecycleService {
         @inject("InRaidHelper") protected inRaidHelper: InRaidHelper,
         @inject("HealthHelper") protected healthHelper: HealthHelper,
         @inject("QuestHelper") protected questHelper: QuestHelper,
+        @inject("RewardHelper") protected rewardHelper: RewardHelper,
         @inject("MatchBotDetailsCacheService") protected matchBotDetailsCacheService: MatchBotDetailsCacheService,
         @inject("PmcChatResponseService") protected pmcChatResponseService: PmcChatResponseService,
         @inject("PlayerScavGenerator") protected playerScavGenerator: PlayerScavGenerator,
@@ -666,7 +668,7 @@ export class LocationLifecycleService {
         pmcProfile.SurvivorClass = postRaidProfile.SurvivorClass;
 
         // MUST occur prior to profile achievements being overwritten by post-raid achievements
-        this.processAchievementCustomisationRewards(fullProfile, postRaidProfile.Achievements);
+        this.processAchievementRewards(fullProfile, postRaidProfile.Achievements);
 
         pmcProfile.Achievements = postRaidProfile.Achievements;
         pmcProfile.Quests = this.processPostRaidQuests(postRaidProfile.Quests);
@@ -730,14 +732,13 @@ export class LocationLifecycleService {
     }
 
     /**
-     * Check for and add any customisations found via the gained achievements this raid
+     * Check for and add any rewards found via the gained achievements this raid
      * @param fullProfile Profile to add customisations to
-     * @param postRaidAchievements Achievements gained this raid
+     * @param postRaidAchievements All profile achievements at the end of the raid
      */
-    protected processAchievementCustomisationRewards(
-        fullProfile: ISptProfile,
-        postRaidAchievements: Record<string, number>,
-    ): void {
+    protected processAchievementRewards(fullProfile: ISptProfile, postRaidAchievements: Record<string, number>): void {
+        const sessionId = fullProfile.info.id;
+        const pmcProfile = fullProfile.characters.pmc;
         const preRaidAchievementIds = Object.keys(fullProfile.characters.pmc.Achievements);
         const postRaidAchievementIds = Object.keys(postRaidAchievements);
         const achievementIdsAcquiredThisRaid = postRaidAchievementIds.filter(
@@ -756,14 +757,23 @@ export class LocationLifecycleService {
             return;
         }
 
-        // Get only customisation rewards from above achievements
-        const customisationRewards = achievements
-            .filter((achievement) => achievement?.rewards.some((reward) => reward.type === "CustomizationDirect"))
-            .flatMap((achievement) => achievement?.rewards);
-
-        // Insert customisations into profile
-        for (const reward of customisationRewards) {
-            this.profileHelper.addHideoutCustomisationUnlock(fullProfile, reward, CustomisationSource.ACHIEVEMENT);
+        for (const achievement of achievements) {
+            const rewardItems = this.rewardHelper.applyRewards(
+                achievement.rewards,
+                CustomisationSource.ACHIEVEMENT,
+                fullProfile,
+                pmcProfile,
+                achievement.id,
+            );
+            if (rewardItems?.length > 0) {
+                this.mailSendService.sendLocalisedSystemMessageToPlayer(
+                    sessionId,
+                    "670547bb5fa0b1a7c30d5836 0",
+                    rewardItems,
+                    [],
+                    this.timeUtil.getHoursAsSeconds(24 * 7),
+                );
+            }
         }
     }
 

@@ -2,6 +2,7 @@ import { ItemHelper } from "@spt/helpers/ItemHelper";
 import { ProfileHelper } from "@spt/helpers/ProfileHelper";
 import { QuestConditionHelper } from "@spt/helpers/QuestConditionHelper";
 import { QuestRewardHelper } from "@spt/helpers/QuestRewardHelper";
+import { RewardHelper } from "@spt/helpers/RewardHelper";
 import { TraderHelper } from "@spt/helpers/TraderHelper";
 import { IPmcData } from "@spt/models/eft/common/IPmcData";
 import { Common, IQuestStatus } from "@spt/models/eft/common/tables/IBotBase";
@@ -46,6 +47,7 @@ export class QuestHelper {
         @inject("LocaleService") protected localeService: LocaleService,
         @inject("ProfileHelper") protected profileHelper: ProfileHelper,
         @inject("QuestRewardHelper") protected questRewardHelper: QuestRewardHelper,
+        @inject("RewardHelper") protected rewardHelper: RewardHelper,
         @inject("LocalisationService") protected localisationService: LocalisationService,
         @inject("SeasonalEventService") protected seasonalEventService: SeasonalEventService,
         @inject("TraderHelper") protected traderHelper: TraderHelper,
@@ -1060,7 +1062,7 @@ export class QuestHelper {
             // Remove any reward that doesn't pass the game edition check
             for (const rewardType of Object.keys(quest.rewards)) {
                 quest.rewards[rewardType] = quest.rewards[rewardType].filter((reward: IReward) =>
-                    this.questRewardHelper.questRewardIsForGameEdition(reward, gameVersion),
+                    this.rewardHelper.rewardIsForGameEdition(reward, gameVersion),
                 );
             }
         }

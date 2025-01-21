@@ -531,19 +531,24 @@ export class RagfairOfferHelper {
 
     /**
      * Complete the selling of players' offer
-     * @param sessionID Session id
+     * @param offerOwnerSessionId Session id
      * @param offer Sold offer details
      * @param boughtAmount Amount item was purchased for
      * @returns IItemEventRouterResponse
      */
-    public completeOffer(sessionID: string, offer: IRagfairOffer, boughtAmount: number): IItemEventRouterResponse {
+    public completeOffer(
+        offerOwnerSessionId: string,
+        offer: IRagfairOffer,
+        boughtAmount: number,
+    ): IItemEventRouterResponse {
         const itemTpl = offer.items[0]._tpl;
         let paymentItemsToSendToPlayer: IItem[] = [];
         const offerStackCount = offer.items[0].upd.StackObjectsCount;
+        const sellerProfile = this.profileHelper.getPmcProfile(offerOwnerSessionId);
 
         // Pack or ALL items of a multi-offer were bought - remove entire ofer
         if (offer.sellInOnePiece || boughtAmount === offerStackCount) {
-            this.deleteOfferById(sessionID, offer._id);
+            this.deleteOfferById(offerOwnerSessionId, offer._id);
         } else {
             const offerRootItem = offer.items[0];
 
@@ -578,24 +583,26 @@ export class RagfairOfferHelper {
 
         const ragfairDetails = {
             offerId: offer._id,
-            count: offer.sellInOnePiece ? offerStackCount : boughtAmount, // pack-offers NEED to the full item count otherwise it only removes 1 from the pack, leaving phantom offer on client ui
+            count: offer.sellInOnePiece ? offerStackCount : boughtAmount, // pack-offers NEED to to be the full item count otherwise it only removes 1 from the pack, leaving phantom offer on client ui
             handbookId: itemTpl,
         };
 
         this.mailSendService.sendDirectNpcMessageToPlayer(
-            sessionID,
+            offerOwnerSessionId,
             this.traderHelper.getTraderById(Traders.RAGMAN),
             MessageType.FLEAMARKET_MESSAGE,
             this.getLocalisedOfferSoldMessage(itemTpl, boughtAmount),
             paymentItemsToSendToPlayer,
-            this.timeUtil.getHoursAsSeconds(
-                this.questHelper.getMailItemRedeemTimeHoursForProfile(this.profileHelper.getPmcProfile(sessionID)),
-            ),
+            this.timeUtil.getHoursAsSeconds(this.questHelper.getMailItemRedeemTimeHoursForProfile(sellerProfile)),
             undefined,
             ragfairDetails,
         );
 
-        return this.eventOutputHolder.getOutput(sessionID);
+        // Adjust sellers sell sum values
+        sellerProfile.RagfairInfo.sellSum ||= 0;
+        sellerProfile.RagfairInfo.sellSum += offer.summaryCost;
+
+        return this.eventOutputHolder.getOutput(offerOwnerSessionId);
     }
 
     /**

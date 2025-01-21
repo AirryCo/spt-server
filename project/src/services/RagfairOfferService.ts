@@ -246,6 +246,10 @@ export class RagfairOfferService {
         profile.RagfairInfo.rating -= this.databaseService.getGlobals().config.RagFair.ratingDecreaseCount;
         profile.RagfairInfo.isRatingGrowing = false;
 
+        // Increment players 'notSellSum' value
+        profile.RagfairInfo.notSellSum ||= 0;
+        profile.RagfairInfo.notSellSum += playerOffer.summaryCost;
+
         const firstOfferItem = playerOffer.items[0];
         if (firstOfferItem.upd.StackObjectsCount > firstOfferItem.upd.OriginalStackObjectsCount) {
             playerOffer.items[0].upd.StackObjectsCount = firstOfferItem.upd.OriginalStackObjectsCount;

@@ -4,14 +4,11 @@ import { PresetHelper } from "@spt/helpers/PresetHelper";
 import { ProfileHelper } from "@spt/helpers/ProfileHelper";
 import { TraderHelper } from "@spt/helpers/TraderHelper";
 import { IPmcData } from "@spt/models/eft/common/IPmcData";
-import { CustomisationSource } from "@spt/models/eft/common/tables/ICustomisationStorage";
 import { IItem } from "@spt/models/eft/common/tables/IItem";
 import { IQuest } from "@spt/models/eft/common/tables/IQuest";
 import { IReward } from "@spt/models/eft/common/tables/IReward";
-import { IHideoutProduction } from "@spt/models/eft/hideout/IHideoutProduction";
 import { IItemEventRouterResponse } from "@spt/models/eft/itemEvent/IItemEventRouterResponse";
 import { QuestStatus } from "@spt/models/enums/QuestStatus";
-import { RewardType } from "@spt/models/enums/RewardType";
 import { SkillTypes } from "@spt/models/enums/SkillTypes";
 import type { ILogger } from "@spt/models/spt/utils/ILogger";
 import { DatabaseService } from "@spt/services/DatabaseService";
@@ -19,6 +16,8 @@ import { LocalisationService } from "@spt/services/LocalisationService";
 import { HashUtil } from "@spt/utils/HashUtil";
 import type { ICloner } from "@spt/utils/cloners/ICloner";
 import { inject, injectable } from "tsyringe";
+import { RewardHelper } from "@spt/helpers/RewardHelper";
+import { CustomisationSource } from "@spt/models/eft/common/tables/ICustomisationStorage";
 
 @injectable()
 export class QuestRewardHelper {
@@ -33,6 +32,7 @@ export class QuestRewardHelper {
         @inject("TraderHelper") protected traderHelper: TraderHelper,
         @inject("PresetHelper") protected presetHelper: PresetHelper,
         @inject("PrimaryCloner") protected cloner: ICloner,
+        @inject("RewardHelper") protected rewardHelper: RewardHelper,
     ) {}
 
     /**
@@ -78,99 +78,15 @@ export class QuestRewardHelper {
 
         // e.g. 'Success' or 'AvailableForFinish'
         const questStateAsString = QuestStatus[state];
-        const gameVersion = pmcProfile.Info.GameVersion;
-        for (const reward of <IReward[]>questDetails.rewards[questStateAsString]) {
-            // Handle quest reward availability for different game versions, notAvailableInGameEditions currently not used
-            if (!this.questRewardIsForGameEdition(reward, gameVersion)) {
-                continue;
-            }
-
-            switch (reward.type) {
-                case RewardType.SKILL:
-                    this.profileHelper.addSkillPointsToPlayer(
-                        profileData,
-                        reward.target as SkillTypes,
-                        Number(reward.value),
-                    );
-                    break;
-                case RewardType.EXPERIENCE:
-                    this.profileHelper.addExperienceToPmc(sessionId, Number.parseInt(<string>reward.value)); // this must occur first as the output object needs to take the modified profile exp value
-                    break;
-                case RewardType.TRADER_STANDING:
-                    this.traderHelper.addStandingToTrader(
-                        sessionId,
-                        reward.target,
-                        Number.parseFloat(<string>reward.value),
-                    );
-                    break;
-                case RewardType.TRADER_UNLOCK:
-                    this.traderHelper.setTraderUnlockedState(reward.target, true, sessionId);
-                    break;
-                case RewardType.ITEM:
-                    // Handled by getQuestRewardItems() below
-                    break;
-                case RewardType.ASSORTMENT_UNLOCK:
-                    // Handled by getAssort(), locked assorts are stripped out by `assortHelper.stripLockedLoyaltyAssort()` before being sent to player
-                    break;
-                case RewardType.ACHIEVEMENT:
-                    this.profileHelper.addAchievementToProfile(fullProfile, reward.target);
-                    break;
-                case RewardType.STASH_ROWS:
-                    this.profileHelper.addStashRowsBonusToProfile(sessionId, Number.parseInt(<string>reward.value)); // Add specified stash rows from quest reward - requires client restart
-                    break;
-                case RewardType.PRODUCTIONS_SCHEME:
-                    this.findAndAddHideoutProductionIdToProfile(
-                        pmcProfile,
-                        reward,
-                        questDetails,
-                        sessionId,
-                        questResponse,
-                    );
-                    break;
-                case RewardType.POCKETS:
-                    this.profileHelper.replaceProfilePocketTpl(pmcProfile, reward.target);
-                    break;
-                case RewardType.CUSTOMIZATION_DIRECT:
-                    this.profileHelper.addHideoutCustomisationUnlock(
-                        fullProfile,
-                        reward,
-                        CustomisationSource.UNLOCKED_IN_GAME,
-                    );
-                    break;
-                default:
-                    this.logger.error(
-                        this.localisationService.getText("quest-reward_type_not_handled", {
-                            rewardType: reward.type,
-                            questId: questId,
-                            questName: questDetails.QuestName,
-                        }),
-                    );
-                    break;
-            }
-        }
-
-        return this.getQuestRewardItems(questDetails, state, gameVersion);
-    }
-
-    /**
-     * Does the provided quest reward have a game version requirement to be given and does it match
-     * @param reward Reward to check
-     * @param gameVersion Version of game to check reward against
-     * @returns True if it has requirement, false if it doesnt pass check
-     */
-    public questRewardIsForGameEdition(reward: IReward, gameVersion: string): boolean {
-        if (reward.availableInGameEditions?.length > 0 && !reward.availableInGameEditions?.includes(gameVersion)) {
-            // Reward has edition whitelist and game version isnt in it
-            return false;
-        }
-
-        if (reward.notAvailableInGameEditions?.length > 0 && reward.notAvailableInGameEditions?.includes(gameVersion)) {
-            // Reward has edition blacklist and game version is in it
-            return false;
-        }
-
-        // No whitelist/blacklist or reward isnt blacklisted/whitelisted
-        return true;
+        const rewards = <IReward[]>questDetails.rewards[questStateAsString];
+        return this.rewardHelper.applyRewards(
+            rewards,
+            CustomisationSource.UNLOCKED_IN_GAME,
+            fullProfile,
+            profileData,
+            questId,
+            questResponse,
+        );
     }
 
     /**
@@ -228,7 +144,8 @@ export class QuestRewardHelper {
      * @returns Updated quest
      */
     public applyMoneyBoost(quest: IQuest, bonusPercent: number, questStatus: QuestStatus): IQuest {
-        const rewards: IReward[] = quest.rewards?.[QuestStatus[questStatus]] ?? [];
+        const clonedQuest = this.cloner.clone(quest);
+        const rewards: IReward[] = clonedQuest.rewards?.[QuestStatus[questStatus]] ?? [];
         const currencyRewards = rewards.filter(
             (reward) => reward.type === "Item" && this.paymentHelper.isMoneyTpl(reward.items[0]._tpl),
         );
@@ -240,205 +157,6 @@ export class QuestRewardHelper {
             reward.value = newCurrencyAmount;
         }
 
-        return quest;
-    }
-
-    /**
-     * WIP - Find hideout craft id and add to unlockedProductionRecipe array in player profile
-     * also update client response recipeUnlocked array with craft id
-     * @param pmcData Player profile
-     * @param craftUnlockReward Reward item from quest with craft unlock details
-     * @param questDetails Quest with craft unlock reward
-     * @param sessionID Session id
-     * @param response Response to send back to client
-     */
-    protected findAndAddHideoutProductionIdToProfile(
-        pmcData: IPmcData,
-        craftUnlockReward: IReward,
-        questDetails: IQuest,
-        sessionID: string,
-        response: IItemEventRouterResponse,
-    ): void {
-        const matchingProductions = this.getRewardProductionMatch(craftUnlockReward, questDetails);
-        if (matchingProductions.length !== 1) {
-            this.logger.error(
-                this.localisationService.getText("quest-unable_to_find_matching_hideout_production", {
-                    questName: questDetails.QuestName,
-                    matchCount: matchingProductions.length,
-                }),
-            );
-
-            return;
-        }
-
-        // Add above match to pmc profile + client response
-        const matchingCraftId = matchingProductions[0]._id;
-        pmcData.UnlockedInfo.unlockedProductionRecipe.push(matchingCraftId);
-        response.profileChanges[sessionID].recipeUnlocked[matchingCraftId] = true;
-    }
-
-    /**
-     * Find hideout craft for the specified quest reward
-     * @param craftUnlockReward Reward item from quest with craft unlock details
-     * @param questDetails Quest with craft unlock reward
-     * @returns Hideout craft
-     */
-    public getRewardProductionMatch(craftUnlockReward: IReward, questDetails: IQuest): IHideoutProduction[] {
-        // Get hideout crafts and find those that match by areatype/required level/end product tpl - hope for just one match
-        const craftingRecipes = this.databaseService.getHideout().production.recipes;
-
-        // Area that will be used to craft unlocked item
-        const desiredHideoutAreaType = Number.parseInt(craftUnlockReward.traderId);
-
-        let matchingProductions = craftingRecipes.filter(
-            (prod) =>
-                prod.areaType === desiredHideoutAreaType &&
-                //prod.requirements.some((requirement) => requirement.questId === questDetails._id) && // BSG dont store the quest id in requirement any more!
-                prod.requirements.some((requirement) => requirement.type === "QuestComplete") &&
-                prod.requirements.some((requirement) => requirement.requiredLevel === craftUnlockReward.loyaltyLevel) &&
-                prod.endProduct === craftUnlockReward.items[0]._tpl,
-        );
-
-        // More/less than single match, above filtering wasn't strict enough
-        if (matchingProductions.length !== 1) {
-            // Multiple matches were found, last ditch attempt to match by questid (value we add manually to production.json via `gen:productionquests` command)
-            matchingProductions = matchingProductions.filter((prod) =>
-                prod.requirements.some((requirement) => requirement.questId === questDetails._id),
-            );
-        }
-
-        return matchingProductions;
-    }
-
-    /**
-     * Gets a flat list of reward items for the given quest at a specific state for the specified game version (e.g. Fail/Success)
-     * @param quest quest to get rewards for
-     * @param status Quest status that holds the items (Started, Success, Fail)
-     * @returns array of items with the correct maxStack
-     */
-    protected getQuestRewardItems(quest: IQuest, status: QuestStatus, gameVersion: string): IItem[] {
-        if (!quest.rewards[QuestStatus[status]]) {
-            this.logger.warning(`Unable to find: ${status} reward for quest: ${quest.QuestName}`);
-            return [];
-        }
-
-        // Iterate over all rewards with the desired status, flatten out items that have a type of Item
-        const questRewards = quest.rewards[QuestStatus[status]].flatMap((reward: IReward) =>
-            reward.type === "Item" && this.questRewardIsForGameEdition(reward, gameVersion)
-                ? this.processReward(reward)
-                : [],
-        );
-
-        return questRewards;
-    }
-
-    /**
-     * Take reward item from quest and set FiR status + fix stack sizes + fix mod Ids
-     * @param questReward Reward item to fix
-     * @returns Fixed rewards
-     */
-    protected processReward(questReward: IReward): IItem[] {
-        /** item with mods to return */
-        let rewardItems: IItem[] = [];
-        let targets: IItem[] = [];
-        const mods: IItem[] = [];
-
-        // Is armor item that may need inserts / plates
-        if (questReward.items.length === 1 && this.itemHelper.armorItemCanHoldMods(questReward.items[0]._tpl)) {
-            // Only process items with slots
-            if (this.itemHelper.itemHasSlots(questReward.items[0]._tpl)) {
-                // Attempt to pull default preset from globals and add child items to reward (clones questReward.items)
-                this.generateArmorRewardChildSlots(questReward.items[0], questReward);
-            }
-        }
-
-        for (const rewardItem of questReward.items) {
-            this.itemHelper.addUpdObjectToItem(rewardItem);
-
-            // Reward items are granted Found in Raid status
-            rewardItem.upd.SpawnedInSession = true;
-
-            // Is root item, fix stacks
-            if (rewardItem._id === questReward.target) {
-                // Is base reward item
-                if (
-                    rewardItem.parentId !== undefined &&
-                    rewardItem.parentId === "hideout" && // Has parentId of hideout
-                    rewardItem.upd !== undefined &&
-                    rewardItem.upd.StackObjectsCount !== undefined && // Has upd with stackobject count
-                    rewardItem.upd.StackObjectsCount > 1 // More than 1 item in stack
-                ) {
-                    rewardItem.upd.StackObjectsCount = 1;
-                }
-                targets = this.itemHelper.splitStack(rewardItem);
-                // splitStack created new ids for the new stacks. This would destroy the relation to possible children.
-                // Instead, we reset the id to preserve relations and generate a new id in the downstream loop, where we are also reparenting if required
-                for (const target of targets) {
-                    target._id = rewardItem._id;
-                }
-            } else {
-                // Is child mod
-                if (questReward.items[0].upd.SpawnedInSession) {
-                    // Propigate FiR status into child items
-                    rewardItem.upd.SpawnedInSession = questReward.items[0].upd.SpawnedInSession;
-                }
-
-                mods.push(rewardItem);
-            }
-        }
-
-        // Add mods to the base items, fix ids
-        for (const target of targets) {
-            // This has all the original id relations since we reset the id to the original after the splitStack
-            const itemsClone = [this.cloner.clone(target)];
-            // Here we generate a new id for the root item
-            target._id = this.hashUtil.generate();
-
-            for (const mod of mods) {
-                itemsClone.push(this.cloner.clone(mod));
-            }
-
-            rewardItems = rewardItems.concat(this.itemHelper.reparentItemAndChildren(target, itemsClone));
-        }
-
-        return rewardItems;
-    }
-
-    /**
-     * Add missing mod items to a quest armor reward
-     * @param originalRewardRootItem Original armor reward item from IReward.items object
-     * @param questReward Armor reward from quest
-     */
-    protected generateArmorRewardChildSlots(originalRewardRootItem: IItem, questReward: IReward): void {
-        // Look for a default preset from globals for armor
-        const defaultPreset = this.presetHelper.getDefaultPreset(originalRewardRootItem._tpl);
-        if (defaultPreset) {
-            // Found preset, use mods to hydrate reward item
-            const presetAndMods: IItem[] = this.itemHelper.replaceIDs(defaultPreset._items);
-            const newRootId = this.itemHelper.remapRootItemId(presetAndMods);
-
-            questReward.items = presetAndMods;
-
-            // Find root item and set its stack count
-            const rootItem = questReward.items.find((item) => item._id === newRootId);
-
-            // Remap target id to the new presets root id
-            questReward.target = rootItem._id;
-
-            // Copy over stack count otherwise reward shows as missing in client
-            this.itemHelper.addUpdObjectToItem(rootItem);
-
-            rootItem.upd.StackObjectsCount = originalRewardRootItem.upd.StackObjectsCount;
-
-            return;
-        }
-
-        this.logger.warning(
-            `Unable to find default preset for armor ${originalRewardRootItem._tpl}, adding mods manually`,
-        );
-        const itemDbData = this.itemHelper.getItem(originalRewardRootItem._tpl)[1];
-
-        // Hydrate reward with only 'required' mods - necessary for things like helmets otherwise you end up with nvgs/visors etc
-        questReward.items = this.itemHelper.addChildSlotItems(questReward.items, itemDbData, undefined, true);
+        return clonedQuest;
     }
 }

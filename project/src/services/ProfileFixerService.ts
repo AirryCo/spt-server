@@ -2,7 +2,7 @@ import { HideoutHelper } from "@spt/helpers/HideoutHelper";
 import { InventoryHelper } from "@spt/helpers/InventoryHelper";
 import { ItemHelper } from "@spt/helpers/ItemHelper";
 import { ProfileHelper } from "@spt/helpers/ProfileHelper";
-import { QuestRewardHelper } from "@spt/helpers/QuestRewardHelper";
+import { RewardHelper } from "@spt/helpers/RewardHelper";
 import { TraderHelper } from "@spt/helpers/TraderHelper";
 import { IPmcData } from "@spt/models/eft/common/IPmcData";
 import { IBonus, IHideoutSlot } from "@spt/models/eft/common/tables/IBotBase";
@@ -51,7 +51,7 @@ export class ProfileFixerService {
         @inject("HashUtil") protected hashUtil: HashUtil,
         @inject("ConfigServer") protected configServer: ConfigServer,
         @inject("PrimaryCloner") protected cloner: ICloner,
-        @inject("QuestRewardHelper") protected questRewardHelper: QuestRewardHelper,
+        @inject("RewardHelper") protected rewardHelper: RewardHelper,
     ) {
         this.coreConfig = this.configServer.getConfig(ConfigTypes.CORE);
         this.ragfairConfig = this.configServer.getConfig(ConfigTypes.RAGFAIR);
@@ -365,9 +365,9 @@ export class ProfileFixerService {
         productionUnlockReward: IReward,
         questDetails: IQuest,
     ): void {
-        const matchingProductions = this.questRewardHelper.getRewardProductionMatch(
+        const matchingProductions = this.rewardHelper.getRewardProductionMatch(
             productionUnlockReward,
-            questDetails,
+            questDetails._id,
         );
         if (matchingProductions.length !== 1) {
             this.logger.error(

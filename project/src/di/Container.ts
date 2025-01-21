@@ -120,6 +120,7 @@ import { RagfairSellHelper } from "@spt/helpers/RagfairSellHelper";
 import { RagfairServerHelper } from "@spt/helpers/RagfairServerHelper";
 import { RagfairSortHelper } from "@spt/helpers/RagfairSortHelper";
 import { RepairHelper } from "@spt/helpers/RepairHelper";
+import { RewardHelper } from "@spt/helpers/RewardHelper";
 import { RepeatableQuestHelper } from "@spt/helpers/RepeatableQuestHelper";
 import { SecureContainerHelper } from "@spt/helpers/SecureContainerHelper";
 import { TradeHelper } from "@spt/helpers/TradeHelper";
@@ -616,6 +617,7 @@ export class Container {
         depContainer.register<RagfairOfferHelper>("RagfairOfferHelper", { useClass: RagfairOfferHelper });
         depContainer.register<RagfairServerHelper>("RagfairServerHelper", { useClass: RagfairServerHelper });
         depContainer.register<RepairHelper>("RepairHelper", { useClass: RepairHelper });
+        depContainer.register<RewardHelper>("RewardHelper", { useClass: RewardHelper });
         depContainer.register<TraderHelper>("TraderHelper", TraderHelper);
         depContainer.register<TraderAssortHelper>("TraderAssortHelper", TraderAssortHelper, {
             lifecycle: Lifecycle.Singleton,

@@ -636,7 +636,7 @@ export class GameController {
 
     /**
      * Mechanic sends players a measuring tape on profile start for some reason
-     * @param pmcProfile
+     * @param pmcProfile Player profile
      */
     protected sendMechanicGiftsToNewProfile(pmcProfile: IPmcData) {
         this.giftService.sendGiftWithSilentReceivedCheck("MechanicGiftDay1", pmcProfile.sessionId, 1);

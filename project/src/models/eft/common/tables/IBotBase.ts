@@ -476,6 +476,8 @@ export interface ITraderInfo {
 export interface IRagfairInfo {
     rating: number;
     isRatingGrowing: boolean;
+    sellSum: number;
+    notSellSum: number;
     offers: IRagfairOffer[];
 }
 

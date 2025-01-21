@@ -28,7 +28,7 @@ export interface ISptProfile {
     customisationUnlocks: ICustomisationStorage[];
 }
 
-export class ITraderPurchaseData {
+export interface ITraderPurchaseData {
     count: number;
     purchaseTimestamp: number;
 }

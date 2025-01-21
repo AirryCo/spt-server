@@ -99,7 +99,7 @@ export class RagfairServer {
         offer.locked = true;
     }
 
-    public getOffer(offerID: string): IRagfairOffer {
+    public getOffer(offerID: string): IRagfairOffer | undefined {
         return this.ragfairOfferService.getOfferByOfferId(offerID);
     }
 

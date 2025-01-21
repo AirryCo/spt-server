@@ -221,6 +221,6 @@ export class SaveServer {
 
         await this.fileSystem.remove(file);
 
-        return !this.fileSystem.exists(file);
+        return !(await this.fileSystem.exists(file));
     }
 }
