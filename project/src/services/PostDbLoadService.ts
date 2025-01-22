@@ -19,12 +19,14 @@ import { ItemBaseClassService } from "@spt/services/ItemBaseClassService";
 import { LocalisationService } from "@spt/services/LocalisationService";
 import { OpenZoneService } from "@spt/services/OpenZoneService";
 import { SeasonalEventService } from "@spt/services/SeasonalEventService";
+import { HashUtil } from "@spt/utils/HashUtil";
 import type { ICloner } from "@spt/utils/cloners/ICloner";
 import { inject, injectable } from "tsyringe";
 
 @injectable()
 export class PostDbLoadService {
     protected coreConfig: ICoreConfig;
+
     protected locationConfig: ILocationConfig;
     protected ragfairConfig: IRagfairConfig;
     protected hideoutConfig: IHideoutConfig;
@@ -35,6 +37,7 @@ export class PostDbLoadService {
 
     constructor(
         @inject("PrimaryLogger") protected logger: ILogger,
+        @inject("HashUtil") protected hashUtil: HashUtil,
         @inject("DatabaseService") protected databaseService: DatabaseService,
         @inject("LocalisationService") protected localisationService: LocalisationService,
         @inject("CustomLocationWaveService") protected customLocationWaveService: CustomLocationWaveService,
@@ -105,6 +108,10 @@ export class PostDbLoadService {
         this.adjustHideoutCraftTimes(this.hideoutConfig.overrideCraftTimeSeconds);
         this.adjustHideoutBuildTimes(this.hideoutConfig.overrideBuildTimeSeconds);
 
+        this.unlockHideoutLootCrateCrafts();
+
+        this.cloneExistingCraftsAndAddNew();
+
         this.removePraporTestMessage();
 
         this.validateQuestAssortUnlocksExist();
@@ -123,6 +130,36 @@ export class PostDbLoadService {
         this.applyFleaPriceOverrides();
 
         this.addCustomItemPresetsToGlobals();
+    }
+
+    protected unlockHideoutLootCrateCrafts() {
+        const hideoutLootBoxCraftIds = [
+            "66582be04de4820934746cea",
+            "6745925da9c9adf0450d5bca",
+            "67449c79268737ef6908d636",
+        ];
+
+        for (const craftId of hideoutLootBoxCraftIds) {
+            const recipe = this.databaseService.getHideout().production.recipes.find((craft) => craft._id === craftId);
+            if (recipe) {
+                recipe.locked = false;
+            }
+        }
+    }
+
+    protected cloneExistingCraftsAndAddNew() {
+        const hideoutCraftDb = this.databaseService.getHideout().production;
+        const craftsToAdd = this.hideoutConfig.hideoutCraftsToAdd;
+        for (const craftToAdd of craftsToAdd) {
+            const clonedCraft = this.cloner.clone(
+                hideoutCraftDb.recipes.find((x) => x._id === craftToAdd.craftIdToCopy),
+            );
+            clonedCraft._id = this.hashUtil.generate();
+            clonedCraft.requirements = craftToAdd.requirements;
+            clonedCraft.endProduct = craftToAdd.craftOutputTpl;
+
+            hideoutCraftDb.recipes.push(clonedCraft);
+        }
     }
 
     protected adjustMinReserveRaiderSpawnChance(): void {

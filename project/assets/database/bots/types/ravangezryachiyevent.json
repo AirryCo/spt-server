@@ -2064,16 +2064,35 @@
     }
   },
   "experience": {
-    "aggressorBonus": 0.02,
+    "aggressorBonus": {
+      "hard": 0.02,
+      "normal": 0.02,
+      "easy": 0.01
+    },
     "level": {
       "max": 1,
       "min": 0
     },
     "reward": {
-      "max": 300,
-      "min": 300
+      "hard": {
+        "min": 300,
+        "max": 300
+      },
+      "normal": {
+        "min": 300,
+        "max": 300
+      },
+      "easy": {
+        "min": 300,
+        "max": 300
+      }
     },
-    "standingForKill": 0
+    "standingForKill": {
+      "hard": 0,
+      "normal": 0,
+      "easy": 0
+    },
+    "useSimpleAnimator": false
   },
   "firstName": [
     "Костян"

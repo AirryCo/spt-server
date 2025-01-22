@@ -1,4 +1,5 @@
 import { MinMax } from "@spt/models/common/MinMax";
+import { IRequirement } from "@spt/models/eft/hideout/IHideoutProduction";
 import { IBaseConfig, IRunIntervalValues } from "@spt/models/spt/config/IBaseConfig";
 
 export interface IHideoutConfig extends IBaseConfig {
@@ -14,6 +15,13 @@ export interface IHideoutConfig extends IBaseConfig {
     /** Only process a profiles hideout crafts when it has been active in the last x minutes */
     updateProfileHideoutWhenActiveWithinMinutes: number;
     cultistCircle: ICultistCircleSettings;
+    hideoutCraftsToAdd: IHIdeoutCraftToAdd[];
+}
+
+export interface IHIdeoutCraftToAdd {
+    requirements: IRequirement[];
+    craftIdToCopy: string;
+    craftOutputTpl: string;
 }
 
 export interface ICultistCircleSettings {

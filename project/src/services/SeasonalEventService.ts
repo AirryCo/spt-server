@@ -71,6 +71,8 @@ export class SeasonalEventService {
             ItemTpl.RANDOMLOOTCONTAINER_NEW_YEAR_GIFT_BIG,
             ItemTpl.RANDOMLOOTCONTAINER_NEW_YEAR_GIFT_MEDIUM,
             ItemTpl.RANDOMLOOTCONTAINER_NEW_YEAR_GIFT_SMALL,
+            ItemTpl.BARTER_SPECIAL_40DEGREE_FUEL,
+            ItemTpl.BARTER_SHYSHKA_CHRISTMAS_TREE_LIFE_EXTENDER,
         ];
     }
 
