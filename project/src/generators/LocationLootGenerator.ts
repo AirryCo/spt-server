@@ -225,7 +225,7 @@ export class LocationLootGenerator {
                 );
                 if (!containerObject) {
                     this.logger.debug(
-                        `Container: ${chosenContainerIds[chosenContainerId]} not found in staticRandomisableContainersOnMap, this is bad`,
+                        `Container: ${chosenContainerId} not found in staticRandomisableContainersOnMap, this is bad`,
                     );
                     continue;
                 }
@@ -320,7 +320,7 @@ export class LocationLootGenerator {
      * @returns dictionary keyed by groupId
      */
     protected getGroupIdToContainerMappings(
-        staticContainerGroupData: IStaticContainer | Record<string, IContainerMinMax>,
+        staticContainerGroupData: IStaticContainer,
         staticContainersOnMap: IStaticContainerData[],
     ): Record<string, IContainerGroupCount> {
         // Create dictionary of all group ids and choose a count of containers the map will spawn of that group
@@ -488,7 +488,7 @@ export class LocationLootGenerator {
         const height = containerTemplate._props.Grids[0]._props.cellsV;
         const width = containerTemplate._props.Grids[0]._props.cellsH;
 
-        // Calcualte 2d array and return
+        // Calculate 2d array and return
         return Array(height)
             .fill(0)
             .map(() => Array(width).fill(0));

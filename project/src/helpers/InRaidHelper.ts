@@ -84,7 +84,7 @@ export class InRaidHelper {
 
         // Handle Removing of FIR status if player did not survive + not transferring
         // Do after above filtering code to reduce work done
-        if (!isSurvived && !isTransfer && !this.inRaidConfig.alwaysKeepFoundInRaidonRaidEnd) {
+        if (!isSurvived && !isTransfer && !this.inRaidConfig.alwaysKeepFoundInRaidOnRaidEnd) {
             this.removeFiRStatusFromCertainItems(postRaidProfile.Inventory.items);
         }
 
