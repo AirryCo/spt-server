@@ -1116,8 +1116,7 @@ export class FenceService {
                 continue;
             }
 
-            let armorWithMods = armorItemAndMods;
-
+            const armorWithMods = armorItemAndMods;
             const modItemDbDetails = this.itemHelper.getItem(plateTpl)[1];
 
             // Chance to remove plate
@@ -1125,7 +1124,7 @@ export class FenceService {
                 this.traderConfig.fence.chancePlateExistsInArmorPercent[modItemDbDetails._props?.armorClass ?? "3"];
             if (!this.randomUtil.getChance100(plateExistsChance)) {
                 // Remove plate from armor
-                armorWithMods = armorItemAndMods.filter(
+                armorItemAndMods = armorItemAndMods.filter(
                     (item) => item.slotId.toLowerCase() !== plateSlot._name.toLowerCase(),
                 );
 
