@@ -248,6 +248,8 @@ export class PostDbLoadService {
                 this.logger.warning(
                     this.localisationService.getText("bot-unable_to_edit_limits_of_unknown_map", mapId),
                 );
+
+                continue;
             }
 
             for (const botToLimit of this.locationConfig.botTypeLimits[mapId]) {

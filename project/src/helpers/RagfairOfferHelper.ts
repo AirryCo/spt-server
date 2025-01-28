@@ -176,7 +176,7 @@ export class RagfairOfferHelper {
      * @returns Matching IRagfairOffer objects
      */
     public getOffersThatRequireItem(searchRequest: ISearchRequestData, pmcData: IPmcData): IRagfairOffer[] {
-        // Get all offers that requre the desired item and filter out offers from non traders if player below ragifar unlock
+        // Get all offers that require the desired item and filter out offers from non traders if player below ragifar unlock
         const requiredOffers = this.ragfairRequiredItemsService.getRequiredItemsById(searchRequest.neededSearchId);
         const tieredFlea = this.ragfairConfig.tieredFlea;
         const tieredFleaLimitTypes = Object.keys(tieredFlea.unlocksType);

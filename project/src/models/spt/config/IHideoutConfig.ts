@@ -15,10 +15,10 @@ export interface IHideoutConfig extends IBaseConfig {
     /** Only process a profiles hideout crafts when it has been active in the last x minutes */
     updateProfileHideoutWhenActiveWithinMinutes: number;
     cultistCircle: ICultistCircleSettings;
-    hideoutCraftsToAdd: IHIdeoutCraftToAdd[];
+    hideoutCraftsToAdd: IHideoutCraftToAdd[];
 }
 
-export interface IHIdeoutCraftToAdd {
+export interface IHideoutCraftToAdd {
     requirements: IRequirement[];
     craftIdToCopy: string;
     craftOutputTpl: string;
