@@ -826,7 +826,7 @@ export class CircleOfCultistService {
                     continue;
                 }
             }
-            this.logger.debug(`Added: ${this.itemHelper.getItemName(randomItem._id)}`);
+            this.logger.debug(`Added: ${this.itemHelper.getItemName(randomItem._id)} Id: ${randomItem._id}`);
             rewardPool.add(randomItem._id);
             currentItemCount++;
         }

@@ -576,14 +576,9 @@ export class InventoryController {
         let itemId = "";
         if ("fromOwner" in body) {
             try {
-                itemId = this.getExaminedItemTpl(body);
+                itemId = this.getExaminedItemTpl(sessionID, body);
             } catch {
                 this.logger.error(this.localisationService.getText("inventory-examine_item_does_not_exist", body.item));
-            }
-
-            // get hideout item
-            if (body.fromOwner.type === "HideoutProduction") {
-                itemId = body.item;
             }
         }
 
@@ -646,7 +641,7 @@ export class InventoryController {
      * @param request Response request
      * @returns tplId
      */
-    protected getExaminedItemTpl(request: IInventoryExamineRequestData): string {
+    protected getExaminedItemTpl(sessionId: string, request: IInventoryExamineRequestData): string | null {
         if (this.presetHelper.isPreset(request.item)) {
             return this.presetHelper.getBaseItemTpl(request.item);
         }
@@ -684,8 +679,37 @@ export class InventoryController {
             }
 
             // Unable to find item in database or ragfair
-            throw new Error(this.localisationService.getText("inventory-unable_to_find_item", request.item));
+            this.logger.error(this.localisationService.getText("inventory-unable_to_find_item", request.item));
         }
+
+        // Hideout
+        if (request.fromOwner.type === "HideoutProduction") {
+            return request.item;
+        }
+
+        if (request.fromOwner.type === "Mail") {
+            // when inspecting an item in mail rewards, we are given on the message its in and its mongoId, not the Template, so we have to go find it ourselves
+            // all mail the player has
+            const mail = this.profileHelper.getFullProfile(sessionId)?.dialogues;
+            // per trader/person mail
+            const dialogue = mail[request.fromOwner.id];
+            if (!dialogue) {
+                this.logger.error(`Unable to get item with id: ${request.item}`);
+                return null;
+            }
+            // check each message from that trader/person for messages that match the ID we got
+            const message = dialogue.messages.find((m) => m._id === request.fromOwner.id);
+            // get the Id given and get the Template ID from that
+            const item = message.items.data.find((item) => item._id === request.item);
+
+            if (!item) {
+                return item._id;
+            }
+        }
+
+        this.logger.error(`Unable to get item with id: ${request.item}`);
+
+        return null;
     }
 
     public readEncyclopedia(

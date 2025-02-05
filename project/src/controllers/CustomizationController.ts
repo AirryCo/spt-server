@@ -17,11 +17,13 @@ import type {
 } from "@spt/models/eft/customization/ICustomizationSetRequest";
 import type { IHideoutCustomisation } from "@spt/models/eft/hideout/IHideoutCustomisation";
 import type { IItemEventRouterResponse } from "@spt/models/eft/itemEvent/IItemEventRouterResponse";
+import { IProcessBuyTradeRequestData } from "@spt/models/eft/trade/IProcessBuyTradeRequestData";
 import type { ILogger } from "@spt/models/spt/utils/ILogger";
 import { EventOutputHolder } from "@spt/routers/EventOutputHolder";
 import { SaveServer } from "@spt/servers/SaveServer";
 import { DatabaseService } from "@spt/services/DatabaseService";
 import { LocalisationService } from "@spt/services/LocalisationService";
+import { PaymentService } from "@spt/services/PaymentService";
 import type { ICloner } from "@spt/utils/cloners/ICloner";
 import { inject, injectable } from "tsyringe";
 
@@ -39,6 +41,7 @@ export class CustomizationController {
         @inject("SaveServer") protected saveServer: SaveServer,
         @inject("LocalisationService") protected localisationService: LocalisationService,
         @inject("ProfileHelper") protected profileHelper: ProfileHelper,
+        @inject("PaymentService") protected paymentService: PaymentService,
         @inject("PrimaryCloner") protected cloner: ICloner,
     ) {}
 
@@ -153,68 +156,21 @@ export class CustomizationController {
         output: IItemEventRouterResponse,
     ): void {
         for (const inventoryItemToProcess of itemsToPayForClothingWith) {
-            this.payForClothingItem(sessionId, pmcData, inventoryItemToProcess, output);
-        }
-    }
-
-    /**
-     * Update output object and player profile with purchase details for single piece of clothing
-     * @param sessionId Session id
-     * @param pmcData Player profile
-     * @param paymentItemDetails Payment details
-     * @param output Client response
-     */
-    protected payForClothingItem(
-        sessionId: string,
-        pmcData: IPmcData,
-        paymentItemDetails: IPaymentItemForClothing,
-        output: IItemEventRouterResponse,
-    ): void {
-        const inventoryItem = pmcData.Inventory.items.find((x) => x._id === paymentItemDetails.id);
-        if (!inventoryItem) {
-            this.logger.error(
-                this.localisationService.getText(
-                    "customisation-unable_to_find_clothing_item_in_inventory",
-                    paymentItemDetails.id,
-                ),
-            );
-
-            return;
-        }
-
-        if (paymentItemDetails.del) {
-            output.profileChanges[sessionId].items.del.push(inventoryItem);
-            pmcData.Inventory.items.splice(pmcData.Inventory.items.indexOf(inventoryItem), 1);
-        }
-
-        // No upd, add a default
-        inventoryItem.upd ||= {
-            StackObjectsCount: 1,
-        };
-
-        // Nullguard
-        if (typeof inventoryItem.upd.StackObjectsCount === "undefined") {
-            inventoryItem.upd.StackObjectsCount = 1;
-        }
-
-        // Needed count to buy is same as current stack
-        if (inventoryItem.upd.StackObjectsCount === paymentItemDetails.count) {
-            output.profileChanges[sessionId].items.del.push(inventoryItem);
-            pmcData.Inventory.items.splice(pmcData.Inventory.items.indexOf(inventoryItem), 1);
-
-            return;
-        }
-
-        if (inventoryItem.upd.StackObjectsCount > paymentItemDetails.count) {
-            inventoryItem.upd.StackObjectsCount -= paymentItemDetails.count;
-            output.profileChanges[sessionId].items.change.push({
-                _id: inventoryItem._id,
-                _tpl: inventoryItem._tpl,
-                parentId: inventoryItem.parentId,
-                slotId: inventoryItem.slotId,
-                location: inventoryItem.location,
-                upd: { StackObjectsCount: inventoryItem.upd.StackObjectsCount },
-            });
+            const request: IProcessBuyTradeRequestData = {
+                scheme_items: [
+                    {
+                        id: inventoryItemToProcess.id,
+                        count: inventoryItemToProcess.count,
+                    },
+                ],
+                tid: "5ac3b934156ae10c4430e83c",
+                Action: "buy_from_trader",
+                type: "",
+                item_id: "",
+                count: 0,
+                scheme_id: 0,
+            };
+            this.paymentService.payMoney(pmcData, request, sessionId, output);
         }
     }
 

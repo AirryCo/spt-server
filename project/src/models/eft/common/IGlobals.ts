@@ -19,6 +19,11 @@ export interface IPlayerSettings {
     OutdoorRolloffMult: number;
 }
 
+export interface IMetaXRAudioPluginSettings {
+    EnabledPluginErrorChecker: boolean;
+    OutputVolumeCheckCooldown: number;
+}
+
 export interface IMovementRolloffMultiplier {
     MovementState: string;
     RolloffMultiplier: number;
@@ -1882,6 +1887,7 @@ export interface IBotPreset {
 export interface IAudioSettings {
     AudioGroupPresets: IAudioGroupPreset[];
     EnvironmentSettings: IEnvironmentSettings;
+    MetaXRAudioPluginSettings: IMetaXRAudioPluginSettings;
     PlayerSettings: IPlayerSettings;
     RadioBroadcastSettings: IRadioBroadcastSettings;
 }

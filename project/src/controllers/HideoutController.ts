@@ -1422,7 +1422,7 @@ export class HideoutController {
             return output;
         }
 
-        pmcData.Hideout.Customization[this.getHideoutCustomisationType(itemDetails.type)];
+        pmcData.Hideout.Customization[this.getHideoutCustomisationType(itemDetails.type)] = itemDetails.itemId;
 
         return output;
     }
