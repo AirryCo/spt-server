@@ -21,8 +21,6 @@ export interface ISptProfile {
     insurance: IInsurance[];
     /** Assort purchases made by player since last trader refresh */
     traderPurchases?: Record<string, Record<string, ITraderPurchaseData>>;
-    /** Achievements earned by player */
-    achievements: Record<string, number>;
     /** List of friend profile IDs */
     friends: string[];
     customisationUnlocks: ICustomisationStorage[];

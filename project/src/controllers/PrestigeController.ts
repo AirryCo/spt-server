@@ -64,6 +64,22 @@ export class PrestigeController {
      * Handle /client/prestige/obtain
      */
     public async obtainPrestige(sessionId: string, request: IObtainPrestigeRequest[]): Promise<void> {
+        // Going to prestige 1
+
+        // transfer
+        // 5% of skills should be transfered over
+        // 5% of mastering should be transfered over
+        // earned achievements should be transfered over
+        // profile stats should be transfered over
+        // prestige progress should be transfered over
+
+        // reset
+        // trader standing
+        // task progress
+        // character level
+        // stash
+        // hideout progress
+
         const prePrestigeProfileClone = this.cloner.clone(this.profileHelper.getFullProfile(sessionId));
         const prePrestigePmc = prePrestigeProfileClone.characters.pmc;
         const createRequest: IProfileCreateRequestData = {
@@ -88,11 +104,10 @@ export class PrestigeController {
         }
 
         // Skill copy
-        // TODO - Find what skills should be prestiged over
         const commonSKillsToCopy = prePrestigePmc.Skills.Common;
         for (const skillToCopy of commonSKillsToCopy) {
-            // Set progress to max level 20
-            skillToCopy.Progress = Math.min(skillToCopy.Progress, 2000);
+            // Set progress 5% of what it was
+            skillToCopy.Progress = skillToCopy.Progress * 0.05;
             const existingSkill = newProfile.characters.pmc.Skills.Common.find((skill) => skill.Id === skillToCopy.Id);
             if (existingSkill) {
                 existingSkill.Progress = skillToCopy.Progress;
@@ -103,8 +118,8 @@ export class PrestigeController {
 
         const masteringSkillsToCopy = prePrestigePmc.Skills.Mastering;
         for (const skillToCopy of masteringSkillsToCopy) {
-            // Set progress to max level 20
-            skillToCopy.Progress = Math.min(skillToCopy.Progress, 2000);
+            // Set progress 5% of what it was
+            skillToCopy.Progress = skillToCopy.Progress * 0.05;
             const existingSkill = newProfile.characters.pmc.Skills.Mastering.find(
                 (skill) => skill.Id === skillToCopy.Id,
             );
@@ -116,6 +131,15 @@ export class PrestigeController {
         }
 
         const indexOfPrestigeObtained = Math.min(createRequest.sptForcePrestigeLevel - 1, 1); // Index starts at 0
+
+        // Add existing completed achievements and new one for prestige
+        newProfile.characters.pmc.Achievements = prePrestigeProfileClone.characters.pmc.Achievements; // this *should* only contain completed ones
+
+        // Add "Prestigious" achievement
+        if (!newProfile.characters.pmc.Achievements["676091c0f457869a94017a23"]) {
+            newProfile.characters.pmc.Achievements["676091c0f457869a94017a23"] = this.timeUtil.getTimestamp();
+        }
+
         // Assumes Prestige data is in descending order
         const currentPrestigeData = this.databaseService.getTemplates().prestige.elements[indexOfPrestigeObtained];
         const prestigeRewards = this.databaseService
@@ -149,11 +173,6 @@ export class PrestigeController {
                 newProfile.characters.pmc,
                 this.eventOutputHolder.getOutput(sessionId),
             );
-        }
-
-        // Add "Prestigious" achievement
-        if (!newProfile.achievements["676091c0f457869a94017a23"]) {
-            newProfile.achievements["676091c0f457869a94017a23"] = this.timeUtil.getTimestamp();
         }
 
         // Force save of above changes to disk

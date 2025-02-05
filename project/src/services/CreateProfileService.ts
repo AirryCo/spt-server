@@ -110,7 +110,6 @@ export class CreateProfileService {
             inraid: {} as IInraid,
             insurance: [],
             traderPurchases: {},
-            achievements: {},
             friends: [],
             customisationUnlocks: [],
         };

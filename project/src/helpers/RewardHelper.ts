@@ -9,6 +9,7 @@ import { IReward } from "@spt/models/eft/common/tables/IReward";
 import { IHideoutProduction } from "@spt/models/eft/hideout/IHideoutProduction";
 import { IItemEventRouterResponse } from "@spt/models/eft/itemEvent/IItemEventRouterResponse";
 import { ISptProfile } from "@spt/models/eft/profile/ISptProfile";
+import { BaseClasses } from "@spt/models/enums/BaseClasses";
 import { RewardType } from "@spt/models/enums/RewardType";
 import { SkillTypes } from "@spt/models/enums/SkillTypes";
 import type { ILogger } from "@spt/models/spt/utils/ILogger";
@@ -253,8 +254,8 @@ export class RewardHelper {
         for (const rewardItem of reward.items) {
             this.itemHelper.addUpdObjectToItem(rewardItem);
 
-            // Reward items are granted Found in Raid status
-            rewardItem.upd.SpawnedInSession = true;
+            // Reward items are granted Found in Raid status (except currency)
+            this.itemHelper.setFoundInRaid(reward.items);
 
             // Is root item, fix stacks
             if (rewardItem._id === reward.target) {

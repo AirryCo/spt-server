@@ -107,17 +107,6 @@ export class DialogStaticRouter extends StaticRouter {
                 },
             ),
             new RouteAction(
-                "/client/mail/dialog/remove",
-                async (
-                    url: string,
-                    info: any,
-                    sessionID: string,
-                    output: string,
-                ): Promise<IGetBodyResponseData<any[]>> => {
-                    return this.dialogueCallbacks.removeMail(url, info, sessionID);
-                },
-            ),
-            new RouteAction(
                 "/client/mail/dialog/getAllAttachments",
                 async (
                     url: string,

@@ -1694,10 +1694,10 @@
                                 "5e023e88277cce2b522ff2b1": 300
                             },
                             "Caliber762x54R": {
-                                "5e023cf8186a883be655e54f": 5,
+                                "5e023cf8186a883be655e54f": 0,
                                 "5887431f2459777e1612938f": 10,
-                                "64b8f7c241772715af0f9c3d": 400,
-                                "64b8f7b5389d7ffd620ccba2": 100
+                                "64b8f7c241772715af0f9c3d": 300,
+                                "64b8f7b5389d7ffd620ccba2": 190
                             },
                             "Caliber9x19PARA": {
                                 "58864a4f2459770fcc257101": 80,
@@ -1951,10 +1951,10 @@
                                 "6196365d58ef8c428c287da1": 300
                             },
                             "Caliber366TKM": {
-                                "59e6542b86f77411dc52a77a": 40,
-                                "59e655cb86f77411dc52a77b": 4,
-                                "59e6658b86f77411d949b250": 80,
-                                "5f0596629e22f464da6bbdd9": 1
+                                "59e6542b86f77411dc52a77a": 100,
+                                "59e655cb86f77411dc52a77b": 5,
+                                "59e6658b86f77411d949b250": 55,
+                                "5f0596629e22f464da6bbdd9": 0
                             },
                             "Caliber762x51": {
                                 "58dd3ad986f77403051cba8f": 1,
@@ -2860,14 +2860,14 @@
     "maxBotCap": {
         "factory4_day": 12,
         "factory4_night": 12,
-        "bigmap": 18,
-        "woods": 19,
-        "shoreline": 20,
-        "lighthouse": 18,
-        "rezervbase": 20,
-        "interchange": 20,
-        "laboratory": 18,
-        "tarkovstreets": 20,
+        "bigmap": 26,
+        "woods": 23,
+        "shoreline": 25,
+        "lighthouse": 23,
+        "rezervbase": 23,
+        "interchange": 24,
+        "laboratory": 19,
+        "tarkovstreets": 24,
         "sandbox": 11,
         "sandbox_high": 12,
         "default": 18

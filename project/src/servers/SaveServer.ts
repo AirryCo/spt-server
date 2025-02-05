@@ -15,6 +15,7 @@ import { inject, injectAll, injectable } from "tsyringe";
 export class SaveServer {
     protected profileFilepath = "user/profiles/";
     protected profiles: Map<string, ISptProfile> = new Map();
+    protected profilesBeingSaved: Set<string> = new Set();
     protected onBeforeSaveCallbacks: Map<string, (profile: ISptProfile) => Promise<ISptProfile>> = new Map();
     protected saveSHA1: { [key: string]: string } = {};
 
@@ -71,12 +72,19 @@ export class SaveServer {
      */
     public async save(): Promise<void> {
         const timer = new Timer();
+        let savedProfiles = 0;
+
         for (const [sessionId] of this.profiles) {
-            await this.saveProfile(sessionId);
+            try {
+                await this.saveProfile(sessionId);
+                savedProfiles++;
+            } catch (error) {
+                this.logger.error(`Could not save profile ${sessionId} | ${error}`);
+            }
         }
-        const profileCount = this.profiles.size;
+
         this.logger.debug(
-            `Saving ${profileCount} profile${profileCount > 1 ? "s" : ""} took ${timer.getTime("ms")}ms`,
+            `Saving ${savedProfiles} profile${savedProfiles > 1 ? "s" : ""} took ${timer.getTime("ms")}ms`,
             false,
         );
     }
@@ -184,6 +192,12 @@ export class SaveServer {
             throw new Error(`Profile ${sessionID} does not exist! Unable to save this profile!`);
         }
 
+        if (this.profilesBeingSaved.has(sessionID)) {
+            throw new Error(`Profile ${sessionID} is already being saved!`);
+        }
+
+        this.profilesBeingSaved.add(sessionID);
+
         const filePath = `${this.profileFilepath}${sessionID}.json`;
 
         // Run pre-save callbacks before we save into json
@@ -201,12 +215,16 @@ export class SaveServer {
             this.profiles.get(sessionID),
             !this.configServer.getConfig<ICoreConfig>(ConfigTypes.CORE).features.compressProfile,
         );
+
         const sha1 = await this.hashUtil.generateSha1ForDataAsync(jsonProfile);
+
         if (typeof this.saveSHA1[sessionID] !== "string" || this.saveSHA1[sessionID] !== sha1) {
             this.saveSHA1[sessionID] = sha1;
             // save profile to disk
             await this.fileSystem.write(filePath, jsonProfile);
         }
+
+        this.profilesBeingSaved.delete(sessionID);
     }
 
     /**

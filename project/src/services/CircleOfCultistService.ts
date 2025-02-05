@@ -180,8 +180,7 @@ export class CircleOfCultistService {
                 cultistCircleStashId,
                 CircleOfCultistService.circleOfCultistSlotId,
             );
-            // Add item + mods to output and profile inventory
-            output.profileChanges[sessionId].items.new.push(...itemToAdd);
+            // Add item + mods to profile inventory, NOT output object (confirmed on live)
             pmcData.Inventory.items.push(...itemToAdd);
         }
     }
@@ -403,6 +402,9 @@ export class CircleOfCultistService {
                 const presetAndMods = this.itemHelper.replaceIDs(defaultPreset._items);
                 this.itemHelper.remapRootItemId(presetAndMods);
 
+                // Set item as FiR
+                this.itemHelper.setFoundInRaid(presetAndMods);
+
                 rewardItemCount++;
                 totalRewardCost += this.itemHelper.getItemPrice(randomItemTplFromPool);
                 rewards.push(presetAndMods);
@@ -485,6 +487,9 @@ export class CircleOfCultistService {
                 // Ensure preset has unique ids and is cloned so we don't alter the preset data stored in memory
                 const presetAndMods = this.itemHelper.replaceIDs(defaultPreset._items);
                 this.itemHelper.remapRootItemId(presetAndMods);
+
+                // Set item as FiR
+                this.itemHelper.setFoundInRaid(presetAndMods);
 
                 rewards.push(presetAndMods);
 
