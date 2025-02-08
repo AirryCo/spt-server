@@ -465,6 +465,7 @@ export class GameController {
                 eft: true,
                 arena: false,
             },
+            isGameSynced: true,
         };
 
         return config;

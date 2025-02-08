@@ -3,6 +3,7 @@ import { InventoryHelper } from "@spt/helpers/InventoryHelper";
 import { ItemHelper } from "@spt/helpers/ItemHelper";
 import { IPmcData } from "@spt/models/eft/common/IPmcData";
 import { IBodyPartHealth, ICurrentMax } from "@spt/models/eft/common/tables/IBotBase";
+import { IEffectsHealthProps } from "@spt/models/eft/common/tables/ITemplateItem";
 import { IBodyPart, IHealthTreatmentRequestData } from "@spt/models/eft/health/IHealthTreatmentRequestData";
 import { IOffraidEatRequestData } from "@spt/models/eft/health/IOffraidEatRequestData";
 import { IOffraidHealRequestData } from "@spt/models/eft/health/IOffraidHealRequestData";
@@ -179,7 +180,7 @@ export class HealthController {
 
         return output;
 
-        function applyEdibleEffect(bodyValue: ICurrentMax, consumptionDetails: Record<string, number>) {
+        function applyEdibleEffect(bodyValue: ICurrentMax, consumptionDetails: IEffectsHealthProps) {
             if (foodIsSingleUse) {
                 // Apply whole value from passed in parameter
                 bodyValue.Current += consumptionDetails.value;
