@@ -163,10 +163,7 @@ export class RagfairServerHelper {
         }
 
         // Item Types to return one of
-        if (
-            isWeaponPreset ||
-            this.itemHelper.isOfBaseclasses(itemDetails[1]._id, this.ragfairConfig.dynamic.showAsSingleStack)
-        ) {
+        if (isWeaponPreset || this.itemHelper.isOfBaseclasses(tplId, this.ragfairConfig.dynamic.showAsSingleStack)) {
             return 1;
         }
 

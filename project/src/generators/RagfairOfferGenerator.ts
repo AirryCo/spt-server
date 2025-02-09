@@ -351,7 +351,7 @@ export class RagfairOfferGenerator {
 
         // get assort items from param if they exist, otherwise grab freshly generated assorts
         const assortItemsToProcess: IItem[][] = replacingExpiredOffers
-            ? expiredOffers ?? []
+            ? (expiredOffers ?? [])
             : this.ragfairAssortGenerator.getAssortItems();
 
         // Create offers for each item set concurrently
@@ -471,10 +471,8 @@ export class RagfairOfferGenerator {
         itemToSellDetails: ITemplateItem,
     ): Promise<void> {
         // Set stack size to random value
-        itemWithChildren[0].upd.StackObjectsCount = this.ragfairServerHelper.calculateDynamicStackCount(
-            itemWithChildren[0]._tpl,
-            isPreset,
-        );
+        var desiredStackSize = this.ragfairServerHelper.calculateDynamicStackCount(itemWithChildren[0]._tpl, isPreset);
+        itemWithChildren[0].upd.StackObjectsCount = desiredStackSize;
 
         const isBarterOffer = this.randomUtil.getChance100(this.ragfairConfig.dynamic.barter.chancePercent);
         const isPackOffer =

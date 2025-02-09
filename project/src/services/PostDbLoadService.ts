@@ -112,6 +112,8 @@ export class PostDbLoadService {
 
         this.cloneExistingCraftsAndAddNew();
 
+        this.removeNewBeginningRequirementFromPrestige();
+
         this.removePraporTestMessage();
 
         this.validateQuestAssortUnlocksExist();
@@ -130,6 +132,15 @@ export class PostDbLoadService {
         this.applyFleaPriceOverrides();
 
         this.addCustomItemPresetsToGlobals();
+    }
+
+    protected removeNewBeginningRequirementFromPrestige() {
+        const prestigeDb = this.databaseService.getTemplates().prestige;
+        for (const prestige of prestigeDb.elements) {
+            prestige.conditions = prestige.conditions.filter(
+                (condition) => condition.target !== "6761ff17cdc36bd66102e9d0",
+            );
+        }
     }
 
     protected unlockHideoutLootCrateCrafts() {
