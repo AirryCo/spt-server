@@ -135,10 +135,11 @@ export class PostDbLoadService {
     }
 
     protected removeNewBeginningRequirementFromPrestige() {
+        const newBeginningQuestIds = ["6761f28a022f60bb320f3e95", "6761ff17cdc36bd66102e9d0"];
         const prestigeDb = this.databaseService.getTemplates().prestige;
         for (const prestige of prestigeDb.elements) {
             prestige.conditions = prestige.conditions.filter(
-                (condition) => condition.target !== "6761ff17cdc36bd66102e9d0",
+                (condition) => !newBeginningQuestIds.includes(condition.target as string),
             );
         }
     }
