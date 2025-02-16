@@ -47,4 +47,6 @@ export interface IAirdropLoot {
     allowBossItems: boolean;
     useForcedLoot?: boolean;
     forcedLoot?: Record<string, MinMax>;
+    useRewardItemBlacklist?: boolean;
+    blockSeasonalItemsOutOfSeason?: boolean;
 }

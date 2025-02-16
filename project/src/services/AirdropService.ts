@@ -183,6 +183,8 @@ export class AirdropService {
             allowBossItems: lootSettingsByType.allowBossItems,
             useForcedLoot: lootSettingsByType.useForcedLoot,
             forcedLoot: lootSettingsByType.forcedLoot,
+            useRewardItemBlacklist: lootSettingsByType.useRewardItemBlacklist,
+            blockSeasonalItemsOutOfSeason: lootSettingsByType.blockSeasonalItemsOutOfSeason,
         };
     }
 }

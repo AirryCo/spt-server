@@ -260,7 +260,7 @@ export class BotGenerator {
             botJsonTemplate,
             botRoleLowercase,
             botGenerationDetails.isPmc,
-            botLevel.level,
+            bot.Info.Level,
             bot.Info.GameVersion,
         );
 

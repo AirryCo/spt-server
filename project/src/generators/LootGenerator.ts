@@ -14,6 +14,7 @@ import { DatabaseService } from "@spt/services/DatabaseService";
 import { ItemFilterService } from "@spt/services/ItemFilterService";
 import { LocalisationService } from "@spt/services/LocalisationService";
 import { RagfairLinkedItemService } from "@spt/services/RagfairLinkedItemService";
+import { SeasonalEventService } from "@spt/services/SeasonalEventService";
 import { HashUtil } from "@spt/utils/HashUtil";
 import { RandomUtil } from "@spt/utils/RandomUtil";
 import { inject, injectable } from "tsyringe";
@@ -32,6 +33,7 @@ export class LootGenerator {
         @inject("InventoryHelper") protected inventoryHelper: InventoryHelper,
         @inject("WeightedRandomHelper") protected weightedRandomHelper: WeightedRandomHelper,
         @inject("LocalisationService") protected localisationService: LocalisationService,
+        @inject("SeasonalEventService") protected seasonalEventService: SeasonalEventService,
         @inject("RagfairLinkedItemService") protected ragfairLinkedItemService: RagfairLinkedItemService,
         @inject("ItemFilterService") protected itemFilterService: ItemFilterService,
     ) {}
@@ -77,6 +79,7 @@ export class LootGenerator {
             options.itemTypeWhitelist,
             options.useRewardItemBlacklist,
             options.allowBossItems,
+            options.blockSeasonalItemsOutOfSeason,
         );
 
         // Pool has items we could add as loot, proceed
@@ -192,6 +195,7 @@ export class LootGenerator {
      * @param itemTypeWhitelist Only allow these items
      * @param useRewardItemBlacklist Should item.json reward item config be used
      * @param allowBossItems Should boss items be allowed in result
+     * @param blockSeasonalItemsOutOfSeason Prevent seasonal items appearing outside their defined season
      * @returns results of filtering + blacklist used
      */
     protected getItemRewardPool(
@@ -199,6 +203,7 @@ export class LootGenerator {
         itemTypeWhitelist: string[],
         useRewardItemBlacklist: boolean,
         allowBossItems: boolean,
+        blockSeasonalItemsOutOfSeason: boolean,
     ): { itemPool: [string, ITemplateItem][]; blacklist: Set<string> } {
         const itemsDb = this.databaseService.getItems();
         let itemBlacklist = new Set<string>([...this.itemFilterService.getBlacklistedItems(), ...itemTplBlacklist]);
@@ -218,6 +223,12 @@ export class LootGenerator {
         if (!allowBossItems) {
             for (const bossItem of this.itemFilterService.getBossItems()) {
                 itemBlacklist.add(bossItem);
+            }
+        }
+
+        if (blockSeasonalItemsOutOfSeason) {
+            for (const seasonalItem of this.seasonalEventService.getInactiveSeasonalEventItems()) {
+                itemBlacklist.add(seasonalItem);
             }
         }
 
@@ -628,7 +639,7 @@ export class LootGenerator {
         }
 
         return this.randomUtil.getArrayValue(
-            this.getItemRewardPool([], rewardContainerDetails.rewardTypePool, true, true).itemPool.map(
+            this.getItemRewardPool([], rewardContainerDetails.rewardTypePool, true, true, false).itemPool.map(
                 (item) => item[1]._id,
             ),
         );
