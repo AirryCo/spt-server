@@ -481,7 +481,8 @@ export class MailSendService {
 
                 // Ammo boxes should contain sub-items
                 if (this.itemHelper.isOfBaseclass(itemTemplate._id, BaseClasses.AMMO_BOX)) {
-                    const childItems = itemsToSendToPlayer.data?.filter((x) => x.parentId === reward._id);
+                    // Get all child items of reward
+                    const childItems = messageDetails.items?.filter((x) => x.parentId === reward._id);
                     if (childItems?.length === 0) {
                         // No cartridges found, generate and add to rewards
                         const boxAndCartridges: IItem[] = [reward];

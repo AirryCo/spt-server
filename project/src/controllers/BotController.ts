@@ -67,7 +67,7 @@ export class BotController {
         if (!value) {
             this.logger.warning(this.localisationService.getText("bot-bot_preset_count_value_missing", type));
 
-            return 30;
+            return 10;
         }
 
         return value;
@@ -189,7 +189,7 @@ export class BotController {
                 pmcProfile,
                 allPmcsHaveSameNameAsPlayer,
                 raidSettings,
-                this.botConfig.presetBatch[condition.Role],
+                this.getBotPresetGenerationLimit(condition.Role),
                 this.botHelper.isBotPmc(condition.Role),
             );
 
@@ -300,7 +300,7 @@ export class BotController {
         const botCacheCount = this.botGenerationCacheService.getCachedBotCount(cacheKey);
 
         if (botCacheCount >= botGenerationDetails.botCountToGenerate) {
-            this.logger.debug(`Cache already has sufficient bots: ${botCacheCount}`);
+            this.logger.debug(`Cache already has sufficient ${cacheKey} bots: ${botCacheCount}, skipping generation`);
             return;
         }
 
@@ -375,7 +375,7 @@ export class BotController {
             pmcProfile,
             false,
             raidSettings,
-            this.botConfig.presetBatch[requestedBot.Role],
+            this.getBotPresetGenerationLimit(requestedBot.Role),
             this.botHelper.isBotPmc(requestedBot.Role),
         );
 
@@ -403,7 +403,7 @@ export class BotController {
                 botGenerationDetails.role = this.botHelper.getRandomizedPmcRole();
                 botGenerationDetails.side = this.botHelper.getPmcSideByRole(botGenerationDetails.role);
                 botGenerationDetails.botDifficulty = this.getPMCDifficulty(requestedBot.Difficulty);
-                botGenerationDetails.botCountToGenerate = this.botConfig.presetBatch[botGenerationDetails.role];
+                botGenerationDetails.botCountToGenerate = this.getBotPresetGenerationLimit(botGenerationDetails.role);
             }
         }
         // Only convert to boss when not already converted to PMC & Boss Convert is enabled
@@ -467,7 +467,7 @@ export class BotController {
 
         // Bosses are only ever 'normal'
         botGenerationDetails.botDifficulty = "normal";
-        botGenerationDetails.botCountToGenerate = this.botConfig.presetBatch[botGenerationDetails.role];
+        botGenerationDetails.botCountToGenerate = this.getBotPresetGenerationLimit(botGenerationDetails.role);
     }
 
     /**

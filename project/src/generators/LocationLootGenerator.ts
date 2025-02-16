@@ -957,9 +957,10 @@ export class LocationLootGenerator {
         chosenTpl: string,
         staticAmmoDist: Record<string, IStaticAmmoDetails[]>,
         parentId?: string,
-    ): IContainerItem {
-        const itemTemplate = this.itemHelper.getItem(chosenTpl)[1];
-        if (!itemTemplate._props) {
+    ): IContainerItem | undefined {
+        const itemResult = this.itemHelper.getItem(chosenTpl);
+        const itemTemplate = itemResult[1];
+        if (!itemResult[0] || !itemTemplate._props) {
             this.logger.error(`Unable to process item: ${chosenTpl}. it lacks _props`);
 
             return undefined;
