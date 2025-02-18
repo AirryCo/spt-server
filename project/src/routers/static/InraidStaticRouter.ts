@@ -26,9 +26,9 @@ export class InraidStaticRouter extends StaticRouter {
                 },
             ),
             new RouteAction(
-                "/singleplayer/bossconvert",
+                "/singleplayer/bosstypes",
                 async (url: string, info: any, sessionID: string, output: string): Promise<string> => {
-                    return this.inraidCallbacks.getBossConvertSettings(url, info, sessionID);
+                    return this.inraidCallbacks.getBossTypes(url, info, sessionID);
                 },
             ),
         ]);

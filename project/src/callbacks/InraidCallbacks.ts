@@ -53,7 +53,7 @@ export class InraidCallbacks {
         return this.httpResponse.noBody(this.inraidController.getTraitorScavHostileChance(url, sessionId));
     }
 
-    public getBossConvertSettings(url: string, info: IEmptyRequestData, sessionId: string): string {
-        return this.httpResponse.noBody(this.inraidController.getBossConvertSettings(url, sessionId));
+    public getBossTypes(url: string, info: IEmptyRequestData, sessionId: string): string {
+        return this.httpResponse.noBody(this.inraidController.getBossTypes(url, sessionId));
     }
 }

@@ -43,7 +43,7 @@ export class BotHelper {
     }
 
     public isBotBoss(botRole: string): boolean {
-        return this.botConfig.bosses.some((x) => x.toLowerCase() === botRole?.toLowerCase());
+        return !this.isBotFollower(botRole) && this.botConfig.bosses.some((x) => x.toLowerCase() === botRole?.toLowerCase());
     }
 
     public isBotFollower(botRole: string): boolean {
@@ -94,15 +94,6 @@ export class BotHelper {
 
     public rollChanceToBePmc(botConvertMinMax: MinMax): boolean {
         return this.randomUtil.getChance100(this.randomUtil.getInt(botConvertMinMax.min, botConvertMinMax.max));
-    }
-
-    protected getPmcConversionValuesForLocation(location: string) {
-        const result = this.pmcConfig.convertIntoPmcChance[location.toLowerCase()];
-        if (!result) {
-            this.pmcConfig.convertIntoPmcChance.default;
-        }
-
-        return result;
     }
 
     /**

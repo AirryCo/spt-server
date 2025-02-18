@@ -73,6 +73,7 @@ import { LocationLootGenerator } from "@spt/generators/LocationLootGenerator";
 import { LootGenerator } from "@spt/generators/LootGenerator";
 import { PMCLootGenerator } from "@spt/generators/PMCLootGenerator";
 import { PlayerScavGenerator } from "@spt/generators/PlayerScavGenerator";
+import { PmcWaveGenerator } from "@spt/generators/PmcWaveGenerator";
 import { RagfairAssortGenerator } from "@spt/generators/RagfairAssortGenerator";
 import { RagfairOfferGenerator } from "@spt/generators/RagfairOfferGenerator";
 import { RepeatableQuestGenerator } from "@spt/generators/RepeatableQuestGenerator";
@@ -574,6 +575,9 @@ export class Container {
         });
         depContainer.register<RepeatableQuestRewardGenerator>("RepeatableQuestRewardGenerator", {
             useClass: RepeatableQuestRewardGenerator,
+        });
+        depContainer.register<PmcWaveGenerator>("PmcWaveGenerator", {
+            useClass: PmcWaveGenerator,
         });
 
         depContainer.register<BarrelInventoryMagGen>("BarrelInventoryMagGen", { useClass: BarrelInventoryMagGen });

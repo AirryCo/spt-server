@@ -1,3 +1,4 @@
+import { PmcWaveGenerator } from "@spt/generators/PmcWaveGenerator";
 import { ILocation } from "@spt/models/eft/common/ILocation";
 import { ConfigTypes } from "@spt/models/enums/ConfigTypes";
 import { ELocationName } from "@spt/models/enums/ELocationName";
@@ -44,6 +45,7 @@ export class PostDbLoadService {
         @inject("OpenZoneService") protected openZoneService: OpenZoneService,
         @inject("SeasonalEventService") protected seasonalEventService: SeasonalEventService,
         @inject("ItemBaseClassService") protected itemBaseClassService: ItemBaseClassService,
+        @inject("PmcWaveGenerator") protected pmcWaveGenerator: PmcWaveGenerator,
         @inject("ConfigServer") protected configServer: ConfigServer,
         @inject("PrimaryCloner") protected cloner: ICloner,
     ) {
@@ -81,6 +83,10 @@ export class PostDbLoadService {
 
         if (this.locationConfig.addOpenZonesToAllMaps) {
             this.openZoneService.applyZoneChangesToAllMaps();
+        }
+
+        if (this.pmcConfig.removeExistingPmcWaves) {
+            this.removeExistingPmcWaves();
         }
 
         if (this.locationConfig.addCustomBotWavesToMaps) {
@@ -132,6 +138,20 @@ export class PostDbLoadService {
         this.applyFleaPriceOverrides();
 
         this.addCustomItemPresetsToGlobals();
+    }
+
+    protected removeExistingPmcWaves() {
+        const locations: ILocation[] = Object.values(this.databaseService.getLocations());
+
+        for (const location of locations) {
+            if (!location || !location?.base?.BossLocationSpawn) {
+                continue;
+            }
+
+            location.base.BossLocationSpawn = location.base.BossLocationSpawn.filter(
+                (x) => !["pmcUSEC", "pmcBEAR"].includes(x.BossName),
+            );
+        }
     }
 
     protected removeNewBeginningRequirementFromPrestige() {

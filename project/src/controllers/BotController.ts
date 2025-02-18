@@ -155,27 +155,44 @@ export class BotController {
     public async generate(sessionId: string, info: IGenerateBotsRequestData): Promise<IBotBase[]> {
         const pmcProfile = this.profileHelper.getPmcProfile(sessionId);
 
-        // Use this opportunity to create and cache bots for later retreval
-        const multipleBotTypesRequested = info.conditions.length > 1;
-        if (multipleBotTypesRequested) {
-            return this.generateMultipleBotsAndCache(info, pmcProfile, sessionId);
+        // If we don't have enough bots cached to satisfy this request, populate the cache
+        if (!this.cacheSatisfiesRequest(info))
+        {
+            await this.generateAndCacheBots(info, pmcProfile, sessionId);
         }
 
-        return this.returnSingleBotFromCache(sessionId, info);
+        return this.returnBotsFromCache(info);
     }
 
     /**
-     * On first bot generation bots are generated and stored inside a cache, ready to be used later
+     * Return true if the current cache satisfies the passed in bot generation request
+     * @param info 
+     * @returns 
+     */
+    public cacheSatisfiesRequest(info: IGenerateBotsRequestData): boolean {
+        return info.conditions.every((condition) => {
+            // Create the key that would be used for caching this bot type, so we can check how many exist
+            const cacheKey = this.botGenerationCacheService.createCacheKey(
+                condition.Role,
+                condition.Difficulty
+            );
+
+            return this.botGenerationCacheService.getCachedBotCount(cacheKey) >= condition.Limit;
+        });
+    }
+
+    /**
+     * When we have less bots than necessary to fulfill a request, re-populate the cache
      * @param request Bot generation request object
      * @param pmcProfile Player profile
      * @param sessionId Session id
      * @returns IBotBase[]
      */
-    protected async generateMultipleBotsAndCache(
+    protected async generateAndCacheBots(
         request: IGenerateBotsRequestData,
-        pmcProfile: IPmcData,
+        pmcProfile: IPmcData | undefined,
         sessionId: string,
-    ): Promise<IBotBase[]> {
+    ): Promise<void> {
         const raidSettings = this.getMostRecentRaidSettings();
 
         const allPmcsHaveSameNameAsPlayer = this.randomUtil.getChance100(
@@ -184,12 +201,24 @@ export class BotController {
 
         // Map conditions to promises for bot generation
         const conditionPromises = request.conditions.map(async (condition) => {
+            // If we already have enough for this bot type, don't generate more
+            const cacheKey = this.botGenerationCacheService.createCacheKey(
+                condition.Role,
+                condition.Difficulty
+            );
+
+            if (this.botGenerationCacheService.getCachedBotCount(cacheKey) >= condition.Limit)
+            {
+                return;
+            }
+
             const botGenerationDetails = this.getBotGenerationDetailsForWave(
                 condition,
                 pmcProfile,
                 allPmcsHaveSameNameAsPlayer,
                 raidSettings,
-                this.getBotPresetGenerationLimit(condition.Role),
+                // Spawn the higher of the preset cache amount, or the requested amount
+                Math.max(this.getBotPresetGenerationLimit(condition.Role), condition.Limit),
                 this.botHelper.isBotPmc(condition.Role),
             );
 
@@ -198,7 +227,6 @@ export class BotController {
         });
 
         await Promise.all(conditionPromises);
-        return [];
     }
 
     protected getMostRecentRaidSettings(): IGetRaidConfigurationRequestData {
@@ -238,7 +266,7 @@ export class BotController {
      */
     protected getBotGenerationDetailsForWave(
         condition: ICondition,
-        pmcProfile: IPmcData,
+        pmcProfile: IPmcData | undefined,
         allPmcsHaveSameNameAsPlayer: boolean,
         raidSettings: IGetRaidConfigurationRequestData,
         botCountToGenerate: number,
@@ -249,7 +277,7 @@ export class BotController {
             side: generateAsPmc ? this.botHelper.getPmcSideByRole(condition.Role) : SideType.SAVAGE,
             role: condition.Role,
             playerLevel: this.getPlayerLevelFromProfile(pmcProfile),
-            playerName: pmcProfile.Info.Nickname,
+            playerName: pmcProfile?.Info.Nickname,
             botRelativeLevelDeltaMax: this.pmcConfig.botRelativeLevelDeltaMax,
             botRelativeLevelDeltaMin: this.pmcConfig.botRelativeLevelDeltaMin,
             botCountToGenerate: botCountToGenerate,
@@ -265,8 +293,8 @@ export class BotController {
      * @param pmcProfile Profile to get level from
      * @returns Level as number
      */
-    protected getPlayerLevelFromProfile(pmcProfile: IPmcData): number {
-        return pmcProfile.Info.Level;
+    protected getPlayerLevelFromProfile(pmcProfile: IPmcData | undefined): number {
+        return pmcProfile?.Info.Level || 1;
     }
 
     /**
@@ -350,124 +378,34 @@ export class BotController {
     }
 
     /**
-     * Pull a single bot out of cache and return, if cache is empty add bots to it and then return
+     * Return the bots requested by the given bot generation request
      * @param sessionId Session id
      * @param request Bot generation request object
-     * @returns Single IBotBase object
+     * @returns An array of IBotBase objects as requested by request
      */
-    protected async returnSingleBotFromCache(
-        sessionId: string,
+    protected async returnBotsFromCache(
         request: IGenerateBotsRequestData,
     ): Promise<IBotBase[]> {
-        const pmcProfile = this.profileHelper.getPmcProfile(sessionId);
-        const requestedBot = request.conditions[0];
+        const desiredBots: IBotBase[] = [];
 
-        const raidSettings = this.getMostRecentRaidSettings();
-
-        // Create generation request for when cache is empty
-        const condition: ICondition = {
-            Role: requestedBot.Role,
-            Limit: 5,
-            Difficulty: requestedBot.Difficulty,
-        };
-        const botGenerationDetails = this.getBotGenerationDetailsForWave(
-            condition,
-            pmcProfile,
-            false,
-            raidSettings,
-            this.getBotPresetGenerationLimit(requestedBot.Role),
-            this.botHelper.isBotPmc(requestedBot.Role),
-        );
-
-        // Event bots need special actions to occur, set data up for them
-        const isEventBot = requestedBot.Role.toLowerCase().includes("event");
-        if (isEventBot) {
-            // Add eventRole data + reassign role property
-            botGenerationDetails.eventRole = requestedBot.Role;
-            botGenerationDetails.role = this.seasonalEventService.getBaseRoleForEventBot(
-                botGenerationDetails.eventRole,
+        // We can assume that during this call, we have enough bots cached to cover the request
+        request.conditions.map((requestedBot) => {
+            // Create a compound key to store bots in cache against
+            const cacheKey = this.botGenerationCacheService.createCacheKey(
+                requestedBot.Role,
+                requestedBot.Difficulty,
             );
-        }
 
-        // Does non pmc bot have a chance of being converted into a pmc
-        const convertIntoPmcChanceMinMax = this.getPmcConversionMinMaxForLocation(
-            requestedBot.Role,
-            raidSettings?.location,
-        );
-        if (convertIntoPmcChanceMinMax && !botGenerationDetails.isPmc) {
-            // Bot has % chance to become pmc and isnt one pmc already
-            const convertToPmc = this.botHelper.rollChanceToBePmc(convertIntoPmcChanceMinMax);
-            if (convertToPmc) {
-                // Update requirements
-                botGenerationDetails.isPmc = true;
-                botGenerationDetails.role = this.botHelper.getRandomizedPmcRole();
-                botGenerationDetails.side = this.botHelper.getPmcSideByRole(botGenerationDetails.role);
-                botGenerationDetails.botDifficulty = this.getPMCDifficulty(requestedBot.Difficulty);
-                botGenerationDetails.botCountToGenerate = this.getBotPresetGenerationLimit(botGenerationDetails.role);
+            // Fetch enough bots to satisfy the request
+            for (let i = 0; i < requestedBot.Limit; i++)
+            {
+                const desiredBot = this.botGenerationCacheService.getBot(cacheKey);
+                this.botGenerationCacheService.storeUsedBot(desiredBot);
+                desiredBots.push(desiredBot);
             }
-        }
-        // Only convert to boss when not already converted to PMC & Boss Convert is enabled
-        const { bossConvertEnabled, bossConvertMinMax, bossesToConvertToWeights } =
-            this.botConfig.assaultToBossConversion;
-        if (bossConvertEnabled && !botGenerationDetails.isPmc) {
-            const bossConvertPercent = bossConvertMinMax[requestedBot.Role.toLowerCase()];
-            if (bossConvertPercent) {
-                // Roll a percentage check if we should convert scav to boss
-                if (
-                    this.randomUtil.getChance100(this.randomUtil.getInt(bossConvertPercent.min, bossConvertPercent.max))
-                ) {
-                    this.updateBotGenerationDetailsToRandomBoss(botGenerationDetails, bossesToConvertToWeights);
-                }
-            }
-        }
+        });
 
-        // Create a compound key to store bots in cache against
-        const cacheKey = this.botGenerationCacheService.createCacheKey(
-            botGenerationDetails.eventRole ?? botGenerationDetails.role,
-            botGenerationDetails.botDifficulty,
-        );
-
-        // Check cache for bot using above key
-        if (!this.botGenerationCacheService.cacheHasBotWithKey(cacheKey)) {
-            // No bot in cache, generate new and store in cache
-            await Promise.all(
-                Array.from({ length: botGenerationDetails.botCountToGenerate }).map(
-                    async () => await this.generateSingleBotAndStoreInCache(botGenerationDetails, sessionId, cacheKey),
-                ),
-            );
-
-            this.logger.debug(
-                `Generated ${botGenerationDetails.botCountToGenerate} ${botGenerationDetails.role} (${
-                    botGenerationDetails.eventRole ?? ""
-                }) ${botGenerationDetails.botDifficulty} bots`,
-            );
-        }
-
-        const desiredBot = this.botGenerationCacheService.getBot(cacheKey);
-        this.botGenerationCacheService.storeUsedBot(desiredBot);
-
-        return [desiredBot];
-    }
-
-    protected getPmcConversionMinMaxForLocation(requestedBotRole: string, location: string): MinMax {
-        const mapSpecificConversionValues = this.pmcConfig.convertIntoPmcChance[location?.toLowerCase()];
-        if (!mapSpecificConversionValues) {
-            return this.pmcConfig.convertIntoPmcChance.default[requestedBotRole];
-        }
-
-        return mapSpecificConversionValues[requestedBotRole?.toLowerCase()];
-    }
-
-    protected updateBotGenerationDetailsToRandomBoss(
-        botGenerationDetails: IBotGenerationDetails,
-        possibleBossTypeWeights: Record<string, number>,
-    ): void {
-        // Seems Actual bosses have the same Brain issues like PMC gaining Boss Brains We cant use all bosses
-        botGenerationDetails.role = this.weightedRandomHelper.getWeightedValue(possibleBossTypeWeights);
-
-        // Bosses are only ever 'normal'
-        botGenerationDetails.botDifficulty = "normal";
-        botGenerationDetails.botCountToGenerate = this.getBotPresetGenerationLimit(botGenerationDetails.role);
+        return desiredBots;
     }
 
     /**

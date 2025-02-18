@@ -408,25 +408,6 @@ export class BotLootCacheService {
         this.lootCache[botRole].secureLoot = secureLootTPool;
     }
 
-    /**
-     * Add unique items into combined pool
-     * @param poolToAddTo Pool of items to add to
-     * @param itemsToAdd items to add to combined pool if unique
-     */
-    protected addUniqueItemsToPool(poolToAddTo: ITemplateItem[], itemsToAdd: ITemplateItem[]): void {
-        if (poolToAddTo.length === 0) {
-            poolToAddTo.push(...itemsToAdd);
-            return;
-        }
-
-        const mergedItemPools = [...poolToAddTo, ...itemsToAdd];
-
-        // Save only unique array values
-        const uniqueResults = [...new Set([].concat(...mergedItemPools))];
-        poolToAddTo.splice(0, poolToAddTo.length);
-        poolToAddTo.push(...uniqueResults);
-    }
-
     protected addItemsToPool(poolToAddTo: Record<string, number>, poolOfItemsToAdd: Record<string, number>): void {
         for (const tpl in poolOfItemsToAdd) {
             // Skip adding items that already exist

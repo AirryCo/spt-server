@@ -94,6 +94,7 @@ export class BotInventoryGenerator {
             botInventory,
             botLevel,
             chosenGameVersion,
+            isPmc,
             raidConfig,
         );
 
@@ -164,6 +165,7 @@ export class BotInventoryGenerator {
         botInventory: PmcInventory,
         botLevel: number,
         chosenGameVersion: string,
+        isPmc: boolean,
         raidConfig: IGetRaidConfigurationRequestData,
     ): void {
         // These will be handled later
@@ -233,7 +235,7 @@ export class BotInventoryGenerator {
             rootEquipmentSlot: EquipmentSlots.POCKETS,
             // Unheard profiles have unique sized pockets, TODO - handle this somewhere else in a better way
             rootEquipmentPool:
-                chosenGameVersion === GameEditions.UNHEARD
+                chosenGameVersion === GameEditions.UNHEARD && isPmc
                     ? { [ItemTpl.POCKETS_1X4_TUE]: 1 }
                     : templateInventory.equipment.Pockets,
             modPool: templateInventory.mods,

@@ -71,7 +71,9 @@
         "bossBoar",
         "bossBoarSniper",
         "bossKolontay",
-        "bossPartisan"
+        "bossPartisan",
+        "followerBigPipe",
+        "followerBirdEye"
     ],
     "durability": {
         "default": {
@@ -2954,27 +2956,6 @@
         "55d4af3a4bdc2d972f8b456f"
     ],
     "disableLootOnBotTypes": [],
-    "assaultToBossConversion": {
-        "bossConvertEnabled": false,
-        "bossesToConvertToWeights": {
-            "bossKilla": 1,
-            "bossSanitar": 1,
-            "bossTagilla": 1,
-            "bossBully": 1,
-            "bossGluhar": 1,
-            "bossKojaniy": 1,
-            "bossKolontay": 1,
-            "bossKnight": 1,
-            "followerBigPipe": 1,
-            "followerBirdEye": 1
-        },
-        "bossConvertMinMax": {
-            "assault": {
-                "min": 100,
-                "max": 100
-            }
-        }
-    },
     "botNameLengthLimit": 19,
     "botRolesThatMustHaveUniqueName": ["assault", "pmcusec", "pmcbear"]
 }

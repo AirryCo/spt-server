@@ -83,7 +83,7 @@ export class InraidController {
         return this.inRaidConfig.playerScavHostileChancePercent;
     }
 
-    public getBossConvertSettings(url: string, sessionId: string): string[] {
-        return Object.keys(this.botConfig.assaultToBossConversion.bossesToConvertToWeights);
+    public getBossTypes(url: string, sessionId: string): string[] {
+        return this.botConfig.bosses;
     }
 }

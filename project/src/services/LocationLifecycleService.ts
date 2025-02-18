@@ -3,10 +3,12 @@ import { ContextVariableType } from "@spt/context/ContextVariableType";
 import { LocationLootGenerator } from "@spt/generators/LocationLootGenerator";
 import { LootGenerator } from "@spt/generators/LootGenerator";
 import { PlayerScavGenerator } from "@spt/generators/PlayerScavGenerator";
+import { PmcWaveGenerator } from "@spt/generators/PmcWaveGenerator";
 import { HealthHelper } from "@spt/helpers/HealthHelper";
 import { InRaidHelper } from "@spt/helpers/InRaidHelper";
 import { ProfileHelper } from "@spt/helpers/ProfileHelper";
 import { QuestHelper } from "@spt/helpers/QuestHelper";
+import { RewardHelper } from "@spt/helpers/RewardHelper";
 import { TraderHelper } from "@spt/helpers/TraderHelper";
 import { ILocationBase } from "@spt/models/eft/common/ILocationBase";
 import { IPmcData } from "@spt/models/eft/common/IPmcData";
@@ -26,6 +28,7 @@ import { ExitStatus } from "@spt/models/enums/ExitStatis";
 import { MessageType } from "@spt/models/enums/MessageType";
 import { QuestStatus } from "@spt/models/enums/QuestStatus";
 import { Traders } from "@spt/models/enums/Traders";
+import { TransitionType } from "@spt/models/enums/TransitionType";
 import { IHideoutConfig } from "@spt/models/spt/config/IHideoutConfig";
 import { IInRaidConfig } from "@spt/models/spt/config/IInRaidConfig";
 import { ILocationConfig } from "@spt/models/spt/config/ILocationConfig";
@@ -51,8 +54,6 @@ import { RandomUtil } from "@spt/utils/RandomUtil";
 import { TimeUtil } from "@spt/utils/TimeUtil";
 import type { ICloner } from "@spt/utils/cloners/ICloner";
 import { inject, injectable } from "tsyringe";
-import { TransitionType } from "@spt/models/enums/TransitionType";
-import { RewardHelper } from "@spt/helpers/RewardHelper";
 
 @injectable()
 export class LocationLifecycleService {
@@ -90,6 +91,7 @@ export class LocationLifecycleService {
         @inject("LootGenerator") protected lootGenerator: LootGenerator,
         @inject("ApplicationContext") protected applicationContext: ApplicationContext,
         @inject("LocationLootGenerator") protected locationLootGenerator: LocationLootGenerator,
+        @inject("PmcWaveGenerator") protected pmcWaveGenerator: PmcWaveGenerator,
         @inject("PrimaryCloner") protected cloner: ICloner,
     ) {
         this.inRaidConfig = this.configServer.getConfig(ConfigTypes.IN_RAID);
@@ -105,6 +107,10 @@ export class LocationLifecycleService {
         this.logger.debug(`Starting: ${request.location}`);
 
         const playerProfile = this.profileHelper.getPmcProfile(sessionId);
+
+        // Set interval times to in-raid value
+        this.ragfairConfig.runIntervalSeconds = this.ragfairConfig.runIntervalValues.inRaid;
+        this.hideoutConfig.runIntervalSeconds = this.hideoutConfig.runIntervalValues.inRaid;
 
         const result: IStartLocalRaidResponseData = {
             serverId: `${request.location}.${request.playerSide}.${this.timeUtil.getTimestamp()}`, // TODO - does this need to be more verbose - investigate client?
@@ -277,18 +283,16 @@ export class LocationLifecycleService {
             return locationBaseClone;
         }
 
-        // If new spawn system is enabled, clear the spawn waves to prevent x2 spawns
-        if (locationBaseClone.NewSpawn) {
-            locationBaseClone.waves = [];
-        }
-
         // Only requested base data, not loot
         if (!generateLoot) {
             return locationBaseClone;
         }
 
-        // Check for a loot multipler adjustment in app context and apply if one is found
-        let locationConfigClone: ILocationConfig;
+        // Add cusom pmcs to map every time its run
+        this.pmcWaveGenerator.applyWaveChangesToMap(locationBaseClone);
+
+        // Adjust raid based on whether this is a scav run
+        let locationConfigClone: ILocationConfig | undefined;
         const raidAdjustments = this.applicationContext
             .getLatestValue(ContextVariableType.RAID_ADJUSTMENTS)
             ?.getValue<IRaidChanges>();
@@ -323,7 +327,7 @@ export class LocationLifecycleService {
         this.logger.success(this.localisationService.getText("location-generated_success", name));
 
         // Reset loot multipliers back to original values
-        if (raidAdjustments) {
+        if (raidAdjustments && locationConfigClone) {
             this.logger.debug("Resetting loot multipliers back to their original values");
             this.locationConfig.staticLootMultiplier = locationConfigClone.staticLootMultiplier;
             this.locationConfig.looseLootMultiplier = locationConfigClone.looseLootMultiplier;
