@@ -130,12 +130,6 @@ export class BotGenerator {
             this.logger.error(`Unable to retrieve: ${botRole} bot template, cannot generate bot of this type`);
         }
 
-        // The client expects the Side for PMCs to be Savage
-        if (botRole === "Bear" || botRole === "Usec") {
-            // TODO: cleanup later
-            preparedBotBase.Info.Side = "Savage";
-        }
-
         return this.generateBot(sessionId, preparedBotBase, botJsonTemplateClone, botGenerationDetails);
     }
 

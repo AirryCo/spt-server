@@ -98,12 +98,16 @@ export class PmcChatResponseService {
             return;
         }
 
+        // Because we've cached PMC sides as "Savage" for the client, we need to figure out
+        // what side it really is
+        const side = killerDetailsInCache.Info.Settings.Role == "pmcUSEC" ? "Usec" : "Bear";
+
         const killerDetails: IUserDialogInfo = {
             _id: killerDetailsInCache._id,
             aid: this.hashUtil.generateAccountId(), // TODO- pass correct value
             Info: {
                 Nickname: killerDetailsInCache.Info.Nickname,
-                Side: killerDetailsInCache.Info.Side,
+                Side: side,
                 Level: killerDetailsInCache.Info.Level,
                 MemberCategory: killerDetailsInCache.Info.MemberCategory,
                 SelectedMemberCategory: killerDetailsInCache.Info.SelectedMemberCategory,

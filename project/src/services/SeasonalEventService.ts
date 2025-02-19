@@ -86,7 +86,8 @@ export class SeasonalEventService {
             ItemTpl.FACECOVER_GRINCH_MASK,
             ItemTpl.FACECOVER_HARE_MASK,
             ItemTpl.FACECOVER_AYBOLIT_MASK,
-            ItemTpl.BARTER_SPECIAL_40DEGREE_FUEL
+            ItemTpl.BARTER_SPECIAL_40DEGREE_FUEL,
+            ItemTpl.FLARE_RSP30_REACTIVE_SIGNAL_CARTRIDGE_FIREWORK,
         ];
     }
 

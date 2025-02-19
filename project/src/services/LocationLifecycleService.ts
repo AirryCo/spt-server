@@ -707,6 +707,9 @@ export class LocationLifecycleService {
         // Handle temp, hydration, limb hp/effects
         this.healthHelper.updateProfileHealthPostRaid(pmcProfile, postRaidProfile.Health, sessionId, isDead);
 
+        // This must occur _BEFORE_ `deleteInventory`, as that method clears insured items
+        this.handleInsuredItemLostEvent(sessionId, pmcProfile, request, locationName);
+
         if (isDead) {
             if (lostQuestItems.length > 0) {
                 // MUST occur AFTER quests have post raid quest data has been merged "processPostRaidQuests()"
@@ -731,8 +734,6 @@ export class LocationLifecycleService {
             // Player killed PMCs, send some mail responses to them
             this.pmcChatResponseService.sendVictimResponse(sessionId, victims, pmcProfile);
         }
-
-        this.handleInsuredItemLostEvent(sessionId, pmcProfile, request, locationName);
     }
 
     /**
