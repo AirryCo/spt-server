@@ -15,7 +15,7 @@ import { HashUtil } from "@spt/utils/HashUtil";
 import { ImporterUtil } from "@spt/utils/ImporterUtil";
 import { JsonUtil } from "@spt/utils/JsonUtil";
 import { inject, injectable } from "tsyringe";
-import { Timer } from "./Timer";
+import { Timer } from "@spt/utils/Timer";
 
 @injectable()
 export class DatabaseImporter implements OnLoad {

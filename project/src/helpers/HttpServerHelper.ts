@@ -40,12 +40,12 @@ export class HttpServerHelper {
      * @returns URI
      */
     public getBackendUrl(): string {
-        return `http://${this.buildUrl()}`;
+        return `https://${this.buildUrl()}`;
     }
 
     /** Get websocket url + port */
     public getWebsocketUrl(): string {
-        return `ws://${this.buildUrl()}`;
+        return `wss://${this.buildUrl()}`;
     }
 
     public sendTextJson(resp: any, output: any): void {

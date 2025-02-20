@@ -9,13 +9,14 @@ import { FileSystem } from "@spt/utils/FileSystem";
 import { HashUtil } from "@spt/utils/HashUtil";
 import { JsonUtil } from "@spt/utils/JsonUtil";
 import { Timer } from "@spt/utils/Timer";
+import { Mutex, MutexInterface, withTimeout } from "async-mutex";
 import { inject, injectAll, injectable } from "tsyringe";
 
 @injectable()
 export class SaveServer {
     protected profileFilepath = "user/profiles/";
     protected profiles: Map<string, ISptProfile> = new Map();
-    protected profilesBeingSaved: Set<string> = new Set();
+    protected profilesBeingSavedMutex: Map<string, MutexInterface> = new Map();
     protected onBeforeSaveCallbacks: Map<string, (profile: ISptProfile) => Promise<ISptProfile>> = new Map();
     protected saveSHA1: { [key: string]: string } = {};
 
@@ -192,39 +193,46 @@ export class SaveServer {
             throw new Error(`Profile ${sessionID} does not exist! Unable to save this profile!`);
         }
 
-        if (this.profilesBeingSaved.has(sessionID)) {
-            throw new Error(`Profile ${sessionID} is already being saved!`);
-        }
+        // Get the current mutex if it exists, create a new one if it doesn't for this profile
+        const mutex =
+            this.profilesBeingSavedMutex.get(sessionID) ||
+            withTimeout(new Mutex(), 5000, new Error(`Saving timed out for profile ${sessionID}`));
+        this.profilesBeingSavedMutex.set(sessionID, mutex);
 
-        this.profilesBeingSaved.add(sessionID);
+        const release = await mutex.acquire();
 
-        const filePath = `${this.profileFilepath}${sessionID}.json`;
+        try {
+            const filePath = `${this.profileFilepath}${sessionID}.json`;
 
-        // Run pre-save callbacks before we save into json
-        for (const [id, callback] of this.onBeforeSaveCallbacks) {
-            const previous = this.profiles.get(sessionID) as ISptProfile; // Cast as ISptProfile here since there should be no reason we're getting an undefined profile
-            try {
-                this.profiles.set(sessionID, await callback(this.profiles.get(sessionID) as ISptProfile)); // Cast as ISptProfile here since there should be no reason we're getting an undefined profile
-            } catch (error) {
-                this.logger.error(this.localisationService.getText("profile_save_callback_error", { callback, error }));
-                this.profiles.set(sessionID, previous);
+            // Run pre-save callbacks before we save into json
+            for (const [id, callback] of this.onBeforeSaveCallbacks) {
+                const previous = this.profiles.get(sessionID) as ISptProfile; // Cast as ISptProfile here since there should be no reason we're getting an undefined profile
+                try {
+                    this.profiles.set(sessionID, await callback(this.profiles.get(sessionID) as ISptProfile)); // Cast as ISptProfile here since there should be no reason we're getting an undefined profile
+                } catch (error) {
+                    this.logger.error(
+                        this.localisationService.getText("profile_save_callback_error", { callback, error }),
+                    );
+                    this.profiles.set(sessionID, previous);
+                }
             }
+
+            const jsonProfile = this.jsonUtil.serialize(
+                this.profiles.get(sessionID),
+                !this.configServer.getConfig<ICoreConfig>(ConfigTypes.CORE).features.compressProfile,
+            );
+
+            const sha1 = await this.hashUtil.generateSha1ForDataAsync(jsonProfile);
+
+            if (typeof this.saveSHA1[sessionID] !== "string" || this.saveSHA1[sessionID] !== sha1) {
+                this.saveSHA1[sessionID] = sha1;
+                // save profile to disk
+                await this.fileSystem.write(filePath, jsonProfile);
+            }
+        } finally {
+            // Release the current lock
+            release();
         }
-
-        const jsonProfile = this.jsonUtil.serialize(
-            this.profiles.get(sessionID),
-            !this.configServer.getConfig<ICoreConfig>(ConfigTypes.CORE).features.compressProfile,
-        );
-
-        const sha1 = await this.hashUtil.generateSha1ForDataAsync(jsonProfile);
-
-        if (typeof this.saveSHA1[sessionID] !== "string" || this.saveSHA1[sessionID] !== sha1) {
-            this.saveSHA1[sessionID] = sha1;
-            // save profile to disk
-            await this.fileSystem.write(filePath, jsonProfile);
-        }
-
-        this.profilesBeingSaved.delete(sessionID);
     }
 
     /**
@@ -236,6 +244,16 @@ export class SaveServer {
         const file = `${this.profileFilepath}${sessionID}.json`;
 
         this.profiles.delete(sessionID);
+
+        const pendingMutex = this.profilesBeingSavedMutex.get(sessionID);
+
+        if (pendingMutex) {
+            // If the profile already has a mutex assigned, cancel all pending locks and release.
+            pendingMutex.cancel();
+            pendingMutex.release();
+
+            this.profilesBeingSavedMutex.delete(sessionID);
+        }
 
         await this.fileSystem.remove(file);
 

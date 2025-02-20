@@ -1,4 +1,5 @@
-import http, { IncomingMessage } from "node:http";
+import { IncomingMessage } from "node:http";
+import https from "node:https";
 import { ProgramStatics } from "@spt/ProgramStatics";
 import { HttpServerHelper } from "@spt/helpers/HttpServerHelper";
 import type { ILogger } from "@spt/models/spt/utils/ILogger";
@@ -27,7 +28,7 @@ export class WebSocketServer {
         return this.webSocketServer;
     }
 
-    public setupWebSocket(httpServer: http.Server): void {
+    public setupWebSocket(httpServer: https.Server): void {
         this.webSocketServer = new Server({ server: httpServer, WebSocket: SPTWebSocket });
 
         this.webSocketServer.addListener("listening", () => {

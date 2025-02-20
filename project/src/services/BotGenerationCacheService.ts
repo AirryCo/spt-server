@@ -45,11 +45,13 @@ export class BotGenerationCacheService {
             }
 
             this.logger.error(this.localisationService.getText("bot-cache_has_zero_bots_of_requested_type", key));
+
+            return null;
         }
 
         this.logger.error(this.localisationService.getText("bot-no_bot_type_in_cache", key));
 
-        return undefined;
+        return null;
     }
 
     /**
