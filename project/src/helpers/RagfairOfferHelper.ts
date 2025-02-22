@@ -547,13 +547,11 @@ export class RagfairOfferHelper {
         const sellerProfile = this.profileHelper.getPmcProfile(offerOwnerSessionId);
 
         // Pack or ALL items of a multi-offer were bought - remove entire ofer
-        if (offer.sellInOnePiece || boughtAmount === offerStackCount) {
+        if (offer.sellInOnePiece || boughtAmount === offer.quantity) {
             this.deleteOfferById(offerOwnerSessionId, offer._id);
         } else {
-            const offerRootItem = offer.items[0];
-
-            // Reduce offer root items stack count
-            offerRootItem.upd.StackObjectsCount -= boughtAmount;
+            // Partial purchase, reduce quantity by amount purchased
+            offer.quantity -= boughtAmount;
         }
 
         // Assemble payment to send to seller now offer was purchased

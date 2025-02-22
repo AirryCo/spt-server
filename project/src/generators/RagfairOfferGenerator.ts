@@ -83,6 +83,7 @@ export class RagfairOfferGenerator {
      * @param items Items in the offer
      * @param barterScheme Cost of item (currency or barter)
      * @param loyalLevel Loyalty level needed to buy item
+     * @param quantity Amount of item being listed
      * @param sellInOnePiece Flags sellInOnePiece to be true
      * @returns Created flea offer
      */
@@ -92,9 +93,10 @@ export class RagfairOfferGenerator {
         items: IItem[],
         barterScheme: IBarterScheme[],
         loyalLevel: number,
+        quantity: number,
         sellInOnePiece = false,
     ): IRagfairOffer {
-        const offer = this.createOffer(userID, time, items, barterScheme, loyalLevel, sellInOnePiece);
+        const offer = this.createOffer(userID, time, items, barterScheme, loyalLevel, quantity, sellInOnePiece);
         this.ragfairOfferService.addOffer(offer);
 
         return offer;
@@ -107,6 +109,7 @@ export class RagfairOfferGenerator {
      * @param items Items in the offer
      * @param barterScheme Cost of item (currency or barter)
      * @param loyalLevel Loyalty level needed to buy item
+     * @param quantity Amount of item being listed
      * @param isPackOffer Is offer being created flaged as a pack
      * @returns IRagfairOffer
      */
@@ -116,6 +119,7 @@ export class RagfairOfferGenerator {
         items: IItem[],
         barterScheme: IBarterScheme[],
         loyalLevel: number,
+        quantity: number,
         isPackOffer = false,
     ): IRagfairOffer {
         const isTrader = this.ragfairServerHelper.isTrader(userID);
@@ -164,6 +168,7 @@ export class RagfairOfferGenerator {
             loyaltyLevel: loyalLevel,
             sellInOnePiece: isPackOffer,
             locked: false,
+            quantity: quantity,
         };
 
         this.offerCounter++;
@@ -472,7 +477,9 @@ export class RagfairOfferGenerator {
     ): Promise<void> {
         // Set stack size to random value
         var desiredStackSize = this.ragfairServerHelper.calculateDynamicStackCount(itemWithChildren[0]._tpl, isPreset);
-        itemWithChildren[0].upd.StackObjectsCount = desiredStackSize;
+
+        // Reset stack count to 1 from whatever it was prior
+        itemWithChildren[0].upd.StackObjectsCount = 1;
 
         const isBarterOffer = this.randomUtil.getChance100(this.ragfairConfig.dynamic.barter.chancePercent);
         const isPackOffer =
@@ -530,6 +537,7 @@ export class RagfairOfferGenerator {
             itemWithChildren,
             barterScheme,
             1,
+            desiredStackSize,
             isPackOffer, // sellAsOnePiece - pack offer
         );
     }
@@ -599,7 +607,15 @@ export class RagfairOfferGenerator {
             const barterSchemeItems = assortsClone.barter_scheme[item._id][0];
             const loyalLevel = assortsClone.loyal_level_items[item._id];
 
-            const offer = this.createAndAddFleaOffer(traderID, time, items, barterSchemeItems, loyalLevel, false);
+            const offer = this.createAndAddFleaOffer(
+                traderID,
+                time,
+                items,
+                barterSchemeItems,
+                loyalLevel,
+                item.upd?.StackObjectsCount ?? 1,
+                false,
+            );
 
             // Refresh complete, reset flag to false
             trader.base.refreshTraderRagfairOffers = false;

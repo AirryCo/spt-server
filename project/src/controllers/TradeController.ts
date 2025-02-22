@@ -171,6 +171,9 @@ export class TradeController {
         };
 
         this.tradeHelper.buyItem(pmcData, buyData, sessionId, this.traderConfig.purchasesAreFoundInRaid, output);
+
+        // Remove/lower offer quantity of item purchased from trader flea offer
+        this.ragfairServer.reduceOfferQuantity(fleaOffer._id, requestOffer.count);
     }
 
     /**
@@ -222,8 +225,8 @@ export class TradeController {
             return;
         }
 
-        // Remove/lower stack count of item purchased from PMC flea offer
-        this.ragfairServer.removeOfferStack(fleaOffer._id, requestOffer.count);
+        // Remove/lower offer quantity of item purchased from PMC flea offer
+        this.ragfairServer.reduceOfferQuantity(fleaOffer._id, requestOffer.count);
     }
 
     /**

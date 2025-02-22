@@ -672,6 +672,7 @@ export class CircleOfCultistService {
         // Create set of unique values to ignore
         const itemRewardBlacklist = new Set([
             ...this.seasonalEventService.getInactiveSeasonalEventItems(),
+            ...this.itemFilterService.getBlacklistedItems(),
             ...this.itemFilterService.getItemRewardBlacklist(),
             ...cultistCircleConfig.rewardItemBlacklist,
             ...itemsMatchingTypeBlacklist,

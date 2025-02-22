@@ -14,7 +14,7 @@ export class ImageRouter {
     ) {}
 
     public addRoute(key: string, valueToAdd: string): void {
-        this.imageRouteService.addRoute(key, valueToAdd);
+        this.imageRouteService.addRoute(key.toLowerCase(), valueToAdd);
     }
 
     public async sendImage(sessionID: string, req: IncomingMessage, resp: ServerResponse, body: any): Promise<void> {
@@ -22,8 +22,9 @@ export class ImageRouter {
         const url = req.url ? FileSystemSync.stripExtension(req.url) : "";
 
         // send image
-        if (this.imageRouteService.existsByKey(url)) {
-            await this.httpFileUtil.sendFileAsync(resp, this.imageRouteService.getByKey(url));
+        const keyLower = url.toLowerCase();
+        if (this.imageRouteService.existsByKey(keyLower)) {
+            await this.httpFileUtil.sendFileAsync(resp, this.imageRouteService.getByKey(keyLower));
         } else {
             this.logger.error(`File not found: ${url}`);
         }

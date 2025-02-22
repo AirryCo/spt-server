@@ -890,6 +890,7 @@ export class RagfairController {
             formattedItems,
             formattedRequirements,
             loyalLevel,
+            items[0].upd?.StackObjectsCount ?? 1,
             sellInOnePiece,
         );
     }

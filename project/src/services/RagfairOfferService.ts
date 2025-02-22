@@ -135,11 +135,11 @@ export class RagfairOfferService {
      * @param offerId Offer to adjust stack size of
      * @param amount How much to deduct from offers stack size
      */
-    public removeOfferStack(offerId: string, amount: number): void {
+    public reduceOfferQuantity(offerId: string, amount: number): void {
         const offer = this.ragfairOfferHandler.getOfferById(offerId);
         if (offer) {
-            offer.items[0].upd.StackObjectsCount -= amount;
-            if (offer.items[0].upd.StackObjectsCount <= 0) {
+            offer.quantity -= amount;
+            if (offer.quantity <= 0) {
                 this.processStaleOffer(offer);
             }
         }

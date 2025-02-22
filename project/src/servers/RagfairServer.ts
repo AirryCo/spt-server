@@ -107,8 +107,8 @@ export class RagfairServer {
         return this.ragfairOfferService.getOffers();
     }
 
-    public removeOfferStack(offerID: string, amount: number): void {
-        this.ragfairOfferService.removeOfferStack(offerID, amount);
+    public reduceOfferQuantity(offerID: string, amount: number): void {
+        this.ragfairOfferService.reduceOfferQuantity(offerID, amount);
     }
 
     public doesOfferExist(offerId: string): boolean {
