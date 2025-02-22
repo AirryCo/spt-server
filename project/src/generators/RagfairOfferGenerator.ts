@@ -142,7 +142,6 @@ export class RagfairOfferGenerator {
 
         // Clone to avoid modifying original array
         const itemsClone = this.cloner.clone(items);
-        const itemStackCount = itemsClone[0].upd?.StackObjectsCount ?? 1;
 
         // Hydrate ammo boxes with cartridges + ensure only 1 item is present (ammo box)
         // On offer refresh dont re-add cartridges to ammo box that already has cartridges
@@ -151,7 +150,7 @@ export class RagfairOfferGenerator {
         }
 
         const roubleListingPrice = Math.round(this.convertOfferRequirementsIntoRoubles(offerRequirements));
-        const singleItemListingPrice = isPackOffer ? roubleListingPrice / itemStackCount : roubleListingPrice;
+        const singleItemListingPrice = isPackOffer ? roubleListingPrice / quantity : roubleListingPrice;
 
         const offer: IRagfairOffer = {
             _id: this.hashUtil.generate(),
@@ -476,7 +475,7 @@ export class RagfairOfferGenerator {
         itemToSellDetails: ITemplateItem,
     ): Promise<void> {
         // Set stack size to random value
-        var desiredStackSize = this.ragfairServerHelper.calculateDynamicStackCount(itemWithChildren[0]._tpl, isPreset);
+        let desiredStackSize = this.ragfairServerHelper.calculateDynamicStackCount(itemWithChildren[0]._tpl, isPreset);
 
         // Reset stack count to 1 from whatever it was prior
         itemWithChildren[0].upd.StackObjectsCount = 1;
@@ -510,14 +509,13 @@ export class RagfairOfferGenerator {
         let barterScheme: IBarterScheme[];
         if (isPackOffer) {
             // Set pack size
-            const stackSize = this.randomUtil.getInt(
+            desiredStackSize = this.randomUtil.getInt(
                 this.ragfairConfig.dynamic.pack.itemCountMin,
                 this.ragfairConfig.dynamic.pack.itemCountMax,
             );
-            itemWithChildren[0].upd.StackObjectsCount = stackSize;
 
             // Don't randomise pack items
-            barterScheme = this.createCurrencyBarterScheme(itemWithChildren, isPackOffer, stackSize);
+            barterScheme = this.createCurrencyBarterScheme(itemWithChildren, isPackOffer, desiredStackSize);
         } else if (isBarterOffer) {
             // Apply randomised properties
             this.randomiseOfferItemUpdProperties(sellerId, itemWithChildren, itemToSellDetails);
