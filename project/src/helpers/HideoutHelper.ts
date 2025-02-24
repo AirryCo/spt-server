@@ -413,7 +413,7 @@ export class HideoutHelper {
         const production = pmcData.Hideout.Production[prodId];
 
         // Check if we're already complete, skip
-        if (production.AvailableForFinish) {
+        if (production.AvailableForFinish && !production.inProgress) {
             return;
         }
 
@@ -440,8 +440,9 @@ export class HideoutHelper {
         // Craft is complete, flas as such
         production.AvailableForFinish = true;
 
-        // Reset progress so its not over production time
-        production.Progress = production.ProductionTime;
+        // The client expects `Progress` to be 0, and `inProgress` to be false when a circle is complete
+        production.Progress = 0;
+        production.inProgress = false;
     }
 
     /**
