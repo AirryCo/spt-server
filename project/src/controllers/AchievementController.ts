@@ -19,7 +19,9 @@ export class AchievementController {
      * @param sessionID Session id
      */
     public getAchievements(sessionID: string): IGetAchievementsResponse {
-        return { elements: this.databaseService.getAchievements() };
+        return {
+            elements: this.databaseService.getAchievements(),
+        };
     }
 
     /**
@@ -35,6 +37,8 @@ export class AchievementController {
             stats[achievement.id] = 0;
         }
 
-        return { elements: stats };
+        return {
+            elements: stats,
+        };
     }
 }

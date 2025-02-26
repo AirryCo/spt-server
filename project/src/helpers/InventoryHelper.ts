@@ -661,6 +661,9 @@ export class InventoryHelper {
         // Item types to ignore
         const skipThisItems: string[] = [
             BaseClasses.BACKPACK,
+            BaseClasses.AMMO_BOX,
+            BaseClasses.VEST,
+            BaseClasses.HEADWEAR,
             BaseClasses.SEARCHABLE_ITEM,
             BaseClasses.SIMPLE_CONTAINER,
         ];
