@@ -50,6 +50,8 @@ export interface ILocationBase {
     EnableCoop: boolean;
     GlobalLootChanceModifier: number;
     GlobalLootChanceModifierPvE: number;
+    HeatmapCellSize: Ixyz;
+    HeatmapLayers: string[];
     GlobalContainerChanceModifier: number;
     IconX: number;
     IconY: number;
@@ -223,6 +225,18 @@ export interface IBotLocationModifier {
     VisibleDistance: number;
     MaxExfiltrationTime: number;
     MinExfiltrationTime: number;
+    FogVisibilityDistanceCoef: number;
+    FogVisibilitySpeedCoef: number;
+    LockSpawnCheckRadius: number;
+    LockSpawnCheckRadiusPvE: number;
+    LockSpawnStartTime: number;
+    LockSpawnStartTimePvE: number;
+    LockSpawnStepTime: number;
+    LockSpawnStepTimePvE: number;
+    NonWaveSpawnBotsLimitPerPlayer: number;
+    NonWaveSpawnBotsLimitPerPlayerPvE: number;
+    RainVisibilityDistanceCoef: number;
+    RainVisibilitySpeedCoef: number;
 }
 
 export interface IAdditionalHostilitySettings {

@@ -1,3 +1,4 @@
+import crypto from "node:crypto";
 import { PlayerScavGenerator } from "@spt/generators/PlayerScavGenerator";
 import { ItemHelper } from "@spt/helpers/ItemHelper";
 import { PrestigeHelper } from "@spt/helpers/PrestigeHelper";
@@ -76,7 +77,7 @@ export class CreateProfileService {
         pmcData.Customization.Head = info.headId;
         pmcData.Health.UpdateTime = this.timeUtil.getTimestamp();
         pmcData.Quests = [];
-        pmcData.Hideout.Seed = this.timeUtil.getTimestamp() + 8 * 60 * 60 * 24 * 365; // 8 years in future why? who knows, we saw it in live
+        pmcData.Hideout.Seed = crypto.randomBytes(16).toString("hex"); // random 32 char hex value
         pmcData.RepeatableQuests = [];
         pmcData.CarExtractCounts = {};
         pmcData.CoopExtractCounts = {};
