@@ -35,7 +35,10 @@ export class BotDifficultyHelper {
      * @returns Difficulty object
      */
     public getBotDifficultySettings(type: string, difficulty: string, botDb: IBots): IDifficultyCategories {
-        const desiredType = type.toLowerCase();
+        const desiredType = this.botHelper.isBotPmc(type)
+            ? this.botHelper.getPmcSideByRole(type).toLowerCase()
+            : type.toLowerCase();
+
         const bot = botDb.types[desiredType];
         if (!bot) {
             // No bot found, get fallback difficulty values

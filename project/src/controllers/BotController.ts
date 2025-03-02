@@ -435,6 +435,11 @@ export class BotController {
      */
     public getBotCap(location: string): number {
         const botCap = this.botConfig.maxBotCap[location.toLowerCase()];
+        
+        if (!botCap) {
+            return this.botConfig.maxBotCap.default;
+        }
+
         if (location === "default") {
             this.logger.warning(
                 this.localisationService.getText("bot-no_bot_cap_found_for_location", location.toLowerCase()),
