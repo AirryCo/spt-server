@@ -190,7 +190,17 @@ export class PreSptModLoader implements IModLoader {
             await this.addModAsync(mod, pkg);
         }
 
-        this.modLoadOrder.setModList(this.imported);
+        const sortedModLoadOrder = this.modLoadOrder.setModList(this.imported);
+
+        for (const [, modConfig] of sortedModLoadOrder) {
+            this.logger.info(
+                this.localisationService.getText("modloader-loaded_mod", {
+                    name: modConfig.name,
+                    version: modConfig.version,
+                    author: modConfig.author,
+                }),
+            );
+        }
     }
 
     protected sortMods(prev: string, next: string, missingFromOrderJSON: Record<string, boolean>): number {
@@ -400,13 +410,6 @@ export class PreSptModLoader implements IModLoader {
 
         // Add mod to imported list
         this.imported[mod] = { ...pkg, dependencies: pkg.modDependencies };
-        this.logger.info(
-            this.localisationService.getText("modloader-loaded_mod", {
-                name: pkg.name,
-                version: pkg.version,
-                author: pkg.author,
-            }),
-        );
     }
 
     /**
