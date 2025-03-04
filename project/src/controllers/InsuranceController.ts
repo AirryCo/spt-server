@@ -471,6 +471,11 @@ export class InsuranceController {
         }
     }
 
+    /**
+     * Get dictionary of items with their corresponding price
+     * @param attachments
+     * @returns
+     */
     protected weightAttachmentsByPrice(attachments: IItem[]): Record<string, number> {
         const result: Record<string, number> = {};
 

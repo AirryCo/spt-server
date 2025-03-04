@@ -19,6 +19,8 @@ export interface IHideoutConfig extends IBaseConfig {
 }
 
 export interface IHideoutCraftToAdd {
+    // The new mongoId for the craft to use
+    newId: string;
     requirements: IRequirement[];
     craftIdToCopy: string;
     craftOutputTpl: string;
