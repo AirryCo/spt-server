@@ -160,7 +160,7 @@ export class BotController {
             await this.generateAndCacheBots(info, pmcProfile, sessionId);
         }
 
-        return this.returnBotsFromCache(info);
+        return await this.returnBotsFromCache(info);
     }
 
     /**
@@ -320,7 +320,7 @@ export class BotController {
         const botCacheCount = this.botGenerationCacheService.getCachedBotCount(cacheKey);
 
         if (botCacheCount > botGenerationDetails.botCountToGenerate) {
-            this.logger.debug(`Cache already has sufficient ${cacheKey} bots: ${botCacheCount}, skipping generation`);
+            this.logger.debug(`Cache already has sufficient: ${cacheKey} bots: ${botCacheCount}, skipping generation`);
             return;
         }
 
