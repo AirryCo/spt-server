@@ -222,6 +222,11 @@
                     "templateId": "544fb5454bdc2df8738b456a",
                     "type": "Tool"
                 },
+				{
+					"areaType": 10,
+					"requiredLevel": 2,
+					"type": "Area"
+				},
                 {
                     "templateId": "66582889efd94e2d665b14a2",
                     "count": 1,
@@ -245,6 +250,11 @@
                     "templateId": "544fb5454bdc2df8738b456a",
                     "type": "Tool"
                 },
+				{
+					"areaType": 10,
+					"requiredLevel": 2,
+					"type": "Area"
+				},
                 {
                     "templateId": "6658285190486915542256c4",
                     "count": 1,
@@ -268,6 +278,11 @@
                     "templateId": "544fb5454bdc2df8738b456a",
                     "type": "Tool"
                 },
+				{
+					"areaType": 10,
+					"requiredLevel": 2,
+					"type": "Area"
+				},
                 {
                     "templateId": "665828f490486915542256c6",
                     "count": 1,
@@ -291,6 +306,11 @@
                     "templateId": "544fb5454bdc2df8738b456a",
                     "type": "Tool"
                 },
+				{
+					"areaType": 10,
+					"requiredLevel": 2,
+					"type": "Area"
+				},
                 {
                     "templateId": "66588bb047fbd536a674240e",
                     "count": 1,
@@ -314,6 +334,11 @@
                     "templateId": "544fb5454bdc2df8738b456a",
                     "type": "Tool"
                 },
+				{
+					"areaType": 10,
+					"requiredLevel": 2,
+					"type": "Area"
+				},
                 {
                     "templateId": "66588b514de4820934746dc6",
                     "count": 1,
@@ -337,8 +362,69 @@
                     "templateId": "544fb5454bdc2df8738b456a",
                     "type": "Tool"
                 },
+				{
+					"areaType": 10,
+					"requiredLevel": 2,
+					"type": "Area"
+				},
                 {
                     "templateId": "66588ba291f6e93c4c06efef",
+                    "count": 1,
+                    "isFunctional": false,
+                    "isEncoded": false,
+                    "isSpawnedInSession": false,
+                    "type": "Item"
+                }
+            ]
+        },
+        {
+			"newId": "67cb4b25bb7852bce4a14364",
+            "craftIdToCopy": "66582be04de4820934746cea",
+            "craftOutputTpl": "66582972ac60f009f270d2aa",
+            "requirements": [
+                {
+                    "templateId": "5c07df7f0db834001b73588a",
+                    "type": "Tool"
+                },
+                {
+                    "templateId": "544fb5454bdc2df8738b456a",
+                    "type": "Tool"
+                },
+				{
+					"areaType": 10,
+					"requiredLevel": 2,
+					"type": "Area"
+				},
+                {
+                    "templateId": "665828c44de4820934746ce4",
+                    "count": 1,
+                    "isFunctional": false,
+                    "isEncoded": false,
+                    "isSpawnedInSession": false,
+                    "type": "Item"
+                }
+            ]
+        },
+        {
+			"newId": "67cb4bb6dac4a5492d2e966a",
+            "craftIdToCopy": "66582be04de4820934746cea",
+            "craftOutputTpl": "665888282c4a1b73af576b77",
+            "requirements": [
+                {
+                    "templateId": "5c07df7f0db834001b73588a",
+                    "type": "Tool"
+                },
+                {
+                    "templateId": "544fb5454bdc2df8738b456a",
+                    "type": "Tool"
+                },
+				{
+					"areaType": 10,
+					"requiredLevel": 2,
+					"type": "Area"
+				},
+                {
+                    "templateId": "66588b6dcb48a73e674b2649",
                     "count": 1,
                     "isFunctional": false,
                     "isEncoded": false,
