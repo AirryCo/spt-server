@@ -329,7 +329,7 @@ export class BotGenerator {
     ): number {
         const result = standingForKill[botDifficulty.toLowerCase()];
         if (typeof result === "undefined") {
-            this.logger.warning(
+            this.logger.debug(
                 `Unable to find standing for kill value for: ${role} ${botDifficulty}, falling back to "normal"`,
             );
 
