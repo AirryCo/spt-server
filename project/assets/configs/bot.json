@@ -2683,8 +2683,8 @@
         "interchange": 22,
         "laboratory": 19,
         "tarkovstreets": 23,
-        "sandbox": 12,
-        "sandbox_high": 12,
+        "sandbox": 14,
+        "sandbox_high": 14,
         "default": 19
     },
     "walletLoot": {

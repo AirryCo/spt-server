@@ -423,7 +423,7 @@ export class BotEquipmentModGenerator {
 
         if (
             !(
-                request.parentTemplate._props.Slots.length ||
+                request.parentTemplate._props.Slots?.length ||
                 request.parentTemplate._props.Cartridges?.length ||
                 request.parentTemplate._props.Chambers?.length
             )
