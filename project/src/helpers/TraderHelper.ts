@@ -504,7 +504,8 @@ export class TraderHelper {
             // Get loyalty level details player has achieved with this trader
             // Uses lowest loyalty level as this function is used before a player has logged into server
             // We have no idea what player loyalty is with traders
-            const traderBuyBackPricePercent = traderBase.loyaltyLevels[0].buy_price_coef;
+            // buy_price_coef is the inverse percentage, must subtract from 100 to get proper buyback percent
+            const traderBuyBackPricePercent = 100 - traderBase.loyaltyLevels[0].buy_price_coef;
 
             const itemHandbookPrice = this.handbookHelper.getTemplatePrice(tpl);
             const priceTraderBuysItemAt = Math.round(
