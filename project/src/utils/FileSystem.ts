@@ -146,6 +146,16 @@ export class FileSystem {
     }
 
     /**
+     * Reads a file as raw data and returns the contents as a Buffer.
+     * 
+     * @param file The file path to read.
+     * @returns A promise that resolves with the raw file contents as a Buffer.
+     */
+    public readRaw(file: string): Promise<Buffer> {
+        return atomicallyRead(file);
+    }
+
+    /**
      * Writes data to a file, overwriting if the file already exists. If the parent directory does not exist, it's
      * created. File must be a file path (a buffer or a file descriptor is not allowed).
      *

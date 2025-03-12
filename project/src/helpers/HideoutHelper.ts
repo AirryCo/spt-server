@@ -581,10 +581,6 @@ export class HideoutHelper {
                 // Deducted all used fuel from this container, clean up and exit loop
                 fuelItemInSlot.upd = this.getAreaUpdObject(1, fuelRemaining, pointsConsumed, isFuelItemFoundInRaid);
 
-                this.logger.debug(
-                    `Profile: ${pmcData._id} Generator has: ${fuelRemaining} fuel left in slot ${i + 1}`,
-                    true,
-                );
                 hasFuelRemaining = true;
 
                 break; // Break to avoid updating all the fuel tanks

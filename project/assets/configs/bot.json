@@ -276,8 +276,8 @@
                 "minLimitPercent": 15
             }
         },
-		"gifter": {
-			"armor": {
+        "gifter": {
+            "armor": {
                 "maxDelta": 10,
                 "minDelta": 0,
                 "minLimitPercent": 15
@@ -289,8 +289,8 @@
                 "minDelta": 0,
                 "minLimitPercent": 15
             }
-		},
-		"skier": {
+        },
+        "skier": {
             "armor": {
                 "maxDelta": 10,
                 "minDelta": 0,
@@ -304,7 +304,7 @@
                 "minLimitPercent": 15
             }
         },
-		"peacemaker": {
+        "peacemaker": {
             "armor": {
                 "maxDelta": 10,
                 "minDelta": 0,
@@ -953,9 +953,9 @@
         },
         "assaultgroup": {},
         "gifter": {
-			"nvgIsActiveChanceDayPercent": 0,
-			"nvgIsActiveChanceNightPercent": 90,
-			"faceShieldIsActiveChancePercent": 0,
+            "nvgIsActiveChanceDayPercent": 0,
+            "nvgIsActiveChanceNightPercent": 90,
+            "faceShieldIsActiveChancePercent": 0,
             "lightIsActiveDayChancePercent": 25,
             "lightIsActiveNightChancePercent": 75,
             "laserIsActiveChancePercent": 75

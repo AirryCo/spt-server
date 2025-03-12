@@ -58,10 +58,7 @@
             "675f7f224076a741a3061568",
             "675f7b168d28a25ec7007dbb"
         ],
-        "interchange": [
-            "64e74a5ac2b4f829615ec336",
-            "667a8ef464eea5fdef0db135"
-        ],
+        "interchange": ["64e74a5ac2b4f829615ec336", "667a8ef464eea5fdef0db135"],
         "lighthouse": [
             "6331bb0d1aa9f42b804997a6",
             "6398a0861c712b1e1d4dadf1",

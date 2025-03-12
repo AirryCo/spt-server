@@ -38,7 +38,7 @@ export class HashUtil {
     }
 
     public generateCRC32ForFile(filePath: string): number {
-        return crc32(this.fileSystemSync.read(filePath));
+        return crc32(this.fileSystemSync.readRaw(filePath));
     }
     /**
      * Create a hash for the data parameter

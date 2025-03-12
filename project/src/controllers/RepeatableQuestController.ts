@@ -161,7 +161,7 @@ export class RepeatableQuestController {
             for (const quest of generatedRepeatables.activeQuests) {
                 generatedRepeatables.changeRequirement[quest._id] = {
                     changeCost: quest.changeCost,
-                    changeStandingCost: this.randomUtil.getArrayValue([0, 0.01]), // Randomise standing cost to replace
+                    changeStandingCost: this.randomUtil.getArrayValue(repeatableConfig.standingChangeCost), // Randomise standing cost to replace
                 };
             }
 
