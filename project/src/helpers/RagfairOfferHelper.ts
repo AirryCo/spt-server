@@ -157,7 +157,9 @@ export class RagfairOfferHelper {
             // Loop over all flea types to find the matching one
             for (const tieredItemType of tieredFleaLimitTypes) {
                 if (this.itemHelper.isOfBaseclass(offerItemTpl, tieredItemType)) {
+                    // The items type matches one we have flagged as tiered
                     if (playerLevel < tieredFlea.unlocksType[tieredItemType]) {
+                        // Players level is below threshhold, hide offer
                         offer.locked = true;
 
                         return;

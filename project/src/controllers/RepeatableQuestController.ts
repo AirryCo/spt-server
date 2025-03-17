@@ -560,7 +560,7 @@ export class RepeatableQuestController {
         // Add replacement quests change requirement data to profile
         repeatablesOfTypeInProfile.changeRequirement[newRepeatableQuest._id] = {
             changeCost: newRepeatableQuest.changeCost,
-            changeStandingCost: this.randomUtil.getArrayValue([0, 0.01]),
+            changeStandingCost: this.randomUtil.getArrayValue(repeatableConfig.standingChangeCost),
         };
 
         // Check if we should charge player for replacing quest
