@@ -16,13 +16,13 @@ import {
     IFenceAssortGenerationValues,
     IGenerationAssortValues,
 } from "@spt/models/spt/fence/IFenceAssortGenerationValues";
-import { ILogger } from "@spt/models/spt/utils/ILogger";
+import type { ILogger } from "@spt/models/spt/utils/ILogger";
 import { ConfigServer } from "@spt/servers/ConfigServer";
 import { DatabaseService } from "@spt/services/DatabaseService";
 import { LocalisationService } from "@spt/services/LocalisationService";
 import { RandomUtil } from "@spt/utils/RandomUtil";
 import { TimeUtil } from "@spt/utils/TimeUtil";
-import { ICloner } from "@spt/utils/cloners/ICloner";
+import type { ICloner } from "@spt/utils/cloners/ICloner";
 import { inject, injectable } from "tsyringe";
 
 /**
@@ -165,6 +165,7 @@ export class FenceService {
         }
 
         // Clean up the items
+        // biome-ignore lint/performance/noDelete: Delete is fine here as we're getting rid of the items before updating.
         delete root.location;
 
         const createAssort: ICreateFenceAssortsResult = { sptItems: [], barter_scheme: {}, loyal_level_items: {} };
@@ -1115,6 +1116,7 @@ export class FenceService {
                 continue;
             }
 
+            const armorWithMods = armorItemAndMods;
             const modItemDbDetails = this.itemHelper.getItem(plateTpl)[1];
 
             // Chance to remove plate
@@ -1135,13 +1137,13 @@ export class FenceService {
             );
 
             // Find items mod to apply dura changes to
-            const modItemToAdjust = armorItemAndMods.find(
+            const modItemToAdjust = armorWithMods.find(
                 (mod) => mod.slotId.toLowerCase() === plateSlot._name.toLowerCase(),
             );
 
             if (!modItemToAdjust) {
                 this.logger.warning(
-                    `Unable to randomise armor items ${armorItemAndMods[0]._tpl} ${plateSlot._name} slot as it cannot be found, skipping`,
+                    `Unable to randomise armor items ${armorWithMods[0]._tpl} ${plateSlot._name} slot as it cannot be found, skipping`,
                 );
                 continue;
             }

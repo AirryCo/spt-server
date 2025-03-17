@@ -1,7 +1,7 @@
 import { IChatCommand } from "@spt/helpers/Dialogue/Commando/IChatCommand";
 import { ISptCommand } from "@spt/helpers/Dialogue/Commando/SptCommands/ISptCommand";
 import { ISendMessageRequest } from "@spt/models/eft/dialog/ISendMessageRequest";
-import { IUserDialogInfo } from "@spt/models/eft/profile/ISptProfile";
+import { IUserDialogInfo } from "@spt/models/eft/profile/IUserDialogInfo";
 import { ConfigTypes } from "@spt/models/enums/ConfigTypes";
 import { ICoreConfig } from "@spt/models/spt/config/ICoreConfig";
 import { ConfigServer } from "@spt/servers/ConfigServer";
@@ -16,11 +16,12 @@ export class SptCommandoCommands implements IChatCommand {
         @injectAll("SptCommand") protected sptCommands: ISptCommand[],
     ) {
         const coreConfigs = this.configServer.getConfig<ICoreConfig>(ConfigTypes.CORE);
+        const commandoId = coreConfigs.features?.chatbotFeatures.ids.commando;
         // if give command is disabled or commando commands are disabled
         if (
             !(
                 coreConfigs.features?.chatbotFeatures?.commandoFeatures?.giveCommandEnabled &&
-                coreConfigs.features?.chatbotFeatures?.commandoEnabled
+                coreConfigs.features?.chatbotFeatures?.enabledBots[commandoId]
             )
         ) {
             const giveCommand = this.sptCommands.find((c) => c.getCommand().toLocaleLowerCase() === "give");

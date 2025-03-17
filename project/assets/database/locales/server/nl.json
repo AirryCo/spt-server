@@ -627,6 +627,7 @@
     "ragfair-unable_to_purchase_0_count_item": "Niet in staat een item te kopen: %s met een aantal van 0",
     "ragfair-unable_to_remove_offer_doesnt_exist": "Niet in staat om aanbod te verwijderen met id: %s omdat het niet gevonden kan worden op de flea market",
     "ragfair-unable_to_remove_offer_not_found_in_profile": "Niet in staat om aanbod te vinden: {{offerId}} in profiel: {{profileId}} omdat aanbiedingen niet gedefinieerd is, wordt aangemaakt",
+    "ragfair-generating_offers": "Flea aanbod genereren...",
     "release-beta-disclaimer": "Door op OK te drukken gaat u ermee akkoord dat er geen ondersteuning wordt geboden en dat dit alleen voor bug testing is. Geen daadwerkelijke gameplay. Mods zijn uitgeschakeld. Een nieuw profiel kan vaker vereist zijn. Rapporteer alle fouten in het rapport-kanaal in discord, of op de issues-pagina op de website. Als je niet op OK drukt tegen de aangegeven tijd, zal het spel sluiten.",
     "release-beta-disclaimer-accept": "Gebruiker heeft de beta disclaimer geaccepteerd",
     "release-beta-disclaimer-mods-enabled": "Door op OK te drukken gaat u ermee akkoord dat er geen ondersteuning geboden zal worden en dat dit enkel voor bug testing bedoeld is. NIET voor werkelijke gameplay. Mods zijn ingeschakeld, maak GEEN probleem melding aan in verband met mods. Vraag de mod auteur NIET om zijn mod aan te passen naar de nieuwste game-versie. Rapporteer alle bugs in het rapporteer kanaal in discord of op de problemen pagina in de website. Als je niet op OK drukt voor de aangegeven tijd zal het spel afsluiten.",
@@ -657,6 +658,7 @@
     "scav-unable_to_add_item_to_player_scav": "Kan %s niet toevoegen aan speler scav, is geen voorwerp",
     "scheduled_event_failed_to_run": "Gepland event: '%s' faalde om successvol te starten.",
     "season-no_matching_season_found_for_date": "Kan geen seizoen vinden met de huidige datum, standaard ingesteld op zomer",
+    "season-event_is_active": "Evenement: %s is actief",
     "seasonal-missing_equipment_slot_on_bot": "Niet in staat om kerst uitrusting te verwijderen uit slot: {{equipmentSlot}} omdat het niet gevonden kon worden op bot: {{botRole}}",
     "seasonal-missing_loot_container_slot_on_bot": "Niet in staat om kerst loot te verwijderen uit slot: {{lootContainer}} omdat het niet gevonden kon worden op bot: {{botRole}}",
     "server_running": "Server is gestart",
@@ -725,7 +727,8 @@
     "websocket-socket_lost_deleting_handle": "[WS] Socket verloren, handle verwijderen",
     "websocket-started": "Websocket gestart op %s",
     "chatbot-cannot_accept_any_more_of_gift": "Je kunt niet meer van dit geschenk accepteren",
-    "chatbot-halloween_event_enabled": "Het halloween evenement is ingeschakeld, herstart uw game client voordat u begint met een raid",
+    "chatbot-forced_event_enabled": "%s evenement is geactiveerd, herstart je game client voordat je een raid start",
     "chatbot-added_stash_rows_please_restart": "2 Rijen toegevoegd aan de stash, herstart uw spel om ze te zien",
-    "chatbot-snow_enabled": "Sneeuw is ingeschakeld voor alle volgende raids totdat de server opnieuw wordt opgestart"
+    "chatbot-snow_enabled": "Sneeuw is ingeschakeld voor alle volgende raids totdat de server opnieuw wordt opgestart",
+    "chatbot-summer_enabled": "Zomer is geactiveerd voor alle hierop volgende raids totdat de server herstart is"
 }

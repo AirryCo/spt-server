@@ -1,5 +1,7 @@
 import { IItem } from "@spt/models/eft/common/tables/IItem";
-import { IMessageContentRagfair, ISystemData, IUserDialogInfo } from "@spt/models/eft/profile/ISptProfile";
+import { IMessageContentRagfair } from "@spt/models/eft/profile/IMessageContentRagfair";
+import { ISystemData } from "@spt/models/eft/profile/ISystemData";
+import { IUserDialogInfo } from "@spt/models/eft/profile/IUserDialogInfo";
 import { MessageType } from "@spt/models/enums/MessageType";
 import { Traders } from "@spt/models/enums/Traders";
 
@@ -28,6 +30,8 @@ export interface ISendMessageDetails {
     ragfairDetails?: IMessageContentRagfair;
     /** OPTIONAL - allows modification of profile settings via mail */
     profileChangeEvents?: IProfileChangeEvent[];
+    /** Optional - the MongoID of the dialogue message to reply to */
+    replyTo?: string;
 }
 
 export interface IProfileChangeEvent {

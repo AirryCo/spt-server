@@ -573,20 +573,32 @@
     "DistToPersueAxemanCoef": 1,
     "DistToSleep": 160,
     "DistToSleepPvE": 160,
+    "FogVisibilityDistanceCoef": 1,
+    "FogVisibilitySpeedCoef": 1,
     "GainSight": 1,
     "KhorovodChance": 0,
+    "LockSpawnCheckRadius": 150,
+    "LockSpawnCheckRadiusPvE": 150,
+    "LockSpawnStartTime": 10,
+    "LockSpawnStartTimePvE": 10,
+    "LockSpawnStepTime": 50,
+    "LockSpawnStepTimePvE": 50,
     "MagnetPower": 10,
     "MarksmanAccuratyCoef": 1,
     "MaxExfiltrationTime": 1800,
     "MinExfiltrationTime": 1200,
+    "NonWaveSpawnBotsLimitPerPlayer": 10,
+    "NonWaveSpawnBotsLimitPerPlayerPvE": 15,
+    "RainVisibilityDistanceCoef": 1,
+    "RainVisibilitySpeedCoef": 1,
     "Scattering": 1,
     "VisibleDistance": 1
   },
   "BotMarksman": 0,
-  "BotMax": 15,
-  "BotMaxPlayer": 14,
+  "BotMax": 25,
+  "BotMaxPlayer": 0,
   "BotMaxPvE": 25,
-  "BotMaxTimePlayer": 1000,
+  "BotMaxTimePlayer": 0,
   "BotNormal": 30,
   "BotSpawnCountStep": 3,
   "BotSpawnPeriodCheck": 15,
@@ -595,7 +607,7 @@
   "BotSpawnTimeOnMax": 330,
   "BotSpawnTimeOnMin": 300,
   "BotStart": 10,
-  "BotStartPlayer": 15,
+  "BotStartPlayer": 0,
   "BotStop": 1400,
   "Description": "Laboratory description",
   "DisabledForScav": true,
@@ -672,7 +684,7 @@
       ],
       "CrowdCooldownPerPlayerSec": 300,
       "CrowdsLimit": 2,
-      "InfectedLookCoeff": 2,
+      "InfectedLookCoeff": 0.5,
       "InfectionPercentage": 0,
       "MaxCrowdAttackSpawnLimit": 13,
       "MinInfectionPercentage": 0,
@@ -689,6 +701,35 @@
   "GlobalContainerChanceModifier": 1,
   "GlobalLootChanceModifier": 0.33,
   "GlobalLootChanceModifierPvE": 0.77,
+  "HeatmapCellSize": {
+    "x": 1,
+    "y": 2,
+    "z": 1
+  },
+  "HeatmapLayers": [
+    "AllCharactersPositions",
+    "AllBotsPositions",
+    "AllRealPlayersPositions",
+    "RealPlayersSavagesPositions",
+    "RealPlayersSavagesDeads",
+    "RealPlayersSavagesDamages",
+    "RealPlayersPmcPositions",
+    "RealPlayersPmcDeads",
+    "RealPlayersPmcDamages",
+    "RealPlayersPmcLaydownPositions",
+    "RealPlayersPmcEquipmentDropPositions",
+    "RealPlayersPmcHealingPositions",
+    "BotsBossPositions",
+    "BotsBossDeads",
+    "BotsBossDamages",
+    "BotsSavagesPositions",
+    "BotsSavagesDeads",
+    "BotsSavagesDamages",
+    "AllCharactersDamageSources",
+    "RealPlayerDamageSources",
+    "BotsDamageSources",
+    "LootPositions"
+  ],
   "IconX": 700,
   "IconY": 800,
   "Id": "laboratory",
@@ -698,32 +739,24 @@
   "Loot": [],
   "MatchMakerMinPlayersByWaitTime": [
     {
-      "minPlayers": 7,
-      "time": 60
+      "minPlayers": 8,
+      "time": 240
     },
     {
       "minPlayers": 6,
-      "time": 70
-    },
-    {
-      "minPlayers": 5,
-      "time": 120
+      "time": 300
     },
     {
       "minPlayers": 4,
-      "time": 180
-    },
-    {
-      "minPlayers": 3,
-      "time": 250
+      "time": 360
     },
     {
       "minPlayers": 2,
-      "time": 330
+      "time": 420
     },
     {
       "minPlayers": 1,
-      "time": 420
+      "time": 450
     }
   ],
   "MaxBotPerZone": 5,
@@ -5714,7 +5747,7 @@
       "location": "TarkovStreets",
       "name": "LAB_TRANSIT_8",
       "target": "5714dc692459777137212e12",
-      "time": 30
+      "time": 20
     }
   ],
   "users_gather_seconds": 0,

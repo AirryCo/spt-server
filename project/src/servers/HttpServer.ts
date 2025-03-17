@@ -1,20 +1,27 @@
-import http, { IncomingMessage, ServerResponse, Server } from "node:http";
+import { IncomingMessage, ServerResponse } from "node:http";
+import https, { Server } from "node:https";
 import { ApplicationContext } from "@spt/context/ApplicationContext";
 import { ContextVariableType } from "@spt/context/ContextVariableType";
 import { HttpServerHelper } from "@spt/helpers/HttpServerHelper";
 import { ConfigTypes } from "@spt/models/enums/ConfigTypes";
 import { IHttpConfig } from "@spt/models/spt/config/IHttpConfig";
-import { ILogger } from "@spt/models/spt/utils/ILogger";
+import type { ILogger } from "@spt/models/spt/utils/ILogger";
 import { ConfigServer } from "@spt/servers/ConfigServer";
 import { WebSocketServer } from "@spt/servers/WebSocketServer";
 import { IHttpListener } from "@spt/servers/http/IHttpListener";
 import { LocalisationService } from "@spt/services/LocalisationService";
+import { FileSystem } from "@spt/utils/FileSystem";
+import { Timer } from "@spt/utils/Timer";
+import { generate } from "selfsigned";
 import { inject, injectAll, injectable } from "tsyringe";
 
 @injectable()
 export class HttpServer {
     protected httpConfig: IHttpConfig;
-    protected started: boolean;
+    protected started = false;
+    protected certPath: string;
+    protected keyPath: string;
+    protected fileSystem: FileSystem;
 
     constructor(
         @inject("PrimaryLogger") protected logger: ILogger,
@@ -24,33 +31,35 @@ export class HttpServer {
         @inject("ConfigServer") protected configServer: ConfigServer,
         @inject("ApplicationContext") protected applicationContext: ApplicationContext,
         @inject("WebSocketServer") protected webSocketServer: WebSocketServer,
+        @inject("FileSystem") fileSystem: FileSystem, // new dependency
     ) {
         this.httpConfig = this.configServer.getConfig(ConfigTypes.HTTP);
+        this.fileSystem = fileSystem;
+        this.certPath = "./user/certs/localhost.crt";
+        this.keyPath = "./user/certs/localhost.key";
     }
 
     /**
      * Handle server loading event
      */
-    public load(): void {
+    public async load(): Promise<void> {
+        // changed to async
         this.started = false;
 
-        /* create server */
-        const httpServer: Server = http.createServer();
+        const httpsServer: Server = await this.createHttpsServer();
 
-        httpServer.on("request", async (req, res) => {
+        httpsServer.on("request", async (req: IncomingMessage, res: ServerResponse) => {
             await this.handleRequest(req, res);
         });
 
-        /* Config server to listen on a port */
-        httpServer.listen(this.httpConfig.port, this.httpConfig.ip, () => {
+        httpsServer.listen(this.httpConfig.port, this.httpConfig.ip, () => {
             this.started = true;
             this.logger.success(
                 this.localisationService.getText("started_webserver_success", this.httpServerHelper.getBackendUrl()),
             );
         });
 
-        httpServer.on("error", (e: any) => {
-            /* server is already running or program using privileged port without root */
+        httpsServer.on("error", (e: any) => {
             if (process.platform === "linux" && !(process.getuid && process.getuid() === 0) && e.port < 1024) {
                 this.logger.error(this.localisationService.getText("linux_use_priviledged_port_non_root"));
             } else {
@@ -59,8 +68,63 @@ export class HttpServer {
             }
         });
 
-        // Setting up websocket
-        this.webSocketServer.setupWebSocket(httpServer);
+        // Setting up WebSocket using our https server
+        this.webSocketServer.setupWebSocket(httpsServer);
+    }
+
+    /**
+     * Creates an HTTPS server using the stored certificate and key.
+     */
+    protected async createHttpsServer(): Promise<Server> {
+        let credentials: { cert: string; key: string };
+        try {
+            credentials = {
+                cert: await this.fileSystem.read(this.certPath),
+                key: await this.fileSystem.read(this.keyPath),
+            };
+        } catch (err: unknown) {
+            const timer = new Timer();
+            credentials = await this.generateSelfSignedCertificate();
+            this.logger.debug(`Generating self-signed SSL certificate took: ${timer.getTime("sec")}s`);
+        }
+
+        const options: https.ServerOptions = {
+            cert: credentials.cert,
+            key: credentials.key,
+            minVersion: "TLSv1.2",
+            maxVersion: "TLSv1.3",
+        };
+        return https.createServer(options);
+    }
+
+    /**
+     * Generates a self-signed certificate and returns an object with the cert and key.
+     */
+    protected async generateSelfSignedCertificate(): Promise<{ cert: string; key: string }> {
+        const attrs = [{ name: "commonName", value: "localhost" }];
+        const pems = generate(attrs, {
+            keySize: 4096,
+            days: 3653, // Ten years
+            algorithm: "sha256",
+            extensions: [
+                {
+                    name: "subjectAltName",
+                    altNames: [
+                        { type: 2, value: "localhost" }, // DNS
+                        { type: 7, ip: "127.0.0.1" }, // Resolving IP
+                    ],
+                },
+            ],
+        });
+
+        try {
+            await this.fileSystem.write(this.certPath, pems.cert);
+            await this.fileSystem.write(this.keyPath, pems.private);
+        } catch (err: unknown) {
+            this.logger.error(`There was an error writing the certificate or key to disk: ${err}`);
+        }
+
+        return { cert: pems.cert, key: pems.private };
     }
 
     protected async handleRequest(req: IncomingMessage, resp: ServerResponse): Promise<void> {
@@ -102,7 +166,7 @@ export class HttpServer {
      * @param remoteAddress Address to check
      * @returns True if its local
      */
-    protected isLocalRequest(remoteAddress: string): boolean {
+    protected isLocalRequest(remoteAddress: string | undefined): boolean | undefined {
         if (!remoteAddress) {
             return undefined;
         }

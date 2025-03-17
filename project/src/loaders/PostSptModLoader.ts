@@ -1,9 +1,10 @@
+import { ProgramStatics } from "@spt/ProgramStatics";
 import { ModTypeCheck } from "@spt/loaders/ModTypeCheck";
 import { PreSptModLoader } from "@spt/loaders/PreSptModLoader";
 import { IPostSptLoadMod } from "@spt/models/external/IPostSptLoadMod";
 import { IPostSptLoadModAsync } from "@spt/models/external/IPostSptLoadModAsync";
 import { IModLoader } from "@spt/models/spt/mod/IModLoader";
-import { ILogger } from "@spt/models/spt/utils/ILogger";
+import type { ILogger } from "@spt/models/spt/utils/ILogger";
 import { LocalisationService } from "@spt/services/LocalisationService";
 import { DependencyContainer, inject, injectable } from "tsyringe";
 
@@ -23,7 +24,7 @@ export class PostSptModLoader implements IModLoader {
     }
 
     public async load(): Promise<void> {
-        if (globalThis.G_MODS_ENABLED) {
+        if (ProgramStatics.MODS) {
             this.container = this.preSptModLoader.getContainer();
             await this.executeModsAsync();
         }

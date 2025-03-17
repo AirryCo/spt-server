@@ -13,7 +13,7 @@ import { GameEditions } from "@spt/models/enums/GameEditions";
 import { Money } from "@spt/models/enums/Money";
 import { Traders } from "@spt/models/enums/Traders";
 import { ITraderConfig } from "@spt/models/spt/config/ITraderConfig";
-import { ILogger } from "@spt/models/spt/utils/ILogger";
+import type { ILogger } from "@spt/models/spt/utils/ILogger";
 import { ConfigServer } from "@spt/servers/ConfigServer";
 import { DatabaseService } from "@spt/services/DatabaseService";
 import { FenceService } from "@spt/services/FenceService";
@@ -504,7 +504,8 @@ export class TraderHelper {
             // Get loyalty level details player has achieved with this trader
             // Uses lowest loyalty level as this function is used before a player has logged into server
             // We have no idea what player loyalty is with traders
-            const traderBuyBackPricePercent = traderBase.loyaltyLevels[0].buy_price_coef;
+            // buy_price_coef is the inverse percentage, must subtract from 100 to get proper buyback percent
+            const traderBuyBackPricePercent = 100 - traderBase.loyaltyLevels[0].buy_price_coef;
 
             const itemHandbookPrice = this.handbookHelper.getTemplatePrice(tpl);
             const priceTraderBuysItemAt = Math.round(

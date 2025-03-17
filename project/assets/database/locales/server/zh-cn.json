@@ -627,6 +627,7 @@
     "ragfair-unable_to_purchase_0_count_item": "无法购买数量为0的物品：%s",
     "ragfair-unable_to_remove_offer_doesnt_exist": "无法移除id：%s的报价，因为跳蚤市场中未找到",
     "ragfair-unable_to_remove_offer_not_found_in_profile": "存档：{{profileId}}中找不到报价：{{offerId}}因为报价未定义，正在创建",
+    "ragfair-generating_offers": "正在生成跳蚤报价……",
     "release-beta-disclaimer": "按下“OK”即表示您同意您不会获得任何技术支持，且该版本仅用于错误测试。 此版本不代表实际游戏体验，模组已被禁用，可能需要用户频繁新建存档。 在SPT官方Discord的报告频道里报告所有错误，或在SPT网站的问题页面报告。 如果您在指定时间内不按下“OK”，游戏将自动关闭。",
     "release-beta-disclaimer-accept": "用户已接受测试版免责声明",
     "release-beta-disclaimer-mods-enabled": "按下“OK”即表示您同意您不会获得任何技术支持，且该版本仅用于错误测试。 此版本不代表实际游戏体验，模组已启用，请不要报告模组产生的问题，也请别催促模组作者更新模组。 在SPT官方Discord的报告频道里报告所有错误，或在SPT网站的问题页面报告。 如果您在指定时间内不按下“OK”，游戏将自动关闭。",
@@ -725,7 +726,6 @@
     "websocket-socket_lost_deleting_handle": "[WS] Socket丢失，正在删除句柄",
     "websocket-started": "websocket启动于%s",
     "chatbot-cannot_accept_any_more_of_gift": "你无法再接收这个礼物",
-    "chatbot-halloween_event_enabled": "万圣节活动已开启，请在进入战局前重启你的游戏",
     "chatbot-added_stash_rows_please_restart": "增加了2行仓库空间，请重启你的游戏",
     "chatbot-snow_enabled": "在服务器重新启动之前，之后所有的战局都将是雪地"
 }

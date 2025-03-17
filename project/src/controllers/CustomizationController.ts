@@ -1,17 +1,30 @@
 import { ProfileHelper } from "@spt/helpers/ProfileHelper";
-import { IPmcData } from "@spt/models/eft/common/IPmcData";
-import { ISuit } from "@spt/models/eft/common/tables/ITrader";
+import { IEmptyRequestData } from "@spt/models/eft/common/IEmptyRequestData";
+import type { IPmcData } from "@spt/models/eft/common/IPmcData";
 import {
+    CustomisationSource,
+    CustomisationType,
+    type ICustomisationStorage,
+} from "@spt/models/eft/common/tables/ICustomisationStorage";
+import type { ISuit } from "@spt/models/eft/common/tables/ITrader";
+import type {
     IBuyClothingRequestData,
     IPaymentItemForClothing,
 } from "@spt/models/eft/customization/IBuyClothingRequestData";
-import { IWearClothingRequestData } from "@spt/models/eft/customization/IWearClothingRequestData";
-import { IItemEventRouterResponse } from "@spt/models/eft/itemEvent/IItemEventRouterResponse";
-import { ILogger } from "@spt/models/spt/utils/ILogger";
+import type {
+    CustomizationSetOption,
+    ICustomizationSetRequest,
+} from "@spt/models/eft/customization/ICustomizationSetRequest";
+import type { IHideoutCustomisation } from "@spt/models/eft/hideout/IHideoutCustomisation";
+import type { IItemEventRouterResponse } from "@spt/models/eft/itemEvent/IItemEventRouterResponse";
+import { IProcessBuyTradeRequestData } from "@spt/models/eft/trade/IProcessBuyTradeRequestData";
+import type { ILogger } from "@spt/models/spt/utils/ILogger";
 import { EventOutputHolder } from "@spt/routers/EventOutputHolder";
 import { SaveServer } from "@spt/servers/SaveServer";
 import { DatabaseService } from "@spt/services/DatabaseService";
 import { LocalisationService } from "@spt/services/LocalisationService";
+import { PaymentService } from "@spt/services/PaymentService";
+import type { ICloner } from "@spt/utils/cloners/ICloner";
 import { inject, injectable } from "tsyringe";
 
 @injectable()
@@ -28,6 +41,8 @@ export class CustomizationController {
         @inject("SaveServer") protected saveServer: SaveServer,
         @inject("LocalisationService") protected localisationService: LocalisationService,
         @inject("ProfileHelper") protected profileHelper: ProfileHelper,
+        @inject("PaymentService") protected paymentService: PaymentService,
+        @inject("PrimaryCloner") protected cloner: ICloner,
     ) {}
 
     /**
@@ -55,34 +70,6 @@ export class CustomizationController {
     }
 
     /**
-     * Handle CustomizationWear event
-     * Equip one to many clothing items to player
-     */
-    public wearClothing(
-        pmcData: IPmcData,
-        wearClothingRequest: IWearClothingRequestData,
-        sessionID: string,
-    ): IItemEventRouterResponse {
-        for (const suitId of wearClothingRequest.suites) {
-            // Find desired clothing item in db
-            const dbSuit = this.databaseService.getCustomization()[suitId];
-
-            // Legs
-            if (dbSuit._parent === this.clothingIds.lowerParentId) {
-                pmcData.Customization.Feet = dbSuit._props.Feet;
-            }
-
-            // Torso
-            if (dbSuit._parent === this.clothingIds.upperParentId) {
-                pmcData.Customization.Body = dbSuit._props.Body;
-                pmcData.Customization.Hands = dbSuit._props.Hands;
-            }
-        }
-
-        return this.eventOutputHolder.getOutput(sessionID);
-    }
-
-    /**
      * Handle CustomizationBuy event
      * Purchase/unlock a clothing item from a trader
      * @param pmcData Player profile
@@ -90,7 +77,7 @@ export class CustomizationController {
      * @param sessionId Session id
      * @returns IItemEventRouterResponse
      */
-    public buyClothing(
+    public buyCustomisation(
         pmcData: IPmcData,
         buyClothingRequest: IBuyClothingRequestData,
         sessionId: string,
@@ -124,6 +111,14 @@ export class CustomizationController {
 
         // Add clothing to profile
         this.saveServer.getProfile(sessionId).suits.push(suitId);
+
+        // TODO: Merge with function this.profileHelper.addHideoutCustomisationUnlock
+        const rewardToStore: ICustomisationStorage = {
+            id: suitId,
+            source: CustomisationSource.UNLOCKED_IN_GAME,
+            type: CustomisationType.SUITE,
+        };
+        this.saveServer.getProfile(sessionId).customisationUnlocks.push(rewardToStore);
 
         return output;
     }
@@ -161,68 +156,21 @@ export class CustomizationController {
         output: IItemEventRouterResponse,
     ): void {
         for (const inventoryItemToProcess of itemsToPayForClothingWith) {
-            this.payForClothingItem(sessionId, pmcData, inventoryItemToProcess, output);
-        }
-    }
-
-    /**
-     * Update output object and player profile with purchase details for single piece of clothing
-     * @param sessionId Session id
-     * @param pmcData Player profile
-     * @param paymentItemDetails Payment details
-     * @param output Client response
-     */
-    protected payForClothingItem(
-        sessionId: string,
-        pmcData: IPmcData,
-        paymentItemDetails: IPaymentItemForClothing,
-        output: IItemEventRouterResponse,
-    ): void {
-        const inventoryItem = pmcData.Inventory.items.find((x) => x._id === paymentItemDetails.id);
-        if (!inventoryItem) {
-            this.logger.error(
-                this.localisationService.getText(
-                    "customisation-unable_to_find_clothing_item_in_inventory",
-                    paymentItemDetails.id,
-                ),
-            );
-
-            return;
-        }
-
-        if (paymentItemDetails.del) {
-            output.profileChanges[sessionId].items.del.push(inventoryItem);
-            pmcData.Inventory.items.splice(pmcData.Inventory.items.indexOf(inventoryItem), 1);
-        }
-
-        // No upd, add a default
-        inventoryItem.upd ||= {
-            StackObjectsCount: 1,
-        };
-
-        // Nullguard
-        if (typeof inventoryItem.upd.StackObjectsCount === "undefined") {
-            inventoryItem.upd.StackObjectsCount = 1;
-        }
-
-        // Needed count to buy is same as current stack
-        if (inventoryItem.upd.StackObjectsCount === paymentItemDetails.count) {
-            output.profileChanges[sessionId].items.del.push(inventoryItem);
-            pmcData.Inventory.items.splice(pmcData.Inventory.items.indexOf(inventoryItem), 1);
-
-            return;
-        }
-
-        if (inventoryItem.upd.StackObjectsCount > paymentItemDetails.count) {
-            inventoryItem.upd.StackObjectsCount -= paymentItemDetails.count;
-            output.profileChanges[sessionId].items.change.push({
-                _id: inventoryItem._id,
-                _tpl: inventoryItem._tpl,
-                parentId: inventoryItem.parentId,
-                slotId: inventoryItem.slotId,
-                location: inventoryItem.location,
-                upd: { StackObjectsCount: inventoryItem.upd.StackObjectsCount },
-            });
+            const request: IProcessBuyTradeRequestData = {
+                scheme_items: [
+                    {
+                        id: inventoryItemToProcess.id,
+                        count: inventoryItemToProcess.count,
+                    },
+                ],
+                tid: "5ac3b934156ae10c4430e83c",
+                Action: "buy_from_trader",
+                type: "",
+                item_id: "",
+                count: 0,
+                scheme_id: 0,
+            };
+            this.paymentService.payMoney(pmcData, request, sessionId, output);
         }
     }
 
@@ -237,5 +185,77 @@ export class CustomizationController {
         }
 
         return result;
+    }
+
+    /** Handle client/hideout/customization/offer/list */
+    public getHideoutCustomisation(sessionID: string, info: IEmptyRequestData): IHideoutCustomisation {
+        return this.databaseService.getHideout().customisation;
+    }
+
+    /** Handle client/customization/storage */
+    public getCustomisationStorage(sessionID: string, info: IEmptyRequestData): ICustomisationStorage[] {
+        const customisationResultsClone = this.cloner.clone(this.databaseService.getTemplates().customisationStorage);
+
+        const profile = this.profileHelper.getFullProfile(sessionID);
+        if (!profile) {
+            return customisationResultsClone;
+        }
+
+        // Append customisations unlocked by player to results
+        customisationResultsClone.push(...(profile.customisationUnlocks ?? []));
+
+        return customisationResultsClone;
+    }
+
+    /** Handle CustomizationSet event */
+    public setCustomisation(
+        sessionId: string,
+        request: ICustomizationSetRequest,
+        pmcData: IPmcData,
+    ): IItemEventRouterResponse {
+        for (const customisation of request.customizations) {
+            switch (customisation.type) {
+                case "dogTag":
+                    pmcData.Customization.DogTag = customisation.id;
+                    break;
+                case "suite":
+                    this.applyClothingItemToProfile(customisation, pmcData);
+                    break;
+                default:
+                    this.logger.error(`Unhandled customisation type: ${customisation.type}`);
+                    break;
+            }
+        }
+
+        return this.eventOutputHolder.getOutput(sessionId);
+    }
+
+    /**
+     * Applies a purchsed suit to the players doll
+     * @param customisation Suit to apply to profile
+     * @param pmcData Profile to update
+     */
+    protected applyClothingItemToProfile(customisation: CustomizationSetOption, pmcData: IPmcData): void {
+        const dbSuit = this.databaseService.getCustomization()[customisation.id];
+        if (!dbSuit) {
+            this.logger.error(
+                `Unable to find suit customisation id: ${customisation.id}, cannot apply clothing to player profile: ${pmcData._id}`,
+            );
+
+            return;
+        }
+
+        // Body
+        if (dbSuit._parent === this.clothingIds.upperParentId) {
+            pmcData.Customization.Body = dbSuit._props.Body;
+            pmcData.Customization.Hands = dbSuit._props.Hands;
+
+            return;
+        }
+
+        // Feet
+        if (dbSuit._parent === this.clothingIds.lowerParentId) {
+            pmcData.Customization.Feet = dbSuit._props.Feet;
+        }
     }
 }

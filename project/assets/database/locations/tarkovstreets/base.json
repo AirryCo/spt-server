@@ -361,6 +361,28 @@
       "Time": -1,
       "TriggerId": "",
       "TriggerName": ""
+    },
+    {
+      "BossChance": 0,
+      "BossDifficult": "normal",
+      "BossEscortAmount": "0",
+      "BossEscortDifficult": "normal",
+      "BossEscortType": "gifter",
+      "BossName": "gifter",
+      "BossPlayer": false,
+      "BossZone": "",
+      "Delay": 0,
+      "ForceSpawn": false,
+      "IgnoreMaxBots": true,
+      "RandomTimeSpawn": false,
+      "SpawnMode": [
+        "pve",
+        "regular"
+      ],
+      "Supports": null,
+      "Time": -1,
+      "TriggerId": "",
+      "TriggerName": ""
     }
   ],
   "BotAssault": 80,
@@ -479,18 +501,30 @@
     "DistToActivatePvE": 260,
     "DistToSleep": 300,
     "DistToSleepPvE": 300,
+    "FogVisibilityDistanceCoef": -1.6,
+    "FogVisibilitySpeedCoef": 0,
     "GainSight": 1,
+    "LockSpawnCheckRadius": 150,
+    "LockSpawnCheckRadiusPvE": 150,
+    "LockSpawnStartTime": 10,
+    "LockSpawnStartTimePvE": 10,
+    "LockSpawnStepTime": 50,
+    "LockSpawnStepTimePvE": 50,
     "MarksmanAccuratyCoef": 1,
     "MaxExfiltrationTime": 2200,
     "MinExfiltrationTime": 1800,
+    "NonWaveSpawnBotsLimitPerPlayer": 10,
+    "NonWaveSpawnBotsLimitPerPlayerPvE": 15,
+    "RainVisibilityDistanceCoef": 0.35,
+    "RainVisibilitySpeedCoef": 0,
     "Scattering": 1,
     "VisibleDistance": 1
   },
   "BotMarksman": 20,
-  "BotMax": 23,
-  "BotMaxPlayer": 10,
+  "BotMax": 48,
+  "BotMaxPlayer": 0,
   "BotMaxPvE": 48,
-  "BotMaxTimePlayer": 1000,
+  "BotMaxTimePlayer": 0,
   "BotNormal": 40,
   "BotSpawnCountStep": 3,
   "BotSpawnPeriodCheck": 14,
@@ -499,7 +533,7 @@
   "BotSpawnTimeOnMax": 360,
   "BotSpawnTimeOnMin": 290,
   "BotStart": 122,
-  "BotStartPlayer": 550,
+  "BotStartPlayer": 0,
   "BotStop": 2200,
   "Description": "The downtown Tarkov with banks, malls, hotels and all the other things a striving modern city could have needed.",
   "DisabledForScav": false,
@@ -576,8 +610,7 @@
       ],
       "CrowdCooldownPerPlayerSec": 300,
       "CrowdsLimit": 2,
-      "InfectedLookCoeff": 2,
-      "InfectionPercentage": 0,
+      "InfectedLookCoeff": 0.5,
       "MaxCrowdAttackSpawnLimit": 18,
       "MinInfectionPercentage": 0,
       "MinSpawnDistToPlayer": 50,
@@ -594,6 +627,35 @@
   "GlobalContainerChanceModifier": 1,
   "GlobalLootChanceModifier": 0.17,
   "GlobalLootChanceModifierPvE": 0.37,
+  "HeatmapCellSize": {
+    "x": 1,
+    "y": 2,
+    "z": 1
+  },
+  "HeatmapLayers": [
+    "AllCharactersPositions",
+    "AllBotsPositions",
+    "AllRealPlayersPositions",
+    "RealPlayersSavagesPositions",
+    "RealPlayersSavagesDeads",
+    "RealPlayersSavagesDamages",
+    "RealPlayersPmcPositions",
+    "RealPlayersPmcDeads",
+    "RealPlayersPmcDamages",
+    "RealPlayersPmcLaydownPositions",
+    "RealPlayersPmcEquipmentDropPositions",
+    "RealPlayersPmcHealingPositions",
+    "BotsBossPositions",
+    "BotsBossDeads",
+    "BotsBossDamages",
+    "BotsSavagesPositions",
+    "BotsSavagesDeads",
+    "BotsSavagesDamages",
+    "AllCharactersDamageSources",
+    "RealPlayerDamageSources",
+    "BotsDamageSources",
+    "LootPositions"
+  ],
   "IconX": 670,
   "IconY": 620,
   "Id": "TarkovStreets",
@@ -603,32 +665,36 @@
   "Loot": [],
   "MatchMakerMinPlayersByWaitTime": [
     {
+      "minPlayers": 14,
+      "time": 240
+    },
+    {
       "minPlayers": 12,
-      "time": 60
+      "time": 300
     },
     {
       "minPlayers": 10,
-      "time": 70
+      "time": 360
     },
     {
       "minPlayers": 8,
-      "time": 120
+      "time": 390
     },
     {
-      "minPlayers": 7,
-      "time": 180
+      "minPlayers": 6,
+      "time": 420
     },
     {
-      "minPlayers": 5,
-      "time": 250
+      "minPlayers": 4,
+      "time": 450
     },
     {
-      "minPlayers": 3,
-      "time": 330
+      "minPlayers": 2,
+      "time": 480
     },
     {
       "minPlayers": 1,
-      "time": 420
+      "time": 510
     }
   ],
   "MaxBotPerZone": 5,
@@ -1236,36 +1302,6 @@
         "z": 291.57
       },
       "Rotation": 130.584167,
-      "Sides": [
-        "Savage"
-      ]
-    },
-    {
-      "BotZoneName": "ZoneColumn",
-      "Categories": [
-        "All"
-      ],
-      "ColliderParams": {
-        "_parent": "SpawnSphereParams",
-        "_props": {
-          "Center": {
-            "x": 0,
-            "y": 0,
-            "z": 0
-          },
-          "Radius": 40
-        }
-      },
-      "CorePointId": 14,
-      "DelayToCanSpawnSec": 40,
-      "Id": "0aea1cd2-c0d4-4aa5-a755-d4980deefa0e",
-      "Infiltration": "",
-      "Position": {
-        "x": 39.23,
-        "y": 2.872,
-        "z": 222.293
-      },
-      "Rotation": 359.110931,
       "Sides": [
         "Savage"
       ]
@@ -3962,7 +3998,7 @@
             "y": 0,
             "z": 0
           },
-          "Radius": 30
+          "Radius": 70
         }
       },
       "CorePointId": 0,
@@ -4653,7 +4689,7 @@
             "y": 0,
             "z": 0
           },
-          "Radius": 30
+          "Radius": 70
         }
       },
       "CorePointId": 0,
@@ -5285,7 +5321,7 @@
             "y": 0,
             "z": 0
           },
-          "Radius": 30
+          "Radius": 70
         }
       },
       "CorePointId": 0,
@@ -7481,7 +7517,7 @@
             "y": 0,
             "z": 0
           },
-          "Radius": 30
+          "Radius": 70
         }
       },
       "CorePointId": 0,
@@ -7519,11 +7555,11 @@
       "Id": "8285cec6-97d0-431f-82ff-e57d864866ca",
       "Infiltration": "E1_2",
       "Position": {
-        "x": -31.202,
-        "y": 2.615,
-        "z": 465.022
+        "x": -77.602,
+        "y": 3.235,
+        "z": 336.713
       },
-      "Rotation": 181.253433,
+      "Rotation": 4.12763071,
       "Sides": [
         "All"
       ]
@@ -7993,7 +8029,7 @@
             "y": 0,
             "z": 0
           },
-          "Radius": 30
+          "Radius": 70
         }
       },
       "CorePointId": 0,
@@ -8121,11 +8157,11 @@
       "Id": "8ee254ee-954f-4f9f-b04d-23abb8cecf7e",
       "Infiltration": "E1_2",
       "Position": {
-        "x": -31.017,
-        "y": 2.615,
-        "z": 466.544
+        "x": -81.37,
+        "y": 3.296,
+        "z": 338.106
       },
-      "Rotation": 181.253433,
+      "Rotation": 5.292642,
       "Sides": [
         "All"
       ]
@@ -8211,11 +8247,11 @@
       "Id": "906d71d5-db71-47c1-8a58-0f48f58daea1",
       "Infiltration": "E1_2",
       "Position": {
-        "x": -32.585,
-        "y": 2.615,
-        "z": 466.542
+        "x": -78.998,
+        "y": 3.308,
+        "z": 336.759
       },
-      "Rotation": 181.253433,
+      "Rotation": 0.5500601,
       "Sides": [
         "All"
       ]
@@ -8392,11 +8428,11 @@
       "Id": "95453f5c-5ca5-405f-8872-ea088ca155c3",
       "Infiltration": "E1_2",
       "Position": {
-        "x": -32.607,
-        "y": 2.615,
-        "z": 465.087
+        "x": -81.293,
+        "y": 3.301,
+        "z": 336.31
       },
-      "Rotation": 181.253433,
+      "Rotation": 355.580658,
       "Sides": [
         "All"
       ]
@@ -11986,36 +12022,6 @@
       ]
     },
     {
-      "BotZoneName": "ZoneColumn",
-      "Categories": [
-        "All"
-      ],
-      "ColliderParams": {
-        "_parent": "SpawnSphereParams",
-        "_props": {
-          "Center": {
-            "x": 0,
-            "y": 0,
-            "z": 0
-          },
-          "Radius": 40
-        }
-      },
-      "CorePointId": 14,
-      "DelayToCanSpawnSec": 40,
-      "Id": "de658a62-65ad-4157-bd1d-282609a69eea",
-      "Infiltration": "",
-      "Position": {
-        "x": 39.309,
-        "y": 2.816,
-        "z": 220.356
-      },
-      "Rotation": 359.110931,
-      "Sides": [
-        "Savage"
-      ]
-    },
-    {
       "BotZoneName": "",
       "Categories": [
         "Player"
@@ -13360,11 +13366,11 @@
       "Id": "f6cc8fe9-efc2-4b01-bd68-87565e068436",
       "Infiltration": "E1_2",
       "Position": {
-        "x": -29.893,
-        "y": 2.615,
-        "z": 465.548
+        "x": -76.262,
+        "y": 3.337,
+        "z": 336.625
       },
-      "Rotation": 181.253433,
+      "Rotation": 350.739258,
       "Sides": [
         "All"
       ]
@@ -13763,6 +13769,56 @@
   ],
   "UnixDateTime": 1621511450,
   "_Id": "5714dc692459777137212e12",
+  "areas": {
+    "SPAWNS/ScavPMCspawn (1)": {
+      "center": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "infiltrationZone": "Factory",
+      "orientation": 100.615387,
+      "position": {
+        "x": 0.16,
+        "y": 1.36,
+        "z": 137.41
+      },
+      "sides": [
+        "Usec",
+        "Bear",
+        "Savage"
+      ],
+      "size": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    },
+    "SPAWNS/ScavPMCspawn (2)": {
+      "center": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "infiltrationZone": "Factory",
+      "orientation": 97.28231,
+      "position": {
+        "x": 2.08,
+        "y": 1.42,
+        "z": 142.93
+      },
+      "sides": [
+        "Usec",
+        "Bear",
+        "Savage"
+      ],
+      "size": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      }
+    }
+  },
   "doors": [],
   "exit_access_time": 40,
   "exit_count": 1,
@@ -14045,6 +14101,15 @@
   ],
   "matching_min_seconds": 60,
   "sav_summon_seconds": 60,
+  "secretExits": [
+    {
+      "EligibleForPMC": true,
+      "EligibleForScav": true,
+      "ExfiltrationTime": 15,
+      "Id": "675aaae1dcf102478202c537",
+      "Name": "streets_secret_onyx"
+    }
+  ],
   "tmp_location_field_remove_me": 0,
   "transits": [
     {
@@ -14056,7 +14121,7 @@
       "location": "Sandbox_high",
       "name": "STR_TRANSIT_3",
       "target": "65b8d6f5cdde2479cb2a3125",
-      "time": 30
+      "time": 20
     },
     {
       "activateAfterSec": 60,
@@ -14067,7 +14132,7 @@
       "location": "Interchange",
       "name": "STR_TRANSIT_4",
       "target": "5714dbc024597771384a510d",
-      "time": 30
+      "time": 20
     },
     {
       "activateAfterSec": 60,
@@ -14078,7 +14143,7 @@
       "location": "laboratory",
       "name": "STR_TRANSIT_5",
       "target": "5b0fc42d86f7744a585f9105",
-      "time": 30
+      "time": 20
     }
   ],
   "users_gather_seconds": 0,

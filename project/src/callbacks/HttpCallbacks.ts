@@ -7,7 +7,7 @@ export class HttpCallbacks implements OnLoad {
     constructor(@inject("HttpServer") protected httpServer: HttpServer) {}
 
     public async onLoad(): Promise<void> {
-        this.httpServer.load();
+        await this.httpServer.load();
     }
 
     public getRoute(): string {

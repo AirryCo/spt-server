@@ -12,7 +12,8 @@ import { IPmcData } from "@spt/models/eft/common/IPmcData";
 import { IItem } from "@spt/models/eft/common/tables/IItem";
 import { ITraderAssort } from "@spt/models/eft/common/tables/ITrader";
 import { IItemEventRouterResponse } from "@spt/models/eft/itemEvent/IItemEventRouterResponse";
-import { ISptProfile, ISystemData } from "@spt/models/eft/profile/ISptProfile";
+import { ISptProfile } from "@spt/models/eft/profile/ISptProfile";
+import { ISystemData } from "@spt/models/eft/profile/ISystemData";
 import { IRagfairOffer } from "@spt/models/eft/ragfair/IRagfairOffer";
 import { ISearchRequestData, OfferOwnerType } from "@spt/models/eft/ragfair/ISearchRequestData";
 import { BaseClasses } from "@spt/models/enums/BaseClasses";
@@ -24,7 +25,7 @@ import { Traders } from "@spt/models/enums/Traders";
 import { IBotConfig } from "@spt/models/spt/config/IBotConfig";
 import { IQuestConfig } from "@spt/models/spt/config/IQuestConfig";
 import { IRagfairConfig, ITieredFlea } from "@spt/models/spt/config/IRagfairConfig";
-import { ILogger } from "@spt/models/spt/utils/ILogger";
+import type { ILogger } from "@spt/models/spt/utils/ILogger";
 import { EventOutputHolder } from "@spt/routers/EventOutputHolder";
 import { ConfigServer } from "@spt/servers/ConfigServer";
 import { SaveServer } from "@spt/servers/SaveServer";
@@ -156,7 +157,9 @@ export class RagfairOfferHelper {
             // Loop over all flea types to find the matching one
             for (const tieredItemType of tieredFleaLimitTypes) {
                 if (this.itemHelper.isOfBaseclass(offerItemTpl, tieredItemType)) {
+                    // The items type matches one we have flagged as tiered
                     if (playerLevel < tieredFlea.unlocksType[tieredItemType]) {
+                        // Players level is below threshhold, hide offer
                         offer.locked = true;
 
                         return;
@@ -175,7 +178,7 @@ export class RagfairOfferHelper {
      * @returns Matching IRagfairOffer objects
      */
     public getOffersThatRequireItem(searchRequest: ISearchRequestData, pmcData: IPmcData): IRagfairOffer[] {
-        // Get all offers that requre the desired item and filter out offers from non traders if player below ragifar unlock
+        // Get all offers that require the desired item and filter out offers from non traders if player below ragifar unlock
         const requiredOffers = this.ragfairRequiredItemsService.getRequiredItemsById(searchRequest.neededSearchId);
         const tieredFlea = this.ragfairConfig.tieredFlea;
         const tieredFleaLimitTypes = Object.keys(tieredFlea.unlocksType);
@@ -215,6 +218,10 @@ export class RagfairOfferHelper {
 
         for (const desiredItemTpl of Object.keys(searchRequest.buildItems)) {
             const matchingOffers = this.ragfairOfferService.getOffersOfType(desiredItemTpl);
+            if (!matchingOffers) {
+                // No offers found for this item, skip
+                continue;
+            }
             for (const offer of matchingOffers) {
                 // Dont show pack offers
                 if (offer.sellInOnePiece) {
@@ -264,6 +271,11 @@ export class RagfairOfferHelper {
                         tieredFleaLimitTypes,
                         pmcData.Info.Level,
                     );
+
+                    // Do not add offer to build if user does not have access to it
+                    if (offer.locked) {
+                        continue;
+                    }
                 }
 
                 const key = offer.items[0]._tpl;
@@ -521,24 +533,27 @@ export class RagfairOfferHelper {
 
     /**
      * Complete the selling of players' offer
-     * @param sessionID Session id
+     * @param offerOwnerSessionId Session id
      * @param offer Sold offer details
      * @param boughtAmount Amount item was purchased for
      * @returns IItemEventRouterResponse
      */
-    public completeOffer(sessionID: string, offer: IRagfairOffer, boughtAmount: number): IItemEventRouterResponse {
+    public completeOffer(
+        offerOwnerSessionId: string,
+        offer: IRagfairOffer,
+        boughtAmount: number,
+    ): IItemEventRouterResponse {
         const itemTpl = offer.items[0]._tpl;
         let paymentItemsToSendToPlayer: IItem[] = [];
         const offerStackCount = offer.items[0].upd.StackObjectsCount;
+        const sellerProfile = this.profileHelper.getPmcProfile(offerOwnerSessionId);
 
         // Pack or ALL items of a multi-offer were bought - remove entire ofer
-        if (offer.sellInOnePiece || boughtAmount === offerStackCount) {
-            this.deleteOfferById(sessionID, offer._id);
+        if (offer.sellInOnePiece || boughtAmount === offer.quantity) {
+            this.deleteOfferById(offerOwnerSessionId, offer._id);
         } else {
-            const offerRootItem = offer.items[0];
-
-            // Reduce offer root items stack count
-            offerRootItem.upd.StackObjectsCount -= boughtAmount;
+            // Partial purchase, reduce quantity by amount purchased
+            offer.quantity -= boughtAmount;
         }
 
         // Assemble payment to send to seller now offer was purchased
@@ -568,24 +583,26 @@ export class RagfairOfferHelper {
 
         const ragfairDetails = {
             offerId: offer._id,
-            count: offer.sellInOnePiece ? offerStackCount : boughtAmount, // pack-offers NEED to the full item count otherwise it only removes 1 from the pack, leaving phantom offer on client ui
+            count: offer.sellInOnePiece ? offerStackCount : boughtAmount, // pack-offers NEED to to be the full item count otherwise it only removes 1 from the pack, leaving phantom offer on client ui
             handbookId: itemTpl,
         };
 
         this.mailSendService.sendDirectNpcMessageToPlayer(
-            sessionID,
+            offerOwnerSessionId,
             this.traderHelper.getTraderById(Traders.RAGMAN),
             MessageType.FLEAMARKET_MESSAGE,
             this.getLocalisedOfferSoldMessage(itemTpl, boughtAmount),
             paymentItemsToSendToPlayer,
-            this.timeUtil.getHoursAsSeconds(
-                this.questHelper.getMailItemRedeemTimeHoursForProfile(this.profileHelper.getPmcProfile(sessionID)),
-            ),
+            this.timeUtil.getHoursAsSeconds(this.questHelper.getMailItemRedeemTimeHoursForProfile(sellerProfile)),
             undefined,
             ragfairDetails,
         );
 
-        return this.eventOutputHolder.getOutput(sessionID);
+        // Adjust sellers sell sum values
+        sellerProfile.RagfairInfo.sellSum ||= 0;
+        sellerProfile.RagfairInfo.sellSum += offer.summaryCost;
+
+        return this.eventOutputHolder.getOutput(offerOwnerSessionId);
     }
 
     /**

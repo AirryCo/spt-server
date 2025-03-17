@@ -14,7 +14,7 @@ import { QuestStatus } from "@spt/models/enums/QuestStatus";
 import { Traders } from "@spt/models/enums/Traders";
 import { IInventoryConfig } from "@spt/models/spt/config/IInventoryConfig";
 import { ITraderConfig } from "@spt/models/spt/config/ITraderConfig";
-import { ILogger } from "@spt/models/spt/utils/ILogger";
+import type { ILogger } from "@spt/models/spt/utils/ILogger";
 import { EventOutputHolder } from "@spt/routers/EventOutputHolder";
 import { ConfigServer } from "@spt/servers/ConfigServer";
 import { RagfairServer } from "@spt/servers/RagfairServer";
@@ -24,7 +24,7 @@ import { LocalisationService } from "@spt/services/LocalisationService";
 import { PaymentService } from "@spt/services/PaymentService";
 import { TraderPurchasePersisterService } from "@spt/services/TraderPurchasePersisterService";
 import { HttpResponseUtil } from "@spt/utils/HttpResponseUtil";
-import { ICloner } from "@spt/utils/cloners/ICloner";
+import type { ICloner } from "@spt/utils/cloners/ICloner";
 import { inject, injectable } from "tsyringe";
 
 @injectable()
@@ -73,31 +73,36 @@ export class TradeHelper {
         let offerItems: IItem[] = [];
         let buyCallback: (buyCount: number) => void;
         if (buyRequestData.tid.toLocaleLowerCase() === "ragfair") {
+            // Called when player purchases PMC offer from ragfair
             buyCallback = (buyCount: number) => {
                 const allOffers = this.ragfairServer.getOffers();
 
                 // We store ragfair offerid in buyRequestData.item_id
                 const offerWithItem = allOffers.find((x) => x._id === buyRequestData.item_id);
-                const itemPurchased = offerWithItem.items[0];
+                const rootItemPurchased = offerWithItem.items[0];
 
                 // Ensure purchase does not exceed trader item limit
-                const assortHasBuyRestrictions = this.itemHelper.hasBuyRestrictions(itemPurchased);
+                const assortHasBuyRestrictions = this.itemHelper.hasBuyRestrictions(rootItemPurchased);
                 if (assortHasBuyRestrictions) {
                     this.checkPurchaseIsWithinTraderItemLimit(
                         sessionID,
                         pmcData,
                         buyRequestData.tid,
-                        itemPurchased,
+                        rootItemPurchased,
                         buyRequestData.item_id,
                         buyCount,
                     );
 
-                    // Decrement trader item count
+                    // Decrement trader current purchase count in profile
                     const itemPurchaseDetails = {
                         items: [{ itemId: buyRequestData.item_id, count: buyCount }],
                         traderId: buyRequestData.tid,
                     };
-                    this.traderHelper.addTraderPurchasesToPlayerProfile(sessionID, itemPurchaseDetails, itemPurchased);
+                    this.traderHelper.addTraderPurchasesToPlayerProfile(
+                        sessionID,
+                        itemPurchaseDetails,
+                        rootItemPurchased,
+                    );
                 }
             };
 

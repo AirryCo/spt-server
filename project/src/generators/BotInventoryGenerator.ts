@@ -18,8 +18,8 @@ import { EquipmentSlots } from "@spt/models/enums/EquipmentSlots";
 import { GameEditions } from "@spt/models/enums/GameEditions";
 import { ItemTpl } from "@spt/models/enums/ItemTpl";
 import { IGenerateEquipmentProperties } from "@spt/models/spt/bots/IGenerateEquipmentProperties";
-import { IBotConfig, IEquipmentFilterDetails } from "@spt/models/spt/config/IBotConfig";
-import { ILogger } from "@spt/models/spt/utils/ILogger";
+import { IBotConfig } from "@spt/models/spt/config/IBotConfig";
+import type { ILogger } from "@spt/models/spt/utils/ILogger";
 import { ConfigServer } from "@spt/servers/ConfigServer";
 import { BotEquipmentFilterService } from "@spt/services/BotEquipmentFilterService";
 import { BotEquipmentModPoolService } from "@spt/services/BotEquipmentModPoolService";
@@ -94,6 +94,7 @@ export class BotInventoryGenerator {
             botInventory,
             botLevel,
             chosenGameVersion,
+            isPmc,
             raidConfig,
         );
 
@@ -142,6 +143,7 @@ export class BotInventoryGenerator {
             hideoutAreaStashes: {},
             fastPanel: {},
             favoriteItems: [],
+            hideoutCustomizationStashId: "",
         };
     }
 
@@ -163,6 +165,7 @@ export class BotInventoryGenerator {
         botInventory: PmcInventory,
         botLevel: number,
         chosenGameVersion: string,
+        isPmc: boolean,
         raidConfig: IGetRaidConfigurationRequestData,
     ): void {
         // These will be handled later
@@ -232,7 +235,7 @@ export class BotInventoryGenerator {
             rootEquipmentSlot: EquipmentSlots.POCKETS,
             // Unheard profiles have unique sized pockets, TODO - handle this somewhere else in a better way
             rootEquipmentPool:
-                chosenGameVersion === GameEditions.UNHEARD
+                chosenGameVersion === GameEditions.UNHEARD && isPmc
                     ? { [ItemTpl.POCKETS_1X4_TUE]: 1 }
                     : templateInventory.equipment.Pockets,
             modPool: templateInventory.mods,

@@ -1,10 +1,11 @@
+import { ProgramStatics } from "@spt/ProgramStatics";
 import { OnLoad } from "@spt/di/OnLoad";
 import { BundleLoader } from "@spt/loaders/BundleLoader";
 import { ModTypeCheck } from "@spt/loaders/ModTypeCheck";
 import { PreSptModLoader } from "@spt/loaders/PreSptModLoader";
 import { IPostDBLoadMod } from "@spt/models/external/IPostDBLoadMod";
 import { IPostDBLoadModAsync } from "@spt/models/external/IPostDBLoadModAsync";
-import { ILogger } from "@spt/models/spt/utils/ILogger";
+import type { ILogger } from "@spt/models/spt/utils/ILogger";
 import { LocalisationService } from "@spt/services/LocalisationService";
 import { DependencyContainer, inject, injectable } from "tsyringe";
 
@@ -21,7 +22,7 @@ export class PostDBModLoader implements OnLoad {
     ) {}
 
     public async onLoad(): Promise<void> {
-        if (globalThis.G_MODS_ENABLED) {
+        if (ProgramStatics.MODS) {
             this.container = this.preSptModLoader.getContainer();
             await this.executeModsAsync();
             this.addBundles();

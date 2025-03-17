@@ -1,6 +1,6 @@
 import { BotHelper } from "@spt/helpers/BotHelper";
 import { IBotBase } from "@spt/models/eft/common/tables/IBotBase";
-import { ILogger } from "@spt/models/spt/utils/ILogger";
+import type { ILogger } from "@spt/models/spt/utils/ILogger";
 import { LocalisationService } from "@spt/services/LocalisationService";
 import { RandomUtil } from "@spt/utils/RandomUtil";
 import { inject, injectable } from "tsyringe";
@@ -45,11 +45,13 @@ export class BotGenerationCacheService {
             }
 
             this.logger.error(this.localisationService.getText("bot-cache_has_zero_bots_of_requested_type", key));
+
+            return null;
         }
 
         this.logger.error(this.localisationService.getText("bot-no_bot_type_in_cache", key));
 
-        return undefined;
+        return null;
     }
 
     /**

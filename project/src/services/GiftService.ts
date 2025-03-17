@@ -6,7 +6,7 @@ import { MessageType } from "@spt/models/enums/MessageType";
 import { Traders } from "@spt/models/enums/Traders";
 import { IGift, IGiftsConfig } from "@spt/models/spt/config/IGiftsConfig";
 import { ISendMessageDetails } from "@spt/models/spt/dialog/ISendMessageDetails";
-import { ILogger } from "@spt/models/spt/utils/ILogger";
+import type { ILogger } from "@spt/models/spt/utils/ILogger";
 import { ConfigServer } from "@spt/servers/ConfigServer";
 import { LocalisationService } from "@spt/services/LocalisationService";
 import { MailSendService } from "@spt/services/MailSendService";
@@ -216,11 +216,22 @@ export class GiftService {
         }
 
         if (giftId) {
-            const giftData = this.getGiftById(giftId);
             if (!this.profileHelper.playerHasRecievedMaxNumberOfGift(sessionId, giftId, 1)) {
                 // Hard-coded to send only one
                 this.sendGiftToPlayer(sessionId, giftId);
             }
+        }
+    }
+
+    /**
+     * Send player a gift with silent recieved check
+     * @param giftId Id of gift to send
+     * @param sessionId Session id of player to send to
+     * @param giftCount OPTIONAL How many to send
+     */
+    public sendGiftWithSilentReceivedCheck(giftId: string, sessionId: string, giftCount = 1) {
+        if (!this.profileHelper.playerHasRecievedMaxNumberOfGift(sessionId, giftId, giftCount)) {
+            this.sendGiftToPlayer(sessionId, giftId);
         }
     }
 }

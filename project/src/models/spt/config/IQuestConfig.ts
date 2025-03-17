@@ -60,6 +60,8 @@ export interface IRepeatableQuestConfig {
     freeChangesAvailable: number;
     freeChanges: number;
     keepDailyQuestTypeOnReplacement: boolean;
+    /** Reputation standing price for replacing a repeatable */
+    standingChangeCost: number[];
 }
 
 export interface IRewardScaling {

@@ -299,6 +299,28 @@
       "Time": -1,
       "TriggerId": "",
       "TriggerName": ""
+    },
+    {
+      "BossChance": 0,
+      "BossDifficult": "normal",
+      "BossEscortAmount": "0",
+      "BossEscortDifficult": "normal",
+      "BossEscortType": "gifter",
+      "BossName": "gifter",
+      "BossPlayer": false,
+      "BossZone": "",
+      "Delay": 0,
+      "ForceSpawn": false,
+      "IgnoreMaxBots": true,
+      "RandomTimeSpawn": false,
+      "SpawnMode": [
+        "regular",
+        "pve"
+      ],
+      "Supports": null,
+      "Time": -1,
+      "TriggerId": "",
+      "TriggerName": ""
     }
   ],
   "BotAssault": 100,
@@ -411,6 +433,84 @@
         "Warn": [
           "sectactPriestEvent"
         ]
+      },
+      {
+        "AlwaysEnemies": [
+          "pmcBEAR",
+          "pmcUSEC"
+        ],
+        "AlwaysFriends": [
+          "assault",
+          "marksman",
+          "peacefullZryachiyEvent",
+          "ravangeZryachiyEvent",
+          "gifter",
+          "bossBoar",
+          "bossKilla",
+          "bossBully",
+          "bossKnight",
+          "bossKojaniy",
+          "bossKolontay",
+          "bossPartisan",
+          "bossSanitar",
+          "bossTagilla",
+          "bossZryachiy"
+        ],
+        "BotRole": "bossGluhar"
+      },
+      {
+        "AlwaysEnemies": [
+          "pmcBEAR",
+          "pmcUSEC"
+        ],
+        "AlwaysFriends": [
+          "assault",
+          "marksman",
+          "peacefullZryachiyEvent",
+          "ravangeZryachiyEvent",
+          "gifter",
+          "bossBoar",
+          "bossKilla",
+          "bossBully",
+          "bossKnight",
+          "bossKojaniy",
+          "bossKolontay",
+          "bossPartisan",
+          "bossSanitar",
+          "bossTagilla",
+          "bossZryachiy"
+        ],
+        "BotRole": "pmcBot"
+      },
+      {
+        "AlwaysEnemies": [
+          "pmcBEAR",
+          "pmcUSEC"
+        ],
+        "AlwaysFriends": [
+          "bossKilla",
+          "marksman",
+          "peacefullZryachiyEvent",
+          "ravangeZryachiyEvent",
+          "gifter",
+          "bossBoar",
+          "bossBully",
+          "bossGluhar",
+          "bossKnight",
+          "bossKojaniy",
+          "bossKolontay",
+          "bossPartisan",
+          "bossSanitar",
+          "bossTagilla",
+          "bossZryachiy",
+          "exUsec",
+          "followerBigPipe",
+          "followerBirdEye",
+          "followerBully",
+          "pmcBot"
+        ],
+        "BotRole": "assault",
+        "SavagePlayerBehaviour": "Neutral"
       }
     ],
     "DistToActivate": 330,
@@ -418,19 +518,31 @@
     "DistToPersueAxemanCoef": 1.1,
     "DistToSleep": 350,
     "DistToSleepPvE": 350,
+    "FogVisibilityDistanceCoef": 0,
+    "FogVisibilitySpeedCoef": 0,
     "GainSight": 1.3,
     "KhorovodChance": 0,
+    "LockSpawnCheckRadius": 150,
+    "LockSpawnCheckRadiusPvE": 150,
+    "LockSpawnStartTime": 10,
+    "LockSpawnStartTimePvE": 10,
+    "LockSpawnStepTime": 50,
+    "LockSpawnStepTimePvE": 50,
     "MarksmanAccuratyCoef": 1,
     "MaxExfiltrationTime": 1800,
     "MinExfiltrationTime": 1200,
+    "NonWaveSpawnBotsLimitPerPlayer": 10,
+    "NonWaveSpawnBotsLimitPerPlayerPvE": 15,
+    "RainVisibilityDistanceCoef": 0.35,
+    "RainVisibilitySpeedCoef": 0,
     "Scattering": 0.6,
     "VisibleDistance": 1.3
   },
   "BotMarksman": 0,
-  "BotMax": 16,
-  "BotMaxPlayer": 7,
+  "BotMax": 28,
+  "BotMaxPlayer": 0,
   "BotMaxPvE": 28,
-  "BotMaxTimePlayer": 1000,
+  "BotMaxTimePlayer": 0,
   "BotNormal": 50,
   "BotSpawnCountStep": 3,
   "BotSpawnPeriodCheck": 15,
@@ -439,7 +551,7 @@
   "BotSpawnTimeOnMax": 320,
   "BotSpawnTimeOnMin": 260,
   "BotStart": 20,
-  "BotStartPlayer": 100,
+  "BotStartPlayer": 0,
   "BotStop": 1500,
   "Description": "The secret Federal State Reserve Agency base that, according to urban legends, contains enough supplies to last for years: food, medications and other resources, enough to survive an all-out nuclear war.",
   "DisabledForScav": false,
@@ -516,8 +628,7 @@
       ],
       "CrowdCooldownPerPlayerSec": 300,
       "CrowdsLimit": 2,
-      "InfectedLookCoeff": 2,
-      "InfectionPercentage": 0,
+      "InfectedLookCoeff": 0.5,
       "MaxCrowdAttackSpawnLimit": 18,
       "MinInfectionPercentage": 0,
       "MinSpawnDistToPlayer": 50,
@@ -526,6 +637,9 @@
       "ZombieCallPeriodSec": 1,
       "ZombieCallRadiusLimit": 125,
       "ZombieMultiplier": 5
+    },
+    "Khorovod": {
+      "Chance": 0
     }
   },
   "ForceOnlineRaidInPVE": false,
@@ -533,6 +647,35 @@
   "GlobalContainerChanceModifier": 1,
   "GlobalLootChanceModifier": 0.17,
   "GlobalLootChanceModifierPvE": 0.4,
+  "HeatmapCellSize": {
+    "x": 1,
+    "y": 2,
+    "z": 1
+  },
+  "HeatmapLayers": [
+    "AllCharactersPositions",
+    "AllBotsPositions",
+    "AllRealPlayersPositions",
+    "RealPlayersSavagesPositions",
+    "RealPlayersSavagesDeads",
+    "RealPlayersSavagesDamages",
+    "RealPlayersPmcPositions",
+    "RealPlayersPmcDeads",
+    "RealPlayersPmcDamages",
+    "RealPlayersPmcLaydownPositions",
+    "RealPlayersPmcEquipmentDropPositions",
+    "RealPlayersPmcHealingPositions",
+    "BotsBossPositions",
+    "BotsBossDeads",
+    "BotsBossDamages",
+    "BotsSavagesPositions",
+    "BotsSavagesDeads",
+    "BotsSavagesDamages",
+    "AllCharactersDamageSources",
+    "RealPlayerDamageSources",
+    "BotsDamageSources",
+    "LootPositions"
+  ],
   "IconX": 360,
   "IconY": 410,
   "Id": "RezervBase",
@@ -542,32 +685,24 @@
   "Loot": [],
   "MatchMakerMinPlayersByWaitTime": [
     {
-      "minPlayers": 7,
-      "time": 60
+      "minPlayers": 9,
+      "time": 240
     },
     {
       "minPlayers": 6,
-      "time": 70
-    },
-    {
-      "minPlayers": 5,
-      "time": 120
+      "time": 300
     },
     {
       "minPlayers": 4,
-      "time": 180
-    },
-    {
-      "minPlayers": 3,
-      "time": 250
+      "time": 360
     },
     {
       "minPlayers": 2,
-      "time": 330
+      "time": 420
     },
     {
       "minPlayers": 1,
-      "time": 420
+      "time": 450
     }
   ],
   "MaxBotPerZone": 4,
@@ -681,7 +816,7 @@
             "y": 0,
             "z": 0
           },
-          "Radius": 15
+          "Radius": 20
         }
       },
       "DelayToCanSpawnSec": 4,
@@ -800,7 +935,7 @@
             "y": 0,
             "z": 0
           },
-          "Radius": 15
+          "Radius": 30
         }
       },
       "DelayToCanSpawnSec": 4,
@@ -1387,7 +1522,7 @@
             "y": 0,
             "z": 0
           },
-          "Radius": 15
+          "Radius": 20
         }
       },
       "DelayToCanSpawnSec": 4,
@@ -2033,7 +2168,7 @@
             "y": 0,
             "z": 0
           },
-          "Radius": 15
+          "Radius": 20
         }
       },
       "DelayToCanSpawnSec": 4,
@@ -2208,7 +2343,7 @@
             "y": 0,
             "z": 0
           },
-          "Radius": 15
+          "Radius": 20
         }
       },
       "DelayToCanSpawnSec": 4,
@@ -2296,7 +2431,7 @@
             "y": 0,
             "z": 0
           },
-          "Radius": 15
+          "Radius": 20
         }
       },
       "DelayToCanSpawnSec": 4,
@@ -3030,7 +3165,7 @@
             "y": 0,
             "z": 0
           },
-          "Radius": 15
+          "Radius": 25
         }
       },
       "DelayToCanSpawnSec": 4,
@@ -3294,7 +3429,7 @@
             "y": 0,
             "z": 0
           },
-          "Radius": 8
+          "Radius": 15
         }
       },
       "DelayToCanSpawnSec": 4,
@@ -4027,7 +4162,7 @@
             "y": 0,
             "z": 0
           },
-          "Radius": 8
+          "Radius": 25
         }
       },
       "DelayToCanSpawnSec": 4,
@@ -4467,7 +4602,7 @@
             "y": 0,
             "z": 0
           },
-          "Radius": 15
+          "Radius": 20
         }
       },
       "DelayToCanSpawnSec": 4,
@@ -4496,7 +4631,7 @@
             "y": 0,
             "z": 0
           },
-          "Radius": 15
+          "Radius": 25
         }
       },
       "DelayToCanSpawnSec": 4,
@@ -6381,7 +6516,7 @@
     {
       "Chance": 100,
       "ChancePVE": 100,
-      "Count": 420,
+      "Count": 400,
       "CountPVE": 400,
       "EntryPoints": "Common",
       "EventAvailable": false,
@@ -6526,9 +6661,22 @@
     {
       "TemplateId": "634959225289190e5e773b3b",
       "Value": 7
+    },
+    {
+      "TemplateId": "675aaa003107dac10006332f",
+      "Value": 2
     }
   ],
   "sav_summon_seconds": 60,
+  "secretExits": [
+    {
+      "EligibleForPMC": true,
+      "EligibleForScav": true,
+      "ExfiltrationTime": 15,
+      "Id": "675aaa003107dac10006332f",
+      "Name": "reserve_secret_minefield"
+    }
+  ],
   "tmp_location_field_remove_me": 0,
   "transits": [
     {
@@ -6536,33 +6684,36 @@
       "active": true,
       "conditions": "REZ_TRANSIT_18_COND",
       "description": "REZ_TRANSIT_18_DESC",
+      "events": false,
       "id": 18,
       "location": "bigmap",
       "name": "REZ_TRANSIT_18",
       "target": "56f40101d2720b2a4d8b45d6",
-      "time": 30
+      "time": 20
     },
     {
       "activateAfterSec": 60,
       "active": true,
       "conditions": "REZ_TRANSIT_19_COND",
       "description": "REZ_TRANSIT_19_DESC",
+      "events": false,
       "id": 19,
       "location": "Woods",
       "name": "REZ_TRANSIT_19",
       "target": "5704e3c2d2720bac5b8b4567",
-      "time": 30
+      "time": 20
     },
     {
       "activateAfterSec": 60,
       "active": true,
       "conditions": "REZ_TRANSIT_20_COND",
       "description": "REZ_TRANSIT_20_DESC",
+      "events": false,
       "id": 20,
       "location": "Lighthouse",
       "name": "REZ_TRANSIT_20",
       "target": "5704e4dad2720bb55b8b4567",
-      "time": 30
+      "time": 20
     }
   ],
   "users_gather_seconds": 0,
@@ -6643,7 +6794,7 @@
       ],
       "SpawnPoints": "",
       "WildSpawnType": "assault",
-      "isPlayers": true,
+      "isPlayers": false,
       "number": 5,
       "slots_max": 4,
       "slots_min": 2,
@@ -6659,7 +6810,7 @@
       ],
       "SpawnPoints": "",
       "WildSpawnType": "assault",
-      "isPlayers": true,
+      "isPlayers": false,
       "number": 6,
       "slots_max": 4,
       "slots_min": 2,
@@ -6691,7 +6842,7 @@
       ],
       "SpawnPoints": "",
       "WildSpawnType": "assault",
-      "isPlayers": true,
+      "isPlayers": false,
       "number": 8,
       "slots_max": 4,
       "slots_min": 2,
@@ -6707,7 +6858,7 @@
       ],
       "SpawnPoints": "",
       "WildSpawnType": "assault",
-      "isPlayers": true,
+      "isPlayers": false,
       "number": 9,
       "slots_max": 4,
       "slots_min": 2,
@@ -6723,7 +6874,7 @@
       ],
       "SpawnPoints": "",
       "WildSpawnType": "assault",
-      "isPlayers": true,
+      "isPlayers": false,
       "number": 10,
       "slots_max": 4,
       "slots_min": 2,
@@ -6739,7 +6890,7 @@
       ],
       "SpawnPoints": "",
       "WildSpawnType": "assault",
-      "isPlayers": true,
+      "isPlayers": false,
       "number": 11,
       "slots_max": 4,
       "slots_min": 2,

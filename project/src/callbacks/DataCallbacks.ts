@@ -44,7 +44,6 @@ export class DataCallbacks {
      */
     public getGlobals(url: string, info: IEmptyRequestData, sessionID: string): IGetBodyResponseData<IGlobals> {
         const globals = this.databaseService.getGlobals();
-        globals.time = Date.now() / 1000;
 
         return this.httpResponse.getBody(this.databaseService.getGlobals());
     }

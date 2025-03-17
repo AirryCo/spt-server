@@ -627,6 +627,7 @@
     "ragfair-unable_to_purchase_0_count_item": "Não foi possível comprar o item: %s com uma contagem de 0",
     "ragfair-unable_to_remove_offer_doesnt_exist": "Não foi possível remover a oferta com id: %s porque ela não pode ser encontrada no flea",
     "ragfair-unable_to_remove_offer_not_found_in_profile": "Não foi possível encontrar a oferta: {{offerId}} no perfil: {{profileId}} pois a oferta é indefinida, criando",
+    "ragfair-generating_offers": "Gerando ofertas do flea...",
     "release-beta-disclaimer": "Ao pressionar OK você concorda que nenhum suporte será oferecido e que isso é apenas para teste de bugs. NÃO jogabilidade real. Os mods estão desativados. Novos perfis podem ser necessários com frequência. Relate todos os bugs no canal de relatórios em discord ou na página de problemas do site. Se você não pressionar OK no horário especificado, o jogo será encerrado.",
     "release-beta-disclaimer-accept": "O usuário aceitou o aviso de isenção de responsabilidade da versão beta",
     "release-beta-disclaimer-mods-enabled": "Ao pressionar OK você concorda que nenhum suporte será oferecido e que isso é apenas para teste de bugs. NÃO jogabilidade real. Os mods estão habilitados, NÃO relate problemas com mods. NÃO peça aos autores de mods mods atualizados. Relate todos os bugs no canal de relatórios em discord ou na página de problemas do site. Se você não pressionar OK no horário especificado, o jogo será encerrado.",
@@ -657,6 +658,7 @@
     "scav-unable_to_add_item_to_player_scav": "Não é possível adicionar: %s ao jogador scav, não é um item",
     "scheduled_event_failed_to_run": "Evento programado: '%s' não foi executado com êxito.",
     "season-no_matching_season_found_for_date": "Não foi possível encontrar uma estação usando a data atual, padrão para Verão",
+    "season-event_is_active": "Evento: %s está ativo",
     "seasonal-missing_equipment_slot_on_bot": "Não foi possível remover o equipamento de Natal do slot: {{equipmentSlot}} porque ele não pode ser encontrado no bot: {{botRole}}",
     "seasonal-missing_loot_container_slot_on_bot": "Não foi possível remover o loot de Natal do slot: {{lootContainer}} pois ele não pode ser encontrado no bot: {{botRole}}",
     "server_running": "O servidor está em execução, não feche enquanto estiver jogando SPT",
@@ -725,7 +727,8 @@
     "websocket-socket_lost_deleting_handle": "[WS] Soquete perdido, excluindo o identificador",
     "websocket-started": "Iniciando o websocket em %s",
     "chatbot-cannot_accept_any_more_of_gift": "Você não pode aceitar mais deste presente",
-    "chatbot-halloween_event_enabled": "O evento de Halloween foi ativado, reinicie seu cliente do jogo antes de iniciar uma raid",
+    "chatbot-forced_event_enabled": "O %s evento foi ativado, reinicie o seu client antes entrar em uma nova raid",
     "chatbot-added_stash_rows_please_restart": "Adicionadas 2 linhas para o estoque, por favor reinicie seu jogo para vê-las",
-    "chatbot-snow_enabled": "Neve está habilitada para todas as raids subsequentes até que o servidor seja reiniciado"
+    "chatbot-snow_enabled": "Neve está habilitada para todas as raids subsequentes até que o servidor seja reiniciado",
+    "chatbot-summer_enabled": "Verão foi ativado para todas as raids subsequentes até o servidor ser reiniciado"
 }

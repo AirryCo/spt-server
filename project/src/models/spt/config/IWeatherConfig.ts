@@ -21,8 +21,14 @@ export interface ISeasonDateTimes {
 }
 
 export interface IWeatherValues {
+    seasonValues: Record<string, ISeasonalValues>;
     /** How many hours to generate weather data into the future */
     generateWeatherAmountHours: number;
+    /** Length of each weather period */
+    timePeriod: WeatherSettings<number>;
+}
+
+export interface ISeasonalValues {
     clouds: WeatherSettings<string>;
     windSpeed: WeatherSettings<number>;
     windDirection: WeatherSettings<WindDirection>;
@@ -30,10 +36,8 @@ export interface IWeatherValues {
     rain: WeatherSettings<number>;
     rainIntensity: MinMax;
     fog: WeatherSettings<string>;
-    temp: Record<Season, ITempDayNight>;
+    temp: ITempDayNight;
     pressure: MinMax;
-    /** Length of each weather period */
-    timePeriod: WeatherSettings<number>;
 }
 
 export interface ITempDayNight {

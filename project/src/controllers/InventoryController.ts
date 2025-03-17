@@ -36,7 +36,7 @@ import { BackendErrorCodes } from "@spt/models/enums/BackendErrorCodes";
 import { HideoutAreas } from "@spt/models/enums/HideoutAreas";
 import { SkillTypes } from "@spt/models/enums/SkillTypes";
 import { Traders } from "@spt/models/enums/Traders";
-import { ILogger } from "@spt/models/spt/utils/ILogger";
+import type { ILogger } from "@spt/models/spt/utils/ILogger";
 import { EventOutputHolder } from "@spt/routers/EventOutputHolder";
 import { DatabaseService } from "@spt/services/DatabaseService";
 import { FenceService } from "@spt/services/FenceService";
@@ -47,7 +47,7 @@ import { RagfairOfferService } from "@spt/services/RagfairOfferService";
 import { HashUtil } from "@spt/utils/HashUtil";
 import { HttpResponseUtil } from "@spt/utils/HttpResponseUtil";
 import { RandomUtil } from "@spt/utils/RandomUtil";
-import { ICloner } from "@spt/utils/cloners/ICloner";
+import type { ICloner } from "@spt/utils/cloners/ICloner";
 import { inject, injectable } from "tsyringe";
 
 @injectable()
@@ -282,7 +282,7 @@ export class InventoryController {
 
         // Remove FiR status from destination stack when source stack has no FiR but destination does
         if (!sourceItem.upd.SpawnedInSession && destinationItem.upd.SpawnedInSession) {
-            delete destinationItem.upd.SpawnedInSession;
+            destinationItem.upd.SpawnedInSession = false;
         }
 
         destinationItem.upd.StackObjectsCount += sourceItem.upd.StackObjectsCount; // Add source stackcount to destination
@@ -408,6 +408,7 @@ export class InventoryController {
         if (request.to.location) {
             itemOne.location = request.to.location;
         } else {
+            // biome-ignore lint/performance/noDelete: Delete is fine here as we entirely want to get rid of the location.
             delete itemOne.location;
         }
 
@@ -416,6 +417,7 @@ export class InventoryController {
         if (request.to2.location) {
             itemTwo.location = request.to2.location;
         } else {
+            // biome-ignore lint/performance/noDelete: Delete is fine here as we entirely want to get rid of the location.
             delete itemTwo.location;
         }
 
@@ -520,7 +522,7 @@ export class InventoryController {
      * Bind an inventory item to the quick access menu at bottom of player screen
      * Handle bind event
      * @param pmcData Player profile
-     * @param bindRequest Reqeust object
+     * @param bindRequest Request object
      * @param sessionID Session id
      * @returns IItemEventRouterResponse
      */
@@ -574,14 +576,9 @@ export class InventoryController {
         let itemId = "";
         if ("fromOwner" in body) {
             try {
-                itemId = this.getExaminedItemTpl(body);
+                itemId = this.getExaminedItemTpl(sessionID, body);
             } catch {
                 this.logger.error(this.localisationService.getText("inventory-examine_item_does_not_exist", body.item));
-            }
-
-            // get hideout item
-            if (body.fromOwner.type === "HideoutProduction") {
-                itemId = body.item;
             }
         }
 
@@ -644,7 +641,7 @@ export class InventoryController {
      * @param request Response request
      * @returns tplId
      */
-    protected getExaminedItemTpl(request: IInventoryExamineRequestData): string {
+    protected getExaminedItemTpl(sessionId: string, request: IInventoryExamineRequestData): string | null {
         if (this.presetHelper.isPreset(request.item)) {
             return this.presetHelper.getBaseItemTpl(request.item);
         }
@@ -682,8 +679,37 @@ export class InventoryController {
             }
 
             // Unable to find item in database or ragfair
-            throw new Error(this.localisationService.getText("inventory-unable_to_find_item", request.item));
+            this.logger.error(this.localisationService.getText("inventory-unable_to_find_item", request.item));
         }
+
+        // Hideout
+        if (request.fromOwner.type === "HideoutProduction") {
+            return request.item;
+        }
+
+        if (request.fromOwner.type === "Mail") {
+            // when inspecting an item in mail rewards, we are given on the message its in and its mongoId, not the Template, so we have to go find it ourselves
+            // all mail the player has
+            const mail = this.profileHelper.getFullProfile(sessionId)?.dialogues;
+            // per trader/person mail
+            const dialogue = mail[request.fromOwner.id];
+            if (!dialogue) {
+                this.logger.error(`Unable to get item with id: ${request.item}`);
+                return null;
+            }
+            // check each message from that trader/person for messages that match the ID we got
+            const message = dialogue.messages.find((m) => m._id === request.fromOwner.id);
+            // get the Id given and get the Template ID from that
+            const item = message.items.data.find((item) => item._id === request.item);
+
+            if (!item) {
+                return item._id;
+            }
+        }
+
+        this.logger.error(`Unable to get item with id: ${request.item}`);
+
+        return null;
     }
 
     public readEncyclopedia(
@@ -721,6 +747,7 @@ export class InventoryController {
             if (change.location) {
                 inventoryItem.location = change.location;
             } else {
+                // biome-ignore lint/performance/noDelete: Delete is fine here as we entirely want to get rid of the location.
                 delete inventoryItem.location;
             }
         }

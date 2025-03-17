@@ -15,16 +15,17 @@ import { IItem } from "@spt/models/eft/common/tables/IItem";
 import { BaseClasses } from "@spt/models/enums/BaseClasses";
 import { ConfigTypes } from "@spt/models/enums/ConfigTypes";
 import { ILocationConfig } from "@spt/models/spt/config/ILocationConfig";
-import { ILogger } from "@spt/models/spt/utils/ILogger";
+import { ISeasonalEvent, ISeasonalEventConfig } from "@spt/models/spt/config/ISeasonalEventConfig";
+import type { ILogger } from "@spt/models/spt/utils/ILogger";
 import { ConfigServer } from "@spt/servers/ConfigServer";
 import { DatabaseService } from "@spt/services/DatabaseService";
 import { ItemFilterService } from "@spt/services/ItemFilterService";
 import { LocalisationService } from "@spt/services/LocalisationService";
 import { SeasonalEventService } from "@spt/services/SeasonalEventService";
+import { HashUtil } from "@spt/utils/HashUtil";
 import { MathUtil } from "@spt/utils/MathUtil";
-import { ObjectId } from "@spt/utils/ObjectId";
 import { ProbabilityObject, ProbabilityObjectArray, RandomUtil } from "@spt/utils/RandomUtil";
-import { ICloner } from "@spt/utils/cloners/ICloner";
+import type { ICloner } from "@spt/utils/cloners/ICloner";
 import { inject, injectable } from "tsyringe";
 
 export interface IContainerItem {
@@ -43,11 +44,12 @@ export interface IContainerGroupCount {
 @injectable()
 export class LocationLootGenerator {
     protected locationConfig: ILocationConfig;
+    protected seasonalEventConfig: ISeasonalEventConfig;
 
     constructor(
         @inject("PrimaryLogger") protected logger: ILogger,
+        @inject("HashUtil") protected hashUtil: HashUtil,
         @inject("DatabaseService") protected databaseService: DatabaseService,
-        @inject("ObjectId") protected objectId: ObjectId,
         @inject("RandomUtil") protected randomUtil: RandomUtil,
         @inject("ItemHelper") protected itemHelper: ItemHelper,
         @inject("MathUtil") protected mathUtil: MathUtil,
@@ -60,6 +62,7 @@ export class LocationLootGenerator {
         @inject("PrimaryCloner") protected cloner: ICloner,
     ) {
         this.locationConfig = this.configServer.getConfig(ConfigTypes.LOCATION);
+        this.seasonalEventConfig = this.configServer.getConfig(ConfigTypes.SEASONAL_EVENT);
     }
 
     /**
@@ -88,18 +91,15 @@ export class LocationLootGenerator {
         // Add mounted weapons to output loot
         result.push(...(staticWeaponsOnMapClone ?? []));
 
-        const allStaticContainersOnMapClone = this.cloner.clone(mapData.staticContainers.staticContainers);
-
+        let allStaticContainersOnMapClone = this.cloner.clone(mapData.staticContainers.staticContainers);
         if (!allStaticContainersOnMapClone) {
             this.logger.error(
                 this.localisationService.getText("location-unable_to_find_static_container_for_map", locationBase.Name),
             );
         }
-        const staticRandomisableContainersOnMap = this.getRandomisableContainersOnMap(allStaticContainersOnMapClone);
 
-        // Containers that MUST be added to map (quest containers etc)
+        // Containers that MUST be added to map (e.g. quest containers)
         const staticForcedOnMapClone = this.cloner.clone(mapData.staticContainers.staticForced);
-
         if (!staticForcedOnMapClone) {
             this.logger.error(
                 this.localisationService.getText(
@@ -108,6 +108,15 @@ export class LocationLootGenerator {
                 ),
             );
         }
+
+        // Remove christmas items from loot data
+        if (!this.seasonalEventService.christmasEventEnabled()) {
+            allStaticContainersOnMapClone = allStaticContainersOnMapClone.filter(
+                (item) => !this.seasonalEventConfig.christmasContainerIds.includes(item.template.Id),
+            );
+        }
+
+        const staticRandomisableContainersOnMap = this.getRandomisableContainersOnMap(allStaticContainersOnMapClone);
 
         // Keep track of static loot count
         let staticContainerCount = 0;
@@ -216,7 +225,7 @@ export class LocationLootGenerator {
                 );
                 if (!containerObject) {
                     this.logger.debug(
-                        `Container: ${chosenContainerIds[chosenContainerId]} not found in staticRandomisableContainersOnMap, this is bad`,
+                        `Container: ${chosenContainerId} not found in staticRandomisableContainersOnMap, this is bad`,
                     );
                     continue;
                 }
@@ -311,7 +320,7 @@ export class LocationLootGenerator {
      * @returns dictionary keyed by groupId
      */
     protected getGroupIdToContainerMappings(
-        staticContainerGroupData: IStaticContainer | Record<string, IContainerMinMax>,
+        staticContainerGroupData: IStaticContainer,
         staticContainersOnMap: IStaticContainerData[],
     ): Record<string, IContainerGroupCount> {
         // Create dictionary of all group ids and choose a count of containers the map will spawn of that group
@@ -388,7 +397,7 @@ export class LocationLootGenerator {
         const containerTpl = containerClone.template.Items[0]._tpl;
 
         // Create new unique parent id to prevent any collisions
-        const parentId = this.objectId.generate();
+        const parentId = this.hashUtil.generate();
         containerClone.template.Root = parentId;
         containerClone.template.Items[0]._id = parentId;
 
@@ -420,7 +429,13 @@ export class LocationLootGenerator {
         const tplsToAddToContainer = tplsForced.concat(chosenTpls);
         for (const tplToAdd of tplsToAddToContainer) {
             const chosenItemWithChildren = this.createStaticLootItem(tplToAdd, staticAmmoDist, parentId);
-            const items = chosenItemWithChildren.items;
+            if (!chosenItemWithChildren) {
+                continue;
+            }
+
+            const items = this.locationConfig.tplsToStripChildItemsFrom.includes(tplToAdd)
+                ? [chosenItemWithChildren.items[0]] // Strip children from parent
+                : chosenItemWithChildren.items;
             const width = chosenItemWithChildren.width;
             const height = chosenItemWithChildren.height;
 
@@ -473,7 +488,7 @@ export class LocationLootGenerator {
         const height = containerTemplate._props.Grids[0]._props.cellsV;
         const width = containerTemplate._props.Grids[0]._props.cellsH;
 
-        // Calcualte 2d array and return
+        // Calculate 2d array and return
         return Array(height)
             .fill(0)
             .map(() => Array(width).fill(0));
@@ -578,6 +593,16 @@ export class LocationLootGenerator {
     ): ISpawnpointTemplate[] {
         const loot: ISpawnpointTemplate[] = [];
         const dynamicForcedSpawnPoints: ISpawnpointsForced[] = [];
+
+        // Remove christmas items from loot data
+        if (!this.seasonalEventService.christmasEventEnabled()) {
+            dynamicLootDist.spawnpoints = dynamicLootDist.spawnpoints.filter(
+                (point) => !point.template.Id.startsWith("christmas"),
+            );
+            dynamicLootDist.spawnpointsForced = dynamicLootDist.spawnpointsForced.filter(
+                (point) => !point.template.Id.startsWith("christmas"),
+            );
+        }
 
         // Build the list of forced loot from both `spawnpointsForced` and any point marked `IsAlwaysSpawn`
         dynamicForcedSpawnPoints.push(...dynamicLootDist.spawnpointsForced);
@@ -866,18 +891,18 @@ export class LocationLootGenerator {
                     : this.randomUtil.getInt(itemTemplate._props.StackMinRandom, itemTemplate._props.StackMaxRandom);
 
             itemWithMods.push({
-                _id: this.objectId.generate(),
+                _id: this.hashUtil.generate(),
                 _tpl: chosenTpl,
                 upd: { StackObjectsCount: stackCount },
             });
         } else if (this.itemHelper.isOfBaseclass(chosenTpl, BaseClasses.AMMO_BOX)) {
             // Fill with cartridges
-            const ammoBoxItem: IItem[] = [{ _id: this.objectId.generate(), _tpl: chosenTpl }];
+            const ammoBoxItem: IItem[] = [{ _id: this.hashUtil.generate(), _tpl: chosenTpl }];
             this.itemHelper.addCartridgesToAmmoBox(ammoBoxItem, itemTemplate);
             itemWithMods.push(...ammoBoxItem);
         } else if (this.itemHelper.isOfBaseclass(chosenTpl, BaseClasses.MAGAZINE)) {
             // Create array with just magazine
-            const magazineItem: IItem[] = [{ _id: this.objectId.generate(), _tpl: chosenTpl }];
+            const magazineItem: IItem[] = [{ _id: this.hashUtil.generate(), _tpl: chosenTpl }];
 
             if (this.randomUtil.getChance100(this.locationConfig.staticMagazineLootHasAmmoChancePercent)) {
                 // Add randomised amount of cartridges
@@ -898,6 +923,11 @@ export class LocationLootGenerator {
 
             // Ensure all IDs are unique
             itemWithChildren = this.itemHelper.replaceIDs(itemWithChildren);
+
+            if (this.locationConfig.tplsToStripChildItemsFrom.includes(chosenItem._tpl)) {
+                // Strip children from parent before adding
+                itemWithChildren = [itemWithChildren[0]];
+            }
 
             itemWithMods.push(...itemWithChildren);
         }
@@ -927,11 +957,17 @@ export class LocationLootGenerator {
         chosenTpl: string,
         staticAmmoDist: Record<string, IStaticAmmoDetails[]>,
         parentId?: string,
-    ): IContainerItem {
-        const itemTemplate = this.itemHelper.getItem(chosenTpl)[1];
+    ): IContainerItem | undefined {
+        const itemResult = this.itemHelper.getItem(chosenTpl);
+        const itemTemplate = itemResult[1];
+        if (!itemResult[0] || !itemTemplate._props) {
+            this.logger.error(`Unable to process item: ${chosenTpl}. it lacks _props`);
+
+            return undefined;
+        }
         let width = itemTemplate._props.Width;
         let height = itemTemplate._props.Height;
-        let items: IItem[] = [{ _id: this.objectId.generate(), _tpl: chosenTpl }];
+        let items: IItem[] = [{ _id: this.hashUtil.generate(), _tpl: chosenTpl }];
         const rootItem = items[0];
 
         // Use passed in parentId as override for new item

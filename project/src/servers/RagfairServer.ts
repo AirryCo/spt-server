@@ -6,7 +6,7 @@ import { ISearchRequestData } from "@spt/models/eft/ragfair/ISearchRequestData";
 import { ConfigTypes } from "@spt/models/enums/ConfigTypes";
 import { Traders } from "@spt/models/enums/Traders";
 import { IRagfairConfig } from "@spt/models/spt/config/IRagfairConfig";
-import { ILogger } from "@spt/models/spt/utils/ILogger";
+import type { ILogger } from "@spt/models/spt/utils/ILogger";
 import { ConfigServer } from "@spt/servers/ConfigServer";
 import { LocalisationService } from "@spt/services/LocalisationService";
 import { RagfairCategoriesService } from "@spt/services/RagfairCategoriesService";
@@ -33,6 +33,7 @@ export class RagfairServer {
     }
 
     public async load(): Promise<void> {
+        this.logger.info(this.localisationService.getText("ragfair-generating_offers"));
         await this.ragfairOfferGenerator.generateDynamicOffers();
         await this.update();
     }
@@ -98,7 +99,7 @@ export class RagfairServer {
         offer.locked = true;
     }
 
-    public getOffer(offerID: string): IRagfairOffer {
+    public getOffer(offerID: string): IRagfairOffer | undefined {
         return this.ragfairOfferService.getOfferByOfferId(offerID);
     }
 
@@ -106,8 +107,8 @@ export class RagfairServer {
         return this.ragfairOfferService.getOffers();
     }
 
-    public removeOfferStack(offerID: string, amount: number): void {
-        this.ragfairOfferService.removeOfferStack(offerID, amount);
+    public reduceOfferQuantity(offerID: string, amount: number): void {
+        this.ragfairOfferService.reduceOfferQuantity(offerID, amount);
     }
 
     public doesOfferExist(offerId: string): boolean {

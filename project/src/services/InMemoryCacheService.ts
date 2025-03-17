@@ -1,4 +1,4 @@
-import { ICloner } from "@spt/utils/cloners/ICloner";
+import type { ICloner } from "@spt/utils/cloners/ICloner";
 import { inject, injectable } from "tsyringe";
 
 @injectable()
@@ -17,7 +17,7 @@ export class InMemoryCacheService {
     }
 
     /**
-     * Retreve data stored by a key
+     * Retrieve data stored by a key
      * @param key key
      * @returns Stored data
      */
@@ -30,7 +30,7 @@ export class InMemoryCacheService {
     }
 
     /**
-     * Does data exists against the provided key
+     * Does data exist against the provided key
      * @param key Key to check for data against
      * @returns true if exists
      */

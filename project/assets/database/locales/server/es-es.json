@@ -725,7 +725,6 @@
     "websocket-socket_lost_deleting_handle": "Conexión de socket perdida, eliminando manejador",
     "websocket-started": "Arrancando socket web a las %s",
     "chatbot-cannot_accept_any_more_of_gift": "No puedes aceptar más de este regalo",
-    "chatbot-halloween_event_enabled": "El evento de Halloween ha sido activado, reinicia el juego antes de iniciar una incursión",
     "chatbot-added_stash_rows_please_restart": "Se han añadido 2 filas al alijo, por favor reinicia tu juego para verlas",
     "chatbot-snow_enabled": "La nieve está habilitada para todas las incursiones siguientes hasta que el servidor se reinicie"
 }

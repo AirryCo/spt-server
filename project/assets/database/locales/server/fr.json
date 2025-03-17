@@ -627,6 +627,7 @@
     "ragfair-unable_to_purchase_0_count_item": "Impossible d'acheter l'objet : %s avec une quantité de 0",
     "ragfair-unable_to_remove_offer_doesnt_exist": "Impossible de retirer l'offre avec l'id : %s car elle ne peut être trouvée sur le marché aux puces",
     "ragfair-unable_to_remove_offer_not_found_in_profile": "Impossible de trouver l'offre : {{offerId}} dans le profil : {{profileId}} puisque les offres sont indéfinies, en création",
+    "ragfair-generating_offers": "Génération des offres du marché aux puces...",
     "release-beta-disclaimer": "En appuyant sur OK vous acceptez qu'aucune aide ne sera fournie et que cette version est uniquement prévue pour du débogage. PAS pour actuellement jouer. Les mods sont desactivés. Créer un nouveau profil peut être souvent nécessaire. Signalez tous les bugs dans le channel discord adéquat ou sur les pages dédiées du site web. Si vous ne pressez pas OK dans le temps imparti, le jeu se fermera.",
     "release-beta-disclaimer-accept": "Utilisateur a accepté l'avertissement de beta",
     "release-beta-disclaimer-mods-enabled": "En appuyant sur OK vous acceptez qu'aucune aide ne sera fournie et que cette version est uniquement prévue pour du débogage. PAS pour actuellement jouer. Les mods sont activés, ne PAS signaler de bug de mod. Ne PAS demander aux auteurs de mods de mettre à jour leur mods. Signalez tous les bugs dans le channel discord adéquat ou sur les pages dédiées du site web. Si vous ne pressez pas OK dans le temps imparti, le jeu se fermera.",
@@ -657,6 +658,7 @@
     "scav-unable_to_add_item_to_player_scav": "Impossible d'ajouter : %s au joueur Scav, pas un objet",
     "scheduled_event_failed_to_run": "événement programmé : '%s' n'a pas été lancé avec succès.",
     "season-no_matching_season_found_for_date": "Impossible de trouver une saison en utilisant la date actuelle, l'été sera utilisé par défaut",
+    "season-event_is_active": "Événement : %s est actif",
     "seasonal-missing_equipment_slot_on_bot": "Impossible de retirer l'item spécial Noël: {{equipmentSlot}} car il n'a pas été trouvé sur le bot: {{botRole}}",
     "seasonal-missing_loot_container_slot_on_bot": "Impossible de retirer le loot spécial Noël dans: {{lootContainer}} car il n'a pas été trouvé sur le bot: {{botRole}}",
     "server_running": "Le serveur est en cours d'exécution, ne le fermez pas pendant que vous jouez à SPT",
@@ -725,7 +727,8 @@
     "websocket-socket_lost_deleting_handle": "[WS] Socket perdu, suppression du handle",
     "websocket-started": "Démarrage du websocket sur %s",
     "chatbot-cannot_accept_any_more_of_gift": "Vous ne pouvez plus accepter plus de cadeaux de ce type",
-    "chatbot-halloween_event_enabled": "L'événement Halloween a été activé, redémarrez votre client avant de commencer un raid",
+    "chatbot-forced_event_enabled": "L'événement %s a été activé, redémarrez votre client de jeu avant de commencer un raid",
     "chatbot-added_stash_rows_please_restart": "2 rangées ont été ajoutées à votre réserve, redémarrez le jeu pour les voir",
-    "chatbot-snow_enabled": "La neige a été activée pour tous les raids suivants jusqu'à ce que le serveur soit redémarré"
+    "chatbot-snow_enabled": "La neige a été activée pour tous les raids suivants jusqu'à ce que le serveur soit redémarré",
+    "chatbot-summer_enabled": "L'été a été activé pour tous les raids suivants jusqu'à ce que le serveur soit redémarré"
 }

@@ -1,5 +1,5 @@
 import { IPackageJsonData } from "@spt/models/spt/mod/IPackageJsonData";
-import { ILogger } from "@spt/models/spt/utils/ILogger";
+import type { ILogger } from "@spt/models/spt/utils/ILogger";
 import { LocalisationService } from "@spt/services/LocalisationService";
 import { inject, injectable } from "tsyringe";
 
@@ -7,17 +7,17 @@ import { inject, injectable } from "tsyringe";
 export class ModLoadOrder {
     protected mods = new Map<string, IPackageJsonData>();
     protected modsAvailable = new Map<string, IPackageJsonData>();
-    protected loadOrder = new Set<string>();
+    protected loadOrder = new Map<string, IPackageJsonData>();
 
     constructor(
         @inject("PrimaryLogger") protected logger: ILogger,
         @inject("LocalisationService") protected localisationService: LocalisationService,
     ) {}
 
-    public setModList(mods: Record<string, IPackageJsonData>): void {
+    public setModList(mods: Record<string, IPackageJsonData>): Map<string, IPackageJsonData> {
         this.mods = new Map<string, IPackageJsonData>(Object.entries(mods));
         this.modsAvailable = structuredClone(this.mods);
-        this.loadOrder = new Set<string>();
+        this.loadOrder = new Map<string, IPackageJsonData>();
 
         const visited = new Set<string>();
 
@@ -31,10 +31,12 @@ export class ModLoadOrder {
         for (const modName of this.modsAvailable.keys()) {
             this.getLoadOrderRecursive(modName, visited);
         }
+
+        return this.loadOrder;
     }
 
     public getLoadOrder(): string[] {
-        return Array.from(this.loadOrder);
+        return Array.from(this.loadOrder.keys());
     }
 
     public getModsOnLoadBefore(mod: string): Set<string> {
@@ -137,6 +139,7 @@ export class ModLoadOrder {
         }
 
         visited.delete(mod);
-        this.loadOrder.add(mod);
+
+        this.loadOrder.set(mod, config);
     }
 }

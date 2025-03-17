@@ -36,6 +36,7 @@
     "bot-unable_to_add_mod_item_invalid": "Mod: {{itemName}} är inte ett giltigt objekt, det går inte att lägga till på plats: '{{modSlot}}' på artikel: {{parentItemName}}, hoppar över",
     "bot-unable_to_add_mods_to_weapon_missing_ammo_slot": "Det går inte att lägga till mods till vapen: {{weaponName}} {{weaponId}} eftersom den saknar slitsar, patroner eller kammare",
     "bot-unable_to_edit_limits_of_unknown_map": "Det går inte att redigera botgränserna för karta: %s eftersom den inte kan hittas",
+    "bot-unable_to_fill_camora_slot_mod_pool_empty": "Det går inte att fylla vapen camora lucka för {{weaponId}} - {{weaponName}}. mod-poolen för var tom, försöker generera dynamiskt",
     "bot-unable_to_filter_mod_slot_all_blacklisted": "Det gick inte att generera filtrerad dynamisk vapenmodpool eftersom svartlistan filtrerade bort alla mods för slot: %s, ignorerar svartlista och återskapar pool",
     "bot-unable_to_filter_mods_all_blacklisted": "Det gick inte att filtrera mods för plats: {{slotName}} på {{itemName}} eftersom de alla var svartlistade, ignorerar svartlista",
     "bot-unable_to_find_ammo_item": "Det går inte att hitta ammunitionsmall med tpl: %s",

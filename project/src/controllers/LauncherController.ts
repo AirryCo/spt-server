@@ -9,7 +9,7 @@ import { IModDetails, Info } from "@spt/models/eft/profile/ISptProfile";
 import { ConfigTypes } from "@spt/models/enums/ConfigTypes";
 import { ICoreConfig } from "@spt/models/spt/config/ICoreConfig";
 import { IPackageJsonData } from "@spt/models/spt/mod/IPackageJsonData";
-import { ILogger } from "@spt/models/spt/utils/ILogger";
+import type { ILogger } from "@spt/models/spt/utils/ILogger";
 import { ConfigServer } from "@spt/servers/ConfigServer";
 import { SaveServer } from "@spt/servers/SaveServer";
 import { DatabaseService } from "@spt/services/DatabaseService";
@@ -88,17 +88,17 @@ export class LauncherController {
         return "";
     }
 
-    public register(info: IRegisterData): string {
+    public async register(info: IRegisterData): Promise<string> {
         for (const sessionID in this.saveServer.getProfiles()) {
             if (info.username === this.saveServer.getProfile(sessionID).info.username) {
                 return "";
             }
         }
 
-        return this.createAccount(info);
+        return await this.createAccount(info);
     }
 
-    protected createAccount(info: IRegisterData): string {
+    protected async createAccount(info: IRegisterData): Promise<string> {
         const profileId = this.generateProfileId();
         const scavId = this.generateProfileId();
         const newProfileDetails: Info = {
@@ -112,8 +112,8 @@ export class LauncherController {
         };
         this.saveServer.createProfile(newProfileDetails);
 
-        this.saveServer.loadProfile(profileId);
-        this.saveServer.saveProfile(profileId);
+        await this.saveServer.loadProfile(profileId);
+        await this.saveServer.saveProfile(profileId);
 
         return profileId;
     }

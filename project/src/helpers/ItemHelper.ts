@@ -8,7 +8,7 @@ import { BaseClasses } from "@spt/models/enums/BaseClasses";
 import { EquipmentSlots } from "@spt/models/enums/EquipmentSlots";
 import { ItemTpl } from "@spt/models/enums/ItemTpl";
 import { Money } from "@spt/models/enums/Money";
-import { ILogger } from "@spt/models/spt/utils/ILogger";
+import type { ILogger } from "@spt/models/spt/utils/ILogger";
 import { DatabaseService } from "@spt/services/DatabaseService";
 import { ItemBaseClassService } from "@spt/services/ItemBaseClassService";
 import { ItemFilterService } from "@spt/services/ItemFilterService";
@@ -18,9 +18,8 @@ import { CompareUtil } from "@spt/utils/CompareUtil";
 import { HashUtil } from "@spt/utils/HashUtil";
 import { JsonUtil } from "@spt/utils/JsonUtil";
 import { MathUtil } from "@spt/utils/MathUtil";
-import { ObjectId } from "@spt/utils/ObjectId";
 import { ProbabilityObject, ProbabilityObjectArray, RandomUtil } from "@spt/utils/RandomUtil";
-import { ICloner } from "@spt/utils/cloners/ICloner";
+import type { ICloner } from "@spt/utils/cloners/ICloner";
 import { inject, injectable } from "tsyringe";
 
 @injectable()
@@ -40,7 +39,6 @@ export class ItemHelper {
         @inject("HashUtil") protected hashUtil: HashUtil,
         @inject("JsonUtil") protected jsonUtil: JsonUtil,
         @inject("RandomUtil") protected randomUtil: RandomUtil,
-        @inject("ObjectId") protected objectId: ObjectId,
         @inject("MathUtil") protected mathUtil: MathUtil,
         @inject("DatabaseService") protected databaseService: DatabaseService,
         @inject("HandbookHelper") protected handbookHelper: HandbookHelper,
@@ -797,7 +795,7 @@ export class ItemHelper {
      * @param itemWithChildren Item with mods to update
      * @param newId new id to add on chidren of base item
      */
-    public replaceRootItemID(itemWithChildren: IItem[], newId = this.objectId.generate()): void {
+    public replaceRootItemID(itemWithChildren: IItem[], newId = this.hashUtil.generate()): void {
         // original id on base item
         const oldId = itemWithChildren[0]._id;
 
@@ -846,6 +844,7 @@ export class ItemHelper {
                     item._id === pmcData.Inventory.questStashItems ||
                     item._id === pmcData.Inventory.sortingTable ||
                     item._id === pmcData.Inventory.stash ||
+                    item._id === pmcData.Inventory.hideoutCustomizationStashId ||
                     hideoutAreaStashes?.includes(item._id)
                 ) {
                     continue;
@@ -928,11 +927,16 @@ export class ItemHelper {
      * Mark the passed in array of items as found in raid.
      * Modifies passed in items
      * @param items The list of items to mark as FiR
+     * @param excludeCurrency Should currency be excluded from becoming FiR (default true)
      */
-    public setFoundInRaid(items: IItem[]): void {
+    public setFoundInRaid(items: IItem[], excludeCurrency = true): void {
         for (const item of items) {
             if (!item.upd) {
                 item.upd = {};
+            }
+
+            if (excludeCurrency && this.isOfBaseclass(item._tpl, BaseClasses.MONEY)) {
+                continue;
             }
 
             item.upd.SpawnedInSession = true;
@@ -941,8 +945,8 @@ export class ItemHelper {
 
     /**
      * WARNING, SLOW. Recursively loop down through an items hierarchy to see if any of the ids match the supplied list, return true if any do
-     * @param {string} tpl Items tpl to check parents of
-     * @param {Array} tplsToCheck Tpl values to check if parents of item match
+     * @param tpl Items tpl to check parents of
+     * @param tplsToCheck Tpl values to check if parents of item match
      * @returns boolean Match found
      */
     public doesItemOrParentsIdMatch(tpl: string, tplsToCheck: string[]): boolean {
@@ -950,12 +954,12 @@ export class ItemHelper {
         const itemExists = itemDetails[0];
         const item = itemDetails[1];
 
-        // not an item, drop out
+        // Not an item, drop out
         if (!itemExists) {
             return false;
         }
 
-        // no parent to check
+        // No parent to check
         if (!item._parent) {
             return false;
         }
@@ -1195,6 +1199,7 @@ export class ItemHelper {
 
             // In live no ammo box has the first cartridge item with a location
             if (location === 0) {
+                // biome-ignore lint/performance/noDelete: Delete is fine here as we entirely want to get rid of the location.
                 delete cartridgeItemToAdd.location;
             }
 
@@ -1367,6 +1372,7 @@ export class ItemHelper {
 
         // Only one cartridge stack added, remove location property as its only used for 2 or more stacks
         if (location === 1) {
+            // biome-ignore lint/performance/noDelete: Delete is fine here as we entirely want to get rid of the location.
             delete magazineWithChildCartridges[1].location;
         }
     }
@@ -1456,7 +1462,7 @@ export class ItemHelper {
         foundInRaid = false,
     ): IItem {
         return {
-            _id: this.objectId.generate(),
+            _id: this.hashUtil.generate(),
             _tpl: ammoTpl,
             parentId: parentId,
             slotId: "cartridges",
@@ -1707,6 +1713,7 @@ export class ItemHelper {
             if (!parentExists && item.parentId !== rootId && item.slotId !== "hideout") {
                 item.parentId = rootId;
                 item.slotId = "hideout";
+                // biome-ignore lint/performance/noDelete: Delete is fine here as we entirely want to get rid of the location.
                 delete item.location;
             }
         }
@@ -1801,7 +1808,10 @@ export class ItemHelper {
      */
     public removeSpawnedInSessionPropertyFromItems(items: IItem[]): void {
         for (const item of items) {
-            delete item.upd.SpawnedInSession;
+            if (item.upd) {
+                // biome-ignore lint/performance/noDelete: Delete is fine here as we're removing the entire property.
+                delete item.upd.SpawnedInSession;
+            }
         }
     }
 }

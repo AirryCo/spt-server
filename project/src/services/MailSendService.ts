@@ -4,19 +4,15 @@ import { NotificationSendHelper } from "@spt/helpers/NotificationSendHelper";
 import { NotifierHelper } from "@spt/helpers/NotifierHelper";
 import { TraderHelper } from "@spt/helpers/TraderHelper";
 import { IItem } from "@spt/models/eft/common/tables/IItem";
-import {
-    IDialogue,
-    IMessage,
-    IMessageContentRagfair,
-    IMessageItems,
-    ISystemData,
-    IUserDialogInfo,
-} from "@spt/models/eft/profile/ISptProfile";
+import { IMessageContentRagfair } from "@spt/models/eft/profile/IMessageContentRagfair";
+import { IDialogue, IMessage, IMessageItems, IReplyTo } from "@spt/models/eft/profile/ISptProfile";
+import { ISystemData } from "@spt/models/eft/profile/ISystemData";
+import { IUserDialogInfo } from "@spt/models/eft/profile/IUserDialogInfo";
 import { BaseClasses } from "@spt/models/enums/BaseClasses";
 import { MessageType } from "@spt/models/enums/MessageType";
 import { Traders } from "@spt/models/enums/Traders";
 import { IProfileChangeEvent, ISendMessageDetails } from "@spt/models/spt/dialog/ISendMessageDetails";
-import { ILogger } from "@spt/models/spt/utils/ILogger";
+import type { ILogger } from "@spt/models/spt/utils/ILogger";
 import { SaveServer } from "@spt/servers/SaveServer";
 import { DatabaseService } from "@spt/services/DatabaseService";
 import { LocalisationService } from "@spt/services/LocalisationService";
@@ -174,7 +170,10 @@ export class MailSendService {
 
         // Add items to message
         if (items.length > 0) {
-            details.items = items;
+            const rootItemParentID = this.hashUtil.generate();
+
+            details.items = this.itemHelper.adoptOrphanedItems(rootItemParentID, items);
+
             details.itemsMaxStorageLifetimeSeconds = maxStorageTimeSeconds ?? 172800; // 48 hours if no value supplied
         }
 
@@ -349,14 +348,55 @@ export class MailSendService {
                 messageDetails.profileChangeEvents?.length === 0 ? messageDetails.profileChangeEvents : undefined, // no one knows, its never been used in any dumps
         };
 
+        // handle replyTo
+        if (messageDetails.replyTo) {
+            const replyMessage = this.getMessageToReplyTo(messageDetails.recipientId, messageDetails.replyTo, dialogId);
+            if (replyMessage) {
+                message.replyTo = replyMessage;
+            }
+        }
+
         // Clean up empty system data
         if (!message.systemData) {
+            // biome-ignore lint/performance/noDelete: Delete is fine here as we're trying to remove the entire data property.
             delete message.systemData;
         }
 
         // Clean up empty template id
         if (!message.templateId) {
+            // biome-ignore lint/performance/noDelete: Delete is fine here as we're trying to remove the entire data property.
             delete message.templateId;
+        }
+
+        return message;
+    }
+
+    /**
+     * @param recipientId The id of the recipient
+     * @param replyToId The id of the message to reply to
+     * @param dialogueId The id of the dialogue (traderId or profileId)
+     * @returns A new instance with data from the found message, otherwise undefined
+     */
+    private getMessageToReplyTo(recipientId: string, replyToId: string, dialogueId: string): IReplyTo | undefined {
+        let message: IReplyTo | undefined = undefined;
+        const currentDialogue = this.dialogueHelper.getDialogueFromProfile(recipientId, dialogueId);
+
+        if (!currentDialogue) {
+            this.logger.warning(`Could not find dialogue ${dialogueId} from sender`);
+            return message;
+        }
+
+        for (const dialogueMessage of currentDialogue.messages) {
+            if (dialogueMessage._id === replyToId) {
+                message = {
+                    _id: dialogueMessage._id,
+                    dt: dialogueMessage.dt,
+                    type: dialogueMessage.type,
+                    uid: dialogueMessage.uid,
+                    text: dialogueMessage.text,
+                };
+                break;
+            }
         }
 
         return message;
@@ -411,13 +451,14 @@ export class MailSendService {
                 parentItem.parentId = this.hashUtil.generate();
             }
 
+            // Prep return object
             itemsToSendToPlayer = { stash: parentItem.parentId, data: [] };
 
             // Ensure Ids are unique and cont collide with items in player inventory later
             messageDetails.items = this.itemHelper.replaceIDs(messageDetails.items);
 
+            // Ensure item exits in items db
             for (const reward of messageDetails.items) {
-                // Ensure item exists in items db
                 const itemTemplate = items[reward._tpl];
                 if (!itemTemplate) {
                     // Can happen when modded items are insured + mod is removed
@@ -438,13 +479,23 @@ export class MailSendService {
                     reward.slotId = "main";
                 }
 
-                // Boxes can contain sub-items
+                // Ammo boxes should contain sub-items
                 if (this.itemHelper.isOfBaseclass(itemTemplate._id, BaseClasses.AMMO_BOX)) {
-                    const boxAndCartridges: IItem[] = [reward];
-                    this.itemHelper.addCartridgesToAmmoBox(boxAndCartridges, itemTemplate);
+                    // Get all child items of reward
+                    const childItems = messageDetails.items?.filter((x) => x.parentId === reward._id);
+                    if (childItems?.length === 0) {
+                        // No cartridges found, generate and add to rewards
+                        const boxAndCartridges: IItem[] = [reward];
+                        this.itemHelper.addCartridgesToAmmoBox(boxAndCartridges, itemTemplate);
 
-                    // Push box + cartridge children into array
-                    itemsToSendToPlayer.data.push(...boxAndCartridges);
+                        // Push box + cartridge children into array
+                        itemsToSendToPlayer.data.push(...boxAndCartridges);
+
+                        continue;
+                    }
+
+                    // Ammo box reward already has ammo, don't do anything extra
+                    itemsToSendToPlayer.data.push(reward);
                 } else {
                     if ("StackSlots" in itemTemplate._props) {
                         this.logger.error(
@@ -459,6 +510,7 @@ export class MailSendService {
 
             // Remove empty data property if no rewards
             if (itemsToSendToPlayer.data.length === 0) {
+                // biome-ignore lint/performance/noDelete: Delete is fine here as we're trying to remove the empty data property.
                 delete itemsToSendToPlayer.data;
             }
         }

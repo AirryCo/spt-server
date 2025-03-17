@@ -23,18 +23,18 @@
  * - Finalized enum names are created as a combination of the parent name, prefix, item name, and suffix
  */
 
-import * as fs from "node:fs";
-import * as path from "node:path";
+import path from "node:path";
 import { OnLoad } from "@spt/di/OnLoad";
 import { ItemHelper } from "@spt/helpers/ItemHelper";
 import { ITemplateItem } from "@spt/models/eft/common/tables/ITemplateItem";
 import { BaseClasses } from "@spt/models/enums/BaseClasses";
 import { ItemTpl } from "@spt/models/enums/ItemTpl";
 import { Weapons } from "@spt/models/enums/Weapons";
-import { ILogger } from "@spt/models/spt/utils/ILogger";
+import type { ILogger } from "@spt/models/spt/utils/ILogger";
 import { DatabaseServer } from "@spt/servers/DatabaseServer";
 import { LocaleService } from "@spt/services/LocaleService";
 import * as itemTplOverrides from "@spt/tools/ItemTplGenerator/itemOverrides";
+import { FileSystemSync } from "@spt/utils/FileSystemSync";
 import { inject, injectAll, injectable } from "tsyringe";
 
 @injectable()
@@ -49,6 +49,7 @@ export class ItemTplGenerator {
         @inject("LocaleService") protected localeService: LocaleService,
         @inject("PrimaryLogger") protected logger: ILogger,
         @inject("ItemHelper") protected itemHelper: ItemHelper,
+        @inject("FileSystemSync") protected fileSystemSync: FileSystemSync,
         @injectAll("OnLoad") protected onLoadComponents: OnLoad[],
     ) {}
 
@@ -349,14 +350,16 @@ export class ItemTplGenerator {
     }
 
     private cleanCaliber(ammoCaliber: string): string {
-        ammoCaliber = ammoCaliber.replace("CALIBER", "");
-        ammoCaliber = ammoCaliber.replace("PARA", "");
-        ammoCaliber = ammoCaliber.replace("NATO", "");
+        let ammoCaliberToClean = ammoCaliber;
+
+        ammoCaliberToClean = ammoCaliberToClean.replace("CALIBER", "");
+        ammoCaliberToClean = ammoCaliberToClean.replace("PARA", "");
+        ammoCaliberToClean = ammoCaliberToClean.replace("NATO", "");
 
         // Special case for 45ACP
-        ammoCaliber = ammoCaliber.replace("1143X23ACP", "45ACP");
+        ammoCaliberToClean = ammoCaliberToClean.replace("1143X23ACP", "45ACP");
 
-        return ammoCaliber;
+        return ammoCaliberToClean;
     }
 
     private getAmmoBoxPrefix(item: ITemplateItem): string {
@@ -494,6 +497,6 @@ export class ItemTplGenerator {
             enumFileData += "}\n";
         }
 
-        fs.writeFileSync(outputPath, enumFileData, "utf-8");
+        this.fileSystemSync.write(outputPath, enumFileData);
     }
 }

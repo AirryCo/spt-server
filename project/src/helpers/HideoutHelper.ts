@@ -17,7 +17,7 @@ import { HideoutAreas } from "@spt/models/enums/HideoutAreas";
 import { ItemTpl } from "@spt/models/enums/ItemTpl";
 import { SkillTypes } from "@spt/models/enums/SkillTypes";
 import { IHideoutConfig } from "@spt/models/spt/config/IHideoutConfig";
-import { ILogger } from "@spt/models/spt/utils/ILogger";
+import type { ILogger } from "@spt/models/spt/utils/ILogger";
 import { EventOutputHolder } from "@spt/routers/EventOutputHolder";
 import { ConfigServer } from "@spt/servers/ConfigServer";
 import { DatabaseService } from "@spt/services/DatabaseService";
@@ -26,7 +26,7 @@ import { PlayerService } from "@spt/services/PlayerService";
 import { HashUtil } from "@spt/utils/HashUtil";
 import { HttpResponseUtil } from "@spt/utils/HttpResponseUtil";
 import { TimeUtil } from "@spt/utils/TimeUtil";
-import { ICloner } from "@spt/utils/cloners/ICloner";
+import type { ICloner } from "@spt/utils/cloners/ICloner";
 import { inject, injectable } from "tsyringe";
 
 @injectable()
@@ -180,8 +180,11 @@ export class HideoutHelper {
                 break;
             case BonusType.TEXT_BONUS:
                 // Delete values before they're added to profile
+                // biome-ignore lint/performance/noDelete: Delete is fine here as we entirely want to get rid of the data.
                 delete bonus.passive;
+                // biome-ignore lint/performance/noDelete: Delete is fine here as we entirely want to get rid of the data.
                 delete bonus.production;
+                // biome-ignore lint/performance/noDelete: Delete is fine here as we entirely want to get rid of the data.
                 delete bonus.visible;
                 break;
         }
@@ -410,7 +413,7 @@ export class HideoutHelper {
         const production = pmcData.Hideout.Production[prodId];
 
         // Check if we're already complete, skip
-        if (production.AvailableForFinish) {
+        if (production.AvailableForFinish && !production.inProgress) {
             return;
         }
 
@@ -437,8 +440,9 @@ export class HideoutHelper {
         // Craft is complete, flas as such
         production.AvailableForFinish = true;
 
-        // Reset progress so its not over production time
-        production.Progress = production.ProductionTime;
+        // The client expects `Progress` to be 0, and `inProgress` to be false when a circle is complete
+        production.Progress = 0;
+        production.inProgress = false;
     }
 
     /**
@@ -577,10 +581,6 @@ export class HideoutHelper {
                 // Deducted all used fuel from this container, clean up and exit loop
                 fuelItemInSlot.upd = this.getAreaUpdObject(1, fuelRemaining, pointsConsumed, isFuelItemFoundInRaid);
 
-                this.logger.debug(
-                    `Profile: ${pmcData._id} Generator has: ${fuelRemaining} fuel left in slot ${i + 1}`,
-                    true,
-                );
                 hasFuelRemaining = true;
 
                 break; // Break to avoid updating all the fuel tanks
@@ -781,6 +781,7 @@ export class HideoutHelper {
             }
 
             // Filter ran out / used up
+            // biome-ignore lint/performance/noDelete: Delete is fine here, as we're seeking to entirely delete the water filter.
             delete waterFilterArea.slots[i].item;
             // Update remaining resources to be subtracted
             filterDrainRate = Math.abs(resourceValue);
@@ -919,6 +920,7 @@ export class HideoutHelper {
                     break; // Break here to avoid updating all filters
                 }
 
+                // biome-ignore lint/performance/noDelete: Delete is fine here, as we're seeking to entirely delete the air filter.
                 delete airFilterArea.slots[i].item;
                 // Update remaining resources to be subtracted
                 filterDrainRate = Math.abs(resourceValue);

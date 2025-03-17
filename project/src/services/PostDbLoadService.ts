@@ -1,3 +1,4 @@
+import { PmcWaveGenerator } from "@spt/generators/PmcWaveGenerator";
 import { ILocation } from "@spt/models/eft/common/ILocation";
 import { ConfigTypes } from "@spt/models/enums/ConfigTypes";
 import { ELocationName } from "@spt/models/enums/ELocationName";
@@ -6,11 +7,12 @@ import { Weapons } from "@spt/models/enums/Weapons";
 import { IBotConfig } from "@spt/models/spt/config/IBotConfig";
 import { ICoreConfig } from "@spt/models/spt/config/ICoreConfig";
 import { IHideoutConfig } from "@spt/models/spt/config/IHideoutConfig";
+import { IItemConfig } from "@spt/models/spt/config/IItemConfig";
 import { ILocationConfig } from "@spt/models/spt/config/ILocationConfig";
 import { ILootConfig } from "@spt/models/spt/config/ILootConfig";
 import { IPmcConfig } from "@spt/models/spt/config/IPmcConfig";
 import { IRagfairConfig } from "@spt/models/spt/config/IRagfairConfig";
-import { ILogger } from "@spt/models/spt/utils/ILogger";
+import type { ILogger } from "@spt/models/spt/utils/ILogger";
 import { ConfigServer } from "@spt/servers/ConfigServer";
 import { CustomLocationWaveService } from "@spt/services/CustomLocationWaveService";
 import { DatabaseService } from "@spt/services/DatabaseService";
@@ -18,27 +20,32 @@ import { ItemBaseClassService } from "@spt/services/ItemBaseClassService";
 import { LocalisationService } from "@spt/services/LocalisationService";
 import { OpenZoneService } from "@spt/services/OpenZoneService";
 import { SeasonalEventService } from "@spt/services/SeasonalEventService";
-import { ICloner } from "@spt/utils/cloners/ICloner";
+import { HashUtil } from "@spt/utils/HashUtil";
+import type { ICloner } from "@spt/utils/cloners/ICloner";
 import { inject, injectable } from "tsyringe";
 
 @injectable()
 export class PostDbLoadService {
     protected coreConfig: ICoreConfig;
+
     protected locationConfig: ILocationConfig;
     protected ragfairConfig: IRagfairConfig;
     protected hideoutConfig: IHideoutConfig;
     protected pmcConfig: IPmcConfig;
     protected lootConfig: ILootConfig;
     protected botConfig: IBotConfig;
+    protected itemConfig: IItemConfig;
 
     constructor(
         @inject("PrimaryLogger") protected logger: ILogger,
+        @inject("HashUtil") protected hashUtil: HashUtil,
         @inject("DatabaseService") protected databaseService: DatabaseService,
         @inject("LocalisationService") protected localisationService: LocalisationService,
         @inject("CustomLocationWaveService") protected customLocationWaveService: CustomLocationWaveService,
         @inject("OpenZoneService") protected openZoneService: OpenZoneService,
         @inject("SeasonalEventService") protected seasonalEventService: SeasonalEventService,
         @inject("ItemBaseClassService") protected itemBaseClassService: ItemBaseClassService,
+        @inject("PmcWaveGenerator") protected pmcWaveGenerator: PmcWaveGenerator,
         @inject("ConfigServer") protected configServer: ConfigServer,
         @inject("PrimaryCloner") protected cloner: ICloner,
     ) {
@@ -49,6 +56,7 @@ export class PostDbLoadService {
         this.pmcConfig = this.configServer.getConfig(ConfigTypes.PMC);
         this.lootConfig = this.configServer.getConfig(ConfigTypes.LOOT);
         this.botConfig = this.configServer.getConfig(ConfigTypes.BOT);
+        this.itemConfig = this.configServer.getConfig(ConfigTypes.ITEM);
     }
 
     public performPostDbLoadActions(): void {
@@ -77,6 +85,10 @@ export class PostDbLoadService {
             this.openZoneService.applyZoneChangesToAllMaps();
         }
 
+        if (this.pmcConfig.removeExistingPmcWaves) {
+            this.removeExistingPmcWaves();
+        }
+
         if (this.locationConfig.addCustomBotWavesToMaps) {
             this.customLocationWaveService.applyWaveChangesToAllMaps();
         }
@@ -86,8 +98,6 @@ export class PostDbLoadService {
         }
 
         this.adjustLooseLootSpawnProbabilities();
-
-        this.checkTraderRepairValuesExist();
 
         this.adjustLocationBotValues();
 
@@ -103,6 +113,12 @@ export class PostDbLoadService {
 
         this.adjustHideoutCraftTimes(this.hideoutConfig.overrideCraftTimeSeconds);
         this.adjustHideoutBuildTimes(this.hideoutConfig.overrideBuildTimeSeconds);
+
+        this.unlockHideoutLootCrateCrafts();
+
+        this.cloneExistingCraftsAndAddNew();
+
+        this.removeNewBeginningRequirementFromPrestige();
 
         this.removePraporTestMessage();
 
@@ -120,6 +136,67 @@ export class PostDbLoadService {
         this.addMissingTraderBuyRestrictionMaxValue();
 
         this.applyFleaPriceOverrides();
+
+        this.addCustomItemPresetsToGlobals();
+    }
+
+    protected removeExistingPmcWaves() {
+        const locations: ILocation[] = Object.values(this.databaseService.getLocations());
+
+        for (const location of locations) {
+            if (!location || !location?.base?.BossLocationSpawn) {
+                continue;
+            }
+
+            location.base.BossLocationSpawn = location.base.BossLocationSpawn.filter(
+                (x) => !["pmcUSEC", "pmcBEAR"].includes(x.BossName),
+            );
+        }
+    }
+
+    protected removeNewBeginningRequirementFromPrestige() {
+        const newBeginningQuestIds = ["6761f28a022f60bb320f3e95", "6761ff17cdc36bd66102e9d0"];
+        const prestigeDb = this.databaseService.getTemplates().prestige;
+        for (const prestige of prestigeDb.elements) {
+            prestige.conditions = prestige.conditions.filter(
+                (condition) => !newBeginningQuestIds.includes(condition.target as string),
+            );
+        }
+    }
+
+    protected unlockHideoutLootCrateCrafts() {
+        const hideoutLootBoxCraftIds = [
+            "66582be04de4820934746cea",
+            "6745925da9c9adf0450d5bca",
+            "67449c79268737ef6908d636",
+        ];
+
+        for (const craftId of hideoutLootBoxCraftIds) {
+            const recipe = this.databaseService.getHideout().production.recipes.find((craft) => craft._id === craftId);
+            if (recipe) {
+                recipe.locked = false;
+            }
+        }
+    }
+
+    protected cloneExistingCraftsAndAddNew() {
+        const hideoutCraftDb = this.databaseService.getHideout().production;
+        const craftsToAdd = this.hideoutConfig.hideoutCraftsToAdd;
+        for (const craftToAdd of craftsToAdd) {
+            const clonedCraft = this.cloner.clone(
+                hideoutCraftDb.recipes.find((x) => x._id === craftToAdd.craftIdToCopy),
+            );
+            if (!clonedCraft) {
+                this.logger.warning(`Unable to find hideout craft: ${craftToAdd.craftIdToCopy}, skipping`);
+                continue;
+            }
+
+            clonedCraft._id = craftToAdd.newId;
+            clonedCraft.requirements = craftToAdd.requirements;
+            clonedCraft.endProduct = craftToAdd.craftOutputTpl;
+
+            hideoutCraftDb.recipes.push(clonedCraft);
+        }
     }
 
     protected adjustMinReserveRaiderSpawnChance(): void {
@@ -208,6 +285,8 @@ export class PostDbLoadService {
                 this.logger.warning(
                     this.localisationService.getText("bot-unable_to_edit_limits_of_unknown_map", mapId),
                 );
+
+                continue;
             }
 
             for (const botToLimit of this.locationConfig.botTypeLimits[mapId]) {
@@ -259,41 +338,6 @@ export class PostDbLoadService {
                 }
 
                 lootPostionToAdjust.probability = newChanceValue;
-            }
-        }
-    }
-
-    /**
-     * Out of date/incorrectly made trader mods forget this data
-     */
-    protected checkTraderRepairValuesExist(): void {
-        const traders = this.databaseService.getTraders();
-        for (const trader of Object.values(traders)) {
-            if (!trader?.base?.repair) {
-                this.logger.warning(
-                    this.localisationService.getText("trader-missing_repair_property_using_default", {
-                        traderId: trader.base._id,
-                        nickname: trader.base.nickname,
-                    }),
-                );
-
-                // use ragfair trader as a default
-                trader.base.repair = this.cloner.clone(traders.ragfair.base.repair);
-
-                return;
-            }
-
-            if (trader.base.repair?.quality === undefined) {
-                this.logger.warning(
-                    this.localisationService.getText("trader-missing_repair_quality_property_using_default", {
-                        traderId: trader.base._id,
-                        nickname: trader.base.nickname,
-                    }),
-                );
-
-                // use ragfair trader as a default
-                trader.base.repair.quality = this.cloner.clone(traders.ragfair.base.repair.quality);
-                trader.base.repair.quality = traders.ragfair.base.repair.quality;
             }
         }
     }
@@ -517,6 +561,18 @@ export class PostDbLoadService {
         const fleaPrices = this.databaseService.getPrices();
         for (const [key, value] of Object.entries(this.ragfairConfig.dynamic.itemPriceOverrideRouble)) {
             fleaPrices[key] = value;
+        }
+    }
+
+    protected addCustomItemPresetsToGlobals() {
+        for (const presetToAdd of this.itemConfig.customItemGlobalPresets) {
+            if (this.databaseService.getGlobals().ItemPresets[presetToAdd._id]) {
+                this.logger.warning(
+                    `Global ItemPreset with Id of: ${presetToAdd._id} already exists, unable to overwrite`,
+                );
+                continue;
+            }
+            this.databaseService.getGlobals().ItemPresets[presetToAdd._id] = presetToAdd;
         }
     }
 }

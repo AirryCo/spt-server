@@ -20,6 +20,7 @@ export interface IRagfairOffer {
     /** Rouble price - same as requirementsCost */
     summaryCost: number;
     user: IRagfairOfferUser;
+    quantity: number;
 
     /** Trader only */
     unlimitedCount?: boolean;

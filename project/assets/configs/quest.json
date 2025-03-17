@@ -8,16 +8,16 @@
         "5e383a6386f77465910ce1f3",
         "5e4d515e86f77438b2195244",
         "639282134ed9512be67647ed",
-        "6613f3007f6666d56807c929",
-        "6613f307fca4f2f386029409"
+        "66151401efb0539ae10875ae",
+        "6615141bfda04449120269a7"
     ],
     "bearOnlyQuests": [
         "6179b5b06e9dd54ac275e409",
         "5e381b0286f77420e3417a74",
         "5e4d4ac186f774264f758336",
         "639136d68ba6894d155e77cf",
-        "66151401efb0539ae10875ae",
-        "6615141bfda04449120269a7"
+        "6613f3007f6666d56807c929",
+        "6613f307fca4f2f386029409"
     ],
     "profileBlacklist": {
         "unheard_edition": ["666314a50aa5c7436c00908a"]
@@ -89,64 +89,29 @@
             "endTimestamp": "",
             "yearly": false
         },
-        "61bb474dce7374453b45dfd2": {
-            "name": "Fairy Tale Showdown",
+        "675031be899713ccad00060c": {
+            "name": "Christmas Dinner",
             "season": "christmas",
             "startTimestamp": 1701388800000,
             "endTimestamp": 1703980800000,
             "yearly": true
         },
-        "61bb474b1ab5304c3817a53a": {
-            "name": "Disrupting the Party",
+        "675031d3884e1da4a90b3bc9": {
+            "name": "Chilly",
             "season": "christmas",
             "startTimestamp": 1701388800000,
             "endTimestamp": 1703980800000,
             "yearly": true
         },
-        "61bb47481908c67d4249a205": {
-            "name": "No Gifts for You",
+        "6750320e23fc8fd9cc087d14": {
+            "name": "Holiday Beyond the Means",
             "season": "christmas",
             "startTimestamp": 1701388800000,
             "endTimestamp": 1703980800000,
             "yearly": true
         },
-        "61bb468b8d7cac1532300ccc": {
-            "name": "Party Preparations",
-            "season": "christmas",
-            "startTimestamp": 1701388800000,
-            "endTimestamp": 1703980800000,
-            "yearly": true
-        },
-        "61b9e1aaef9a1b5d6a79899a": {
-            "name": "Santas bag",
-            "season": "christmas",
-            "startTimestamp": 1701388800000,
-            "endTimestamp": 1703980800000,
-            "yearly": true
-        },
-        "61bb47516b70332c062ca7b9": {
-            "name": "Stop the Fight!",
-            "season": "christmas",
-            "startTimestamp": 1701388800000,
-            "endTimestamp": 1703980800000,
-            "yearly": true
-        },
-        "61bb475467f83663e155e26a": {
-            "name": "A Kind Snow Maiden",
-            "season": "christmas",
-            "startTimestamp": 1701388800000,
-            "endTimestamp": 1703980800000,
-            "yearly": true
-        },
-        "61bb4756883b2c16a163870a": {
-            "name": "Home Comfort",
-            "season": "christmas",
-            "startTimestamp": 1701388800000,
-            "endTimestamp": 1703980800000,
-            "yearly": true
-        },
-        "61bb47578d7cac1532300ccd": {
-            "name": "Bad Santa",
+        "67503247622398376d0b57cd": {
+            "name": "Khorovod",
             "season": "christmas",
             "startTimestamp": 1701388800000,
             "endTimestamp": 1703980800000,
@@ -154,13 +119,6 @@
         },
         "655e427b64d09b4122018228": {
             "name": "The punisher - Harvest",
-            "season": "None",
-            "startTimestamp": 1341615600000,
-            "endTimestamp": "",
-            "yearly": false
-        },
-        "65e85198e32da31f2b30978e": {
-            "name": "Evil Spirits",
             "season": "None",
             "startTimestamp": 1341615600000,
             "endTimestamp": "",
@@ -228,6 +186,27 @@
             "startTimestamp": 1341615600000,
             "endTimestamp": "",
             "yearly": true
+        },
+        "674647f38466ebb03408b291": {
+            "name": "Thats a Great Plan Walter",
+            "season": "None",
+            "startTimestamp": 1341615600000,
+            "endTimestamp": "",
+            "yearly": false
+        },
+        "675031e1f300496cc4104450": {
+            "name": "Hide in Plain Sight",
+            "season": "christmas",
+            "startTimestamp": 1701388800000,
+            "endTimestamp": 1703980800000,
+            "yearly": true
+        },
+        "675031f57775aada6b0f96a1": {
+            "name": "Cheer up",
+            "season": "christmas",
+            "startTimestamp": 1701388800000,
+            "endTimestamp": 1703980800000,
+            "yearly": true
         }
     },
     "repeatableQuests": [
@@ -243,7 +222,7 @@
                 "levels": [1, 10, 20, 30, 40, 50, 60],
                 "experience": [1000, 2000, 8000, 13000, 19000, 24000, 30000],
                 "roubles": [11000, 20000, 32000, 45000, 58000, 70000, 82000],
-                "gpCoins": [3, 3, 6, 6, 8, 8, 10],
+                "gpCoins": [2, 3, 6, 6, 8, 8, 10],
                 "items": [2, 4, 5, 5, 5, 5, 5],
                 "reputation": [0.01, 0.01, 0.02, 0.02, 0.03, 0.03, 0.03],
                 "rewardSpread": 0.5,
@@ -1033,7 +1012,8 @@
             "rewardAmmoStackMinSize": 5,
             "freeChangesAvailable": 2,
             "freeChanges": 2,
-            "keepDailyQuestTypeOnReplacement": false
+            "keepDailyQuestTypeOnReplacement": false,
+            "standingChangeCost": [0, 0.01]
         },
         {
             "id": "618035d38012292db3081bf0",
@@ -1045,7 +1025,7 @@
             "minPlayerLevel": 15,
             "rewardScaling": {
                 "levels": [1, 10, 20, 30, 40, 50, 60],
-                "experience": [5000, 15000, 27000, 80000, 142000, 220000, 290000],
+                "experience": [5000, 15000, 27000, 80000, 210000, 260000, 350000],
                 "roubles": [20000, 50000, 175000, 350000, 540000, 710000, 880000],
                 "gpCoins": [10, 10, 16, 16, 20, 30, 35],
                 "items": [4, 5, 5, 6, 6, 7, 7],
@@ -1895,7 +1875,8 @@
             "rewardBlacklist": ["627bce33f21bc425b06ab967", "59f32c3b86f77472a31742f0", "59f32bb586f774757e1e8442"],
             "rewardAmmoStackMinSize": 5,
             "freeChangesAvailable": 0,
-            "freeChanges": 0
+            "freeChanges": 0,
+            "standingChangeCost": [0, 0.01, 0.01]
         },
         {
             "id": "62825ef60e88d037dc1eb426",
@@ -2309,7 +2290,8 @@
             "rewardBlacklist": ["627bce33f21bc425b06ab967", "59f32c3b86f77472a31742f0", "59f32bb586f774757e1e8442"],
             "rewardAmmoStackMinSize": 5,
             "freeChangesAvailable": 0,
-            "freeChanges": 0
+            "freeChanges": 0,
+            "standingChangeCost": [0, 0.01]
         }
     ],
     "locationIdMap": {

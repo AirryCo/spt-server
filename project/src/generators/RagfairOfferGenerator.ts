@@ -1,3 +1,4 @@
+import { ProgramStatics } from "@spt/ProgramStatics";
 import { RagfairAssortGenerator } from "@spt/generators/RagfairAssortGenerator";
 import { BotHelper } from "@spt/helpers/BotHelper";
 import { HandbookHelper } from "@spt/helpers/HandbookHelper";
@@ -24,7 +25,7 @@ import {
 } from "@spt/models/spt/config/IRagfairConfig";
 import { ITraderConfig } from "@spt/models/spt/config/ITraderConfig";
 import { ITplWithFleaPrice } from "@spt/models/spt/ragfair/ITplWithFleaPrice";
-import { ILogger } from "@spt/models/spt/utils/ILogger";
+import type { ILogger } from "@spt/models/spt/utils/ILogger";
 import { ConfigServer } from "@spt/servers/ConfigServer";
 import { SaveServer } from "@spt/servers/SaveServer";
 import { DatabaseService } from "@spt/services/DatabaseService";
@@ -35,7 +36,7 @@ import { RagfairPriceService } from "@spt/services/RagfairPriceService";
 import { HashUtil } from "@spt/utils/HashUtil";
 import { RandomUtil } from "@spt/utils/RandomUtil";
 import { TimeUtil } from "@spt/utils/TimeUtil";
-import { ICloner } from "@spt/utils/cloners/ICloner";
+import type { ICloner } from "@spt/utils/cloners/ICloner";
 import { inject, injectable } from "tsyringe";
 
 @injectable()
@@ -82,6 +83,7 @@ export class RagfairOfferGenerator {
      * @param items Items in the offer
      * @param barterScheme Cost of item (currency or barter)
      * @param loyalLevel Loyalty level needed to buy item
+     * @param quantity Amount of item being listed
      * @param sellInOnePiece Flags sellInOnePiece to be true
      * @returns Created flea offer
      */
@@ -91,9 +93,10 @@ export class RagfairOfferGenerator {
         items: IItem[],
         barterScheme: IBarterScheme[],
         loyalLevel: number,
+        quantity: number,
         sellInOnePiece = false,
     ): IRagfairOffer {
-        const offer = this.createOffer(userID, time, items, barterScheme, loyalLevel, sellInOnePiece);
+        const offer = this.createOffer(userID, time, items, barterScheme, loyalLevel, quantity, sellInOnePiece);
         this.ragfairOfferService.addOffer(offer);
 
         return offer;
@@ -106,6 +109,7 @@ export class RagfairOfferGenerator {
      * @param items Items in the offer
      * @param barterScheme Cost of item (currency or barter)
      * @param loyalLevel Loyalty level needed to buy item
+     * @param quantity Amount of item being listed
      * @param isPackOffer Is offer being created flaged as a pack
      * @returns IRagfairOffer
      */
@@ -115,6 +119,7 @@ export class RagfairOfferGenerator {
         items: IItem[],
         barterScheme: IBarterScheme[],
         loyalLevel: number,
+        quantity: number,
         isPackOffer = false,
     ): IRagfairOffer {
         const isTrader = this.ragfairServerHelper.isTrader(userID);
@@ -137,7 +142,6 @@ export class RagfairOfferGenerator {
 
         // Clone to avoid modifying original array
         const itemsClone = this.cloner.clone(items);
-        const itemStackCount = itemsClone[0].upd?.StackObjectsCount ?? 1;
 
         // Hydrate ammo boxes with cartridges + ensure only 1 item is present (ammo box)
         // On offer refresh dont re-add cartridges to ammo box that already has cartridges
@@ -146,7 +150,7 @@ export class RagfairOfferGenerator {
         }
 
         const roubleListingPrice = Math.round(this.convertOfferRequirementsIntoRoubles(offerRequirements));
-        const singleItemListingPrice = isPackOffer ? roubleListingPrice / itemStackCount : roubleListingPrice;
+        const singleItemListingPrice = isPackOffer ? roubleListingPrice / quantity : roubleListingPrice;
 
         const offer: IRagfairOffer = {
             _id: this.hashUtil.generate(),
@@ -163,6 +167,7 @@ export class RagfairOfferGenerator {
             loyaltyLevel: loyalLevel,
             sellInOnePiece: isPackOffer,
             locked: false,
+            quantity: quantity,
         };
 
         this.offerCounter++;
@@ -350,7 +355,7 @@ export class RagfairOfferGenerator {
 
         // get assort items from param if they exist, otherwise grab freshly generated assorts
         const assortItemsToProcess: IItem[][] = replacingExpiredOffers
-            ? expiredOffers
+            ? (expiredOffers ?? [])
             : this.ragfairAssortGenerator.getAssortItems();
 
         // Create offers for each item set concurrently
@@ -386,9 +391,13 @@ export class RagfairOfferGenerator {
 
         // Get number of offers to create
         // Limit to 1 offer when processing expired - like-for-like replacement
-        const offerCount = isExpiredOffer
+        let offerCount = isExpiredOffer
             ? 1
             : Math.round(this.randomUtil.getInt(config.offerItemCount.min, config.offerItemCount.max));
+
+        if (ProgramStatics.DEBUG && !ProgramStatics.COMPILED) {
+            offerCount = 2;
+        }
 
         // Store all functions to create offers for this item and pass into Promise.all to run async
         const assortSingleOfferProcesses = [];
@@ -398,7 +407,9 @@ export class RagfairOfferGenerator {
             this.itemHelper.reparentItemAndChildren(clonedAssort[0], clonedAssort);
 
             // Clear unnecessary properties
+            // biome-ignore lint/performance/noDelete: Deleting is fine here, we're getting rid of unecessary properties.
             delete clonedAssort[0].parentId;
+            // biome-ignore lint/performance/noDelete: Deleting is fine here, we're getting rid of unecessary properties.
             delete clonedAssort[0].slotId;
 
             assortSingleOfferProcesses.push(
@@ -464,10 +475,10 @@ export class RagfairOfferGenerator {
         itemToSellDetails: ITemplateItem,
     ): Promise<void> {
         // Set stack size to random value
-        itemWithChildren[0].upd.StackObjectsCount = this.ragfairServerHelper.calculateDynamicStackCount(
-            itemWithChildren[0]._tpl,
-            isPreset,
-        );
+        let desiredStackSize = this.ragfairServerHelper.calculateDynamicStackCount(itemWithChildren[0]._tpl, isPreset);
+
+        // Reset stack count to 1 from whatever it was prior
+        itemWithChildren[0].upd.StackObjectsCount = 1;
 
         const isBarterOffer = this.randomUtil.getChance100(this.ragfairConfig.dynamic.barter.chancePercent);
         const isPackOffer =
@@ -498,14 +509,13 @@ export class RagfairOfferGenerator {
         let barterScheme: IBarterScheme[];
         if (isPackOffer) {
             // Set pack size
-            const stackSize = this.randomUtil.getInt(
+            desiredStackSize = this.randomUtil.getInt(
                 this.ragfairConfig.dynamic.pack.itemCountMin,
                 this.ragfairConfig.dynamic.pack.itemCountMax,
             );
-            itemWithChildren[0].upd.StackObjectsCount = stackSize;
 
             // Don't randomise pack items
-            barterScheme = this.createCurrencyBarterScheme(itemWithChildren, isPackOffer, stackSize);
+            barterScheme = this.createCurrencyBarterScheme(itemWithChildren, isPackOffer, desiredStackSize);
         } else if (isBarterOffer) {
             // Apply randomised properties
             this.randomiseOfferItemUpdProperties(sellerId, itemWithChildren, itemToSellDetails);
@@ -525,6 +535,7 @@ export class RagfairOfferGenerator {
             itemWithChildren,
             barterScheme,
             1,
+            desiredStackSize,
             isPackOffer, // sellAsOnePiece - pack offer
         );
     }
@@ -539,10 +550,10 @@ export class RagfairOfferGenerator {
 
         const time = this.timeUtil.getTimestamp();
         const trader = this.databaseService.getTrader(traderID);
-        const assorts = trader.assort;
+        const assortsClone = this.cloner.clone(trader.assort);
 
         // Trader assorts / assort items are missing
-        if (!assorts?.items?.length) {
+        if (!assortsClone?.items?.length) {
             this.logger.error(
                 this.localisationService.getText(
                     "ragfair-no_trader_assorts_cant_generate_flea_offers",
@@ -553,7 +564,7 @@ export class RagfairOfferGenerator {
         }
 
         const blacklist = this.ragfairConfig.dynamic.blacklist;
-        for (const item of assorts.items) {
+        for (const item of assortsClone.items) {
             // We only want to process 'base/root' items, no children
             if (item.slotId !== "hideout") {
                 // skip mod items
@@ -577,9 +588,9 @@ export class RagfairOfferGenerator {
             const isPreset = this.presetHelper.isPreset(item._id);
             const items: IItem[] = isPreset
                 ? this.ragfairServerHelper.getPresetItems(item)
-                : [...[item], ...this.itemHelper.findAndReturnChildrenByAssort(item._id, assorts.items)];
+                : [...[item], ...this.itemHelper.findAndReturnChildrenByAssort(item._id, assortsClone.items)];
 
-            const barterScheme = assorts.barter_scheme[item._id];
+            const barterScheme = assortsClone.barter_scheme[item._id];
             if (!barterScheme) {
                 this.logger.warning(
                     this.localisationService.getText("ragfair-missing_barter_scheme", {
@@ -591,20 +602,18 @@ export class RagfairOfferGenerator {
                 continue;
             }
 
-            const barterSchemeItems = assorts.barter_scheme[item._id][0];
+            const barterSchemeItems = assortsClone.barter_scheme[item._id][0];
+            const loyalLevel = assortsClone.loyal_level_items[item._id];
 
-            // Adjust price by traderPriceMultipler config property
-            if (this.traderConfig.traderPriceMultipler > 0) {
-                if (barterSchemeItems.length === 1 && this.paymentHelper.isMoneyTpl(barterSchemeItems[0]._tpl)) {
-                    barterSchemeItems[0].count = Math.ceil(
-                        barterSchemeItems[0].count * this.traderConfig.traderPriceMultipler,
-                    );
-                }
-            }
-
-            const loyalLevel = assorts.loyal_level_items[item._id];
-
-            const offer = this.createAndAddFleaOffer(traderID, time, items, barterSchemeItems, loyalLevel, false);
+            const offer = this.createAndAddFleaOffer(
+                traderID,
+                time,
+                items,
+                barterSchemeItems,
+                loyalLevel,
+                item.upd?.StackObjectsCount ?? 1,
+                false,
+            );
 
             // Refresh complete, reset flag to false
             trader.base.refreshTraderRagfairOffers = false;

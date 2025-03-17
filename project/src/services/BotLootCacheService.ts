@@ -1,14 +1,14 @@
 import { PMCLootGenerator } from "@spt/generators/PMCLootGenerator";
 import { ItemHelper } from "@spt/helpers/ItemHelper";
+import { MinMax } from "@spt/models/common/MinMax";
 import { IBotType } from "@spt/models/eft/common/tables/IBotType";
 import { IProps, ITemplateItem } from "@spt/models/eft/common/tables/ITemplateItem";
 import { BaseClasses } from "@spt/models/enums/BaseClasses";
 import { IBotLootCache, LootCacheType } from "@spt/models/spt/bots/IBotLootCache";
-import { ILogger } from "@spt/models/spt/utils/ILogger";
-import { DatabaseServer } from "@spt/servers/DatabaseServer";
+import type { ILogger } from "@spt/models/spt/utils/ILogger";
 import { LocalisationService } from "@spt/services/LocalisationService";
 import { RagfairPriceService } from "@spt/services/RagfairPriceService";
-import { ICloner } from "@spt/utils/cloners/ICloner";
+import type { ICloner } from "@spt/utils/cloners/ICloner";
 import { inject, injectable } from "tsyringe";
 
 @injectable()
@@ -18,7 +18,6 @@ export class BotLootCacheService {
     constructor(
         @inject("PrimaryLogger") protected logger: ILogger,
         @inject("ItemHelper") protected itemHelper: ItemHelper,
-        @inject("DatabaseServer") protected databaseServer: DatabaseServer,
         @inject("PMCLootGenerator") protected pmcLootGenerator: PMCLootGenerator,
         @inject("LocalisationService") protected localisationService: LocalisationService,
         @inject("RagfairPriceService") protected ragfairPriceService: RagfairPriceService,
@@ -40,6 +39,7 @@ export class BotLootCacheService {
      * @param isPmc is the bot a pmc
      * @param lootType what type of loot is needed (backpack/pocket/stim/vest etc)
      * @param botJsonTemplate Base json db file for the bot having its loot generated
+     * @param itemPriceMinMax OPTIONAL - min max limit of loot item price
      * @returns ITemplateItem array
      */
     public getLootFromCache(
@@ -47,6 +47,7 @@ export class BotLootCacheService {
         isPmc: boolean,
         lootType: LootCacheType,
         botJsonTemplate: IBotType,
+        itemPriceMinMax?: MinMax,
     ): Record<string, number> {
         if (!this.botRoleExistsInCache(botRole)) {
             this.initCacheForBotRole(botRole);
@@ -103,6 +104,27 @@ export class BotLootCacheService {
                     }),
                 );
                 break;
+        }
+
+        if (itemPriceMinMax) {
+            const filteredResult = Object.entries(result).filter(([key, val]) => {
+                const itemPrice = this.itemHelper.getItemPrice(key);
+                if (itemPriceMinMax?.min && itemPriceMinMax?.max) {
+                    return itemPrice >= itemPriceMinMax?.min && itemPrice <= itemPriceMinMax?.max;
+                }
+
+                if (itemPriceMinMax?.min && !itemPriceMinMax?.max) {
+                    return itemPrice >= itemPriceMinMax?.min;
+                }
+
+                if (!itemPriceMinMax?.min && itemPriceMinMax?.max) {
+                    return itemPrice <= itemPriceMinMax?.max;
+                }
+
+                return false;
+            });
+
+            return this.cloner.clone(Object.fromEntries(filteredResult) as Record<string, number>);
         }
 
         return this.cloner.clone(result);
@@ -384,25 +406,6 @@ export class BotLootCacheService {
         this.lootCache[botRole].pocketLoot = filteredPocketItems;
         this.lootCache[botRole].vestLoot = filteredVestItems;
         this.lootCache[botRole].secureLoot = secureLootTPool;
-    }
-
-    /**
-     * Add unique items into combined pool
-     * @param poolToAddTo Pool of items to add to
-     * @param itemsToAdd items to add to combined pool if unique
-     */
-    protected addUniqueItemsToPool(poolToAddTo: ITemplateItem[], itemsToAdd: ITemplateItem[]): void {
-        if (poolToAddTo.length === 0) {
-            poolToAddTo.push(...itemsToAdd);
-            return;
-        }
-
-        const mergedItemPools = [...poolToAddTo, ...itemsToAdd];
-
-        // Save only unique array values
-        const uniqueResults = [...new Set([].concat(...mergedItemPools))];
-        poolToAddTo.splice(0, poolToAddTo.length);
-        poolToAddTo.push(...uniqueResults);
     }
 
     protected addItemsToPool(poolToAddTo: Record<string, number>, poolOfItemsToAdd: Record<string, number>): void {

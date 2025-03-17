@@ -9,7 +9,7 @@ import {
 import { IProfileChange, ITraderData } from "@spt/models/eft/itemEvent/IItemEventRouterBase";
 import { IItemEventRouterResponse } from "@spt/models/eft/itemEvent/IItemEventRouterResponse";
 import { TimeUtil } from "@spt/utils/TimeUtil";
-import { ICloner } from "@spt/utils/cloners/ICloner";
+import type { ICloner } from "@spt/utils/cloners/ICloner";
 import { inject, injectable } from "tsyringe";
 
 @injectable()
@@ -91,7 +91,7 @@ export class EventOutputHolder {
         this.cleanUpCompleteCraftsInProfile(pmcData.Hideout.Production);
     }
 
-    protected resetMoneyTransferLimit(limit: IMoneyTransferLimits) {
+    protected resetMoneyTransferLimit(limit: IMoneyTransferLimits): void {
         if (limit.nextResetTime < this.timeUtil.getTimestamp()) {
             limit.nextResetTime += limit.resetInterval;
             limit.remainingLimit = limit.totalLimit;

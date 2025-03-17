@@ -154,7 +154,6 @@
       "BossPlayer": false,
       "BossZone": "",
       "IgnoreMaxBots": true,
-      "RandomTimeSpawn": false,
       "SpawnMode": [
         "pve"
       ],
@@ -173,8 +172,64 @@
       "BossPlayer": false,
       "BossZone": "",
       "IgnoreMaxBots": true,
-      "RandomTimeSpawn": false,
       "SpawnMode": [
+        "pve"
+      ],
+      "Supports": null,
+      "Time": -1,
+      "TriggerId": "",
+      "TriggerName": ""
+    },
+    {
+      "BossChance": 0,
+      "BossDifficult": "normal",
+      "BossEscortAmount": "2",
+      "BossEscortDifficult": "normal",
+      "BossEscortType": "arenaFighterEvent",
+      "BossName": "arenaFighterEvent",
+      "BossPlayer": false,
+      "BossZone": "BotZone",
+      "IgnoreMaxBots": true,
+      "SpawnMode": [
+        "regular",
+        "pve"
+      ],
+      "Supports": null,
+      "Time": -1,
+      "TriggerId": "",
+      "TriggerName": ""
+    },
+    {
+      "BossChance": 0,
+      "BossDifficult": "normal",
+      "BossEscortAmount": "2",
+      "BossEscortDifficult": "normal",
+      "BossEscortType": "arenaFighterEvent",
+      "BossName": "arenaFighterEvent",
+      "BossPlayer": false,
+      "BossZone": "BotZone",
+      "IgnoreMaxBots": true,
+      "SpawnMode": [
+        "regular",
+        "pve"
+      ],
+      "Supports": null,
+      "Time": -1,
+      "TriggerId": "",
+      "TriggerName": ""
+    },
+    {
+      "BossChance": 0,
+      "BossDifficult": "normal",
+      "BossEscortAmount": "2",
+      "BossEscortDifficult": "normal",
+      "BossEscortType": "arenaFighterEvent",
+      "BossName": "arenaFighterEvent",
+      "BossPlayer": false,
+      "BossZone": "BotZone",
+      "IgnoreMaxBots": true,
+      "SpawnMode": [
+        "regular",
         "pve"
       ],
       "Supports": null,
@@ -300,12 +355,24 @@
     "DistToPersueAxemanCoef": 0.9,
     "DistToSleep": 120,
     "DistToSleepPvE": 120,
+    "FogVisibilityDistanceCoef": 1,
+    "FogVisibilitySpeedCoef": 1,
     "GainSight": 1,
     "KhorovodChance": 0,
+    "LockSpawnCheckRadius": 150,
+    "LockSpawnCheckRadiusPvE": 150,
+    "LockSpawnStartTime": 10,
+    "LockSpawnStartTimePvE": 10,
+    "LockSpawnStepTime": 50,
+    "LockSpawnStepTimePvE": 50,
     "MagnetPower": 15,
     "MarksmanAccuratyCoef": 1,
     "MaxExfiltrationTime": 900,
     "MinExfiltrationTime": 600,
+    "NonWaveSpawnBotsLimitPerPlayer": 10,
+    "NonWaveSpawnBotsLimitPerPlayerPvE": 15,
+    "RainVisibilityDistanceCoef": 1,
+    "RainVisibilitySpeedCoef": 1,
     "Scattering": 1,
     "VisibleDistance": 1
   },
@@ -399,7 +466,7 @@
       ],
       "CrowdCooldownPerPlayerSec": 300,
       "CrowdsLimit": 2,
-      "InfectedLookCoeff": 2,
+      "InfectedLookCoeff": 0.5,
       "InfectionPercentage": 0,
       "MaxCrowdAttackSpawnLimit": 13,
       "MinInfectionPercentage": 0,
@@ -416,6 +483,35 @@
   "GlobalContainerChanceModifier": 1,
   "GlobalLootChanceModifier": 0.33,
   "GlobalLootChanceModifierPvE": 0.5,
+  "HeatmapCellSize": {
+    "x": 1,
+    "y": 2,
+    "z": 1
+  },
+  "HeatmapLayers": [
+    "AllCharactersPositions",
+    "AllBotsPositions",
+    "AllRealPlayersPositions",
+    "RealPlayersSavagesPositions",
+    "RealPlayersSavagesDeads",
+    "RealPlayersSavagesDamages",
+    "RealPlayersPmcPositions",
+    "RealPlayersPmcDeads",
+    "RealPlayersPmcDamages",
+    "RealPlayersPmcLaydownPositions",
+    "RealPlayersPmcEquipmentDropPositions",
+    "RealPlayersPmcHealingPositions",
+    "BotsBossPositions",
+    "BotsBossDeads",
+    "BotsBossDamages",
+    "BotsSavagesPositions",
+    "BotsSavagesDeads",
+    "BotsSavagesDamages",
+    "AllCharactersDamageSources",
+    "RealPlayerDamageSources",
+    "BotsDamageSources",
+    "LootPositions"
+  ],
   "IconX": 318,
   "IconY": 359,
   "Id": "factory4_night",
@@ -425,20 +521,24 @@
   "Loot": [],
   "MatchMakerMinPlayersByWaitTime": [
     {
+      "minPlayers": 5,
+      "time": 240
+    },
+    {
       "minPlayers": 4,
-      "time": 60
+      "time": 300
     },
     {
       "minPlayers": 3,
-      "time": 70
+      "time": 360
     },
     {
       "minPlayers": 2,
-      "time": 120
+      "time": 420
     },
     {
       "minPlayers": 1,
-      "time": 330
+      "time": 450
     }
   ],
   "MaxBotPerZone": 0,
@@ -4972,9 +5072,22 @@
     {
       "TemplateId": "634959225289190e5e773b3b",
       "Value": 6
+    },
+    {
+      "TemplateId": "675aaaf674a7619a5304c233",
+      "Value": 2
     }
   ],
   "sav_summon_seconds": 60,
+  "secretExits": [
+    {
+      "EligibleForPMC": true,
+      "EligibleForScav": true,
+      "ExfiltrationTime": 15,
+      "Id": "675aaaf674a7619a5304c233",
+      "Name": "factory_secret_ark"
+    }
+  ],
   "tmp_location_field_remove_me": 0,
   "transits": [
     {
@@ -4986,7 +5099,7 @@
       "location": "Woods",
       "name": "FAC_TRANSIT_12",
       "target": "5704e3c2d2720bac5b8b4567",
-      "time": 30
+      "time": 20
     },
     {
       "activateAfterSec": 60,
@@ -4997,7 +5110,7 @@
       "location": "bigmap",
       "name": "FAC_TRANSIT_13",
       "target": "56f40101d2720b2a4d8b45d6",
-      "time": 30
+      "time": 20
     },
     {
       "activateAfterSec": 60,
@@ -5008,7 +5121,7 @@
       "location": "laboratory",
       "name": "FAC_TRANSIT_14",
       "target": "5b0fc42d86f7744a585f9105",
-      "time": 30
+      "time": 20
     }
   ],
   "users_gather_seconds": 0,

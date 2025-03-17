@@ -3,7 +3,6 @@ import "reflect-metadata";
 import { ItemHelper } from "@spt/helpers/ItemHelper";
 import { IInsurance } from "@spt/models/eft/profile/ISptProfile";
 import { profileInsuranceFixture } from "@tests/__fixture__/profileInsurance.fixture";
-import { format } from "date-fns";
 import { container } from "tsyringe";
 
 type DateInput = number | number[] | { [index: number]: number };
@@ -36,9 +35,17 @@ export class ProfileInsuranceFactory {
                 date = dateInput || defaultDate;
             }
 
+            const dateObject = new Date(date * 1000); // Convert UNIX timestamp to milliseconds
+
+            const month = (dateObject.getUTCMonth() + 1).toString().padStart(2, "0");
+            const day = dateObject.getUTCDate().toString().padStart(2, "0");
+            const year = dateObject.getUTCFullYear();
+            const hours = dateObject.getUTCHours().toString().padStart(2, "0");
+            const minutes = dateObject.getUTCMinutes().toString().padStart(2, "0");
+
             insurance.scheduledTime = date;
-            insurance.systemData.date = format(date, "MM.dd.yyyy");
-            insurance.systemData.time = format(date, "HH:mm");
+            insurance.systemData.date = `${month}.${day}.${year}`;
+            insurance.systemData.time = `${hours}:${minutes}`;
             return insurance;
         });
 

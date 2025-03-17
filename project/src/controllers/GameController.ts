@@ -1,19 +1,27 @@
+import { ProgramStatics } from "@spt/ProgramStatics";
 import { ApplicationContext } from "@spt/context/ApplicationContext";
 import { ContextVariableType } from "@spt/context/ContextVariableType";
 import { HideoutHelper } from "@spt/helpers/HideoutHelper";
 import { HttpServerHelper } from "@spt/helpers/HttpServerHelper";
 import { InventoryHelper } from "@spt/helpers/InventoryHelper";
 import { ProfileHelper } from "@spt/helpers/ProfileHelper";
+import { RewardHelper } from "@spt/helpers/RewardHelper";
 import { PreSptModLoader } from "@spt/loaders/PreSptModLoader";
 import { IEmptyRequestData } from "@spt/models/eft/common/IEmptyRequestData";
 import { IPmcData } from "@spt/models/eft/common/IPmcData";
 import { IBodyPartHealth } from "@spt/models/eft/common/tables/IBotBase";
+import {
+    CustomisationSource,
+    CustomisationType,
+    ICustomisationStorage,
+} from "@spt/models/eft/common/tables/ICustomisationStorage";
+import { IItem } from "@spt/models/eft/common/tables/IItem";
 import { ICheckVersionResponse } from "@spt/models/eft/game/ICheckVersionResponse";
 import { ICurrentGroupResponse } from "@spt/models/eft/game/ICurrentGroupResponse";
 import { IGameConfigResponse } from "@spt/models/eft/game/IGameConfigResponse";
 import { IGameKeepAliveResponse } from "@spt/models/eft/game/IGameKeepAliveResponse";
 import { IGameModeRequestData } from "@spt/models/eft/game/IGameModeRequestData";
-import { ESessionMode } from "@spt/models/eft/game/IGameModeResponse";
+import { ESessionMode, IGameModeResponse } from "@spt/models/eft/game/IGameModeResponse";
 import { IGetRaidTimeRequest } from "@spt/models/eft/game/IGetRaidTimeRequest";
 import { IGetRaidTimeResponse } from "@spt/models/eft/game/IGetRaidTimeResponse";
 import { IServerDetails } from "@spt/models/eft/game/IServerDetails";
@@ -22,14 +30,16 @@ import { ISptProfile } from "@spt/models/eft/profile/ISptProfile";
 import { BonusType } from "@spt/models/enums/BonusType";
 import { ConfigTypes } from "@spt/models/enums/ConfigTypes";
 import { HideoutAreas } from "@spt/models/enums/HideoutAreas";
+import { RewardType } from "@spt/models/enums/RewardType";
 import { SkillTypes } from "@spt/models/enums/SkillTypes";
 import { IBotConfig } from "@spt/models/spt/config/IBotConfig";
 import { ICoreConfig } from "@spt/models/spt/config/ICoreConfig";
 import { IHideoutConfig } from "@spt/models/spt/config/IHideoutConfig";
 import { IHttpConfig } from "@spt/models/spt/config/IHttpConfig";
 import { IRagfairConfig } from "@spt/models/spt/config/IRagfairConfig";
-import { ILogger } from "@spt/models/spt/utils/ILogger";
+import type { ILogger } from "@spt/models/spt/utils/ILogger";
 import { ConfigServer } from "@spt/servers/ConfigServer";
+import { CreateProfileService } from "@spt/services/CreateProfileService";
 import { CustomLocationWaveService } from "@spt/services/CustomLocationWaveService";
 import { DatabaseService } from "@spt/services/DatabaseService";
 import { GiftService } from "@spt/services/GiftService";
@@ -44,8 +54,9 @@ import { SeasonalEventService } from "@spt/services/SeasonalEventService";
 import { HashUtil } from "@spt/utils/HashUtil";
 import { RandomUtil } from "@spt/utils/RandomUtil";
 import { TimeUtil } from "@spt/utils/TimeUtil";
-import { ICloner } from "@spt/utils/cloners/ICloner";
+import type { ICloner } from "@spt/utils/cloners/ICloner";
 import { inject, injectable } from "tsyringe";
+import crypto from "node:crypto";
 
 @injectable()
 export class GameController {
@@ -63,12 +74,14 @@ export class GameController {
         @inject("PreSptModLoader") protected preSptModLoader: PreSptModLoader,
         @inject("HttpServerHelper") protected httpServerHelper: HttpServerHelper,
         @inject("InventoryHelper") protected inventoryHelper: InventoryHelper,
+        @inject("RewardHelper") protected rewardHelper: RewardHelper,
         @inject("RandomUtil") protected randomUtil: RandomUtil,
         @inject("HideoutHelper") protected hideoutHelper: HideoutHelper,
         @inject("ProfileHelper") protected profileHelper: ProfileHelper,
         @inject("ProfileFixerService") protected profileFixerService: ProfileFixerService,
         @inject("LocalisationService") protected localisationService: LocalisationService,
         @inject("PostDbLoadService") protected postDbLoadService: PostDbLoadService,
+        @inject("CreateProfileService") protected createProfileService: CreateProfileService,
         @inject("CustomLocationWaveService") protected customLocationWaveService: CustomLocationWaveService,
         @inject("OpenZoneService") protected openZoneService: OpenZoneService,
         @inject("SeasonalEventService") protected seasonalEventService: SeasonalEventService,
@@ -88,6 +101,7 @@ export class GameController {
     }
 
     public load(): void {
+        // Runs on server start
         this.postDbLoadService.performPostDbLoadActions();
     }
 
@@ -101,13 +115,17 @@ export class GameController {
             `${sessionID}_${startTimeStampMS}`,
         );
 
-        this.profileActivityService.setActivityTimestamp(sessionID);
-
         // repeatableQuests are stored by in profile.Quests due to the responses of the client (e.g. Quests in
         // offraidData). Since we don't want to clutter the Quests list, we need to remove all completed (failed or
         // successful) repeatable quests. We also have to remove the Counters from the repeatableQuests
         if (sessionID) {
             const fullProfile = this.profileHelper.getFullProfile(sessionID);
+
+            if (!fullProfile) {
+                this.logger.error("gameStart requested but the profile linked to the sessionID does not exist!");
+                return;
+            }
+
             if (fullProfile.info.wipe) {
                 // Don't bother doing any fixes, we're resetting profile
                 return;
@@ -127,10 +145,16 @@ export class GameController {
                 fullProfile.friends = [];
             }
 
-            //3.9 migrations
+            // In 0.16.1.3.35312 BSG changed this to from an int to a hex64 encoded value
+            // Handle this outside of the migrations so even BE created profiles get changed
+            if (typeof fullProfile.characters.pmc.Hideout.Seed === "number") {
+                fullProfile.characters.pmc.Hideout.Seed = crypto.randomBytes(16).toString("hex");
+            }
+
+            //3.9 migration
             if (fullProfile.spt.version.includes("3.9.") && !fullProfile.spt.migrations["39x"]) {
                 // Check every item has a valid mongoid
-                this.inventoryHelper.validateInventoryUsesMonogoIds(fullProfile.characters.pmc.Inventory.items);
+                this.inventoryHelper.validateInventoryUsesMongoIds(fullProfile.characters.pmc.Inventory.items);
 
                 this.migrate39xProfile(fullProfile);
 
@@ -138,6 +162,16 @@ export class GameController {
                 fullProfile.spt.migrations["39x"] = this.timeUtil.getTimestamp();
 
                 this.logger.success(`Migration of 3.9.x profile: ${fullProfile.info.username} completed successfully`);
+            }
+
+            //3.10 migration
+            if (fullProfile.spt.version.includes("3.10.") && !fullProfile.spt.migrations["310x"]) {
+                this.migrate310xProfile(fullProfile);
+
+                // Flag as migrated
+                fullProfile.spt.migrations["310x"] = this.timeUtil.getTimestamp();
+
+                this.logger.success(`Migration of 3.10.x profile: ${fullProfile.info.username} completed successfully`);
             }
 
             if (Array.isArray(fullProfile.characters.pmc.WishList)) {
@@ -167,6 +201,8 @@ export class GameController {
             if (pmcProfile.Inventory) {
                 this.sendPraporGiftsToNewProfiles(pmcProfile);
 
+                this.sendMechanicGiftsToNewProfile(pmcProfile);
+
                 this.profileFixerService.checkForOrphanedModdedItems(sessionID, fullProfile);
             }
 
@@ -178,6 +214,10 @@ export class GameController {
                 this.profileFixerService.addMissingHideoutBonusesToProfile(pmcProfile);
                 this.hideoutHelper.setHideoutImprovementsToCompleted(pmcProfile);
                 this.hideoutHelper.unlockHideoutWallInProfile(pmcProfile);
+                // Handle if player has been inactive for a long time, catch up on hideout update before the user goes to his hideout
+                if (!this.profileActivityService.activeWithinLastMinutes(sessionID, this.hideoutConfig.updateProfileHideoutWhenActiveWithinMinutes)) {
+                    this.hideoutHelper.updatePlayerHideout(sessionID);
+                }
             }
 
             this.logProfileDetails(fullProfile);
@@ -196,6 +236,159 @@ export class GameController {
 
             this.seasonalEventService.givePlayerSeasonalGifts(sessionID);
         }
+
+        // Set activity timestamp at the end of the method, so that code that checks for an older timestamp (Updating hideout) can still run
+        this.profileActivityService.setActivityTimestamp(sessionID);
+    }
+
+    protected migrate310xProfile(fullProfile: ISptProfile) {
+        if (typeof fullProfile.customisationUnlocks === "undefined") {
+            fullProfile.customisationUnlocks = [];
+            this.createProfileService.addCustomisationUnlocksToProfile(fullProfile);
+        }
+
+        if (typeof fullProfile.characters.pmc.Prestige === "undefined") {
+            fullProfile.characters.pmc.Prestige = {};
+        }
+
+        if (typeof fullProfile.characters.pmc.Info.PrestigeLevel === "undefined") {
+            fullProfile.characters.pmc.Info.PrestigeLevel = 0;
+        }
+
+        if (typeof fullProfile.characters.pmc.Inventory.hideoutCustomizationStashId === "undefined") {
+            fullProfile.characters.pmc.Inventory.hideoutCustomizationStashId = "676db384777490e23c45b657";
+            this.createProfileService.addMissingInternalContainersToProfile(fullProfile.characters.pmc);
+        }
+
+        if (typeof fullProfile.characters.pmc.Hideout.Customization === "undefined") {
+            fullProfile.characters.pmc.Hideout.Customization = {
+                Wall: "675844bdf94a97cbbe096f1a",
+                Floor: "6758443ff94a97cbbe096f18",
+                Light: "675fe8abbc3deae49a0b947f",
+                Ceiling: "673b3f977038192ee006aa09",
+                ShootingRangeMark: "67585d416c72998cf60ed85a",
+            };
+        }
+
+        const clothingToRemove: string[] = [];
+
+        if (fullProfile.characters.pmc.Info.Side === "Bear") {
+            // Reset clothing customization back to default as customization changed in 4.0
+            fullProfile.characters.pmc.Customization.Body = "5cc0858d14c02e000c6bea66"; //Bear default clothing
+            fullProfile.characters.pmc.Customization.Feet = "5cc085bb14c02e000e67a5c5";
+            fullProfile.characters.pmc.Customization.Hands = "5cc0876314c02e000c6bea6b";
+            fullProfile.characters.pmc.Customization.DogTag = "674731c8bafff850080488bb"; //Bear base dogtag
+
+            if (fullProfile.characters.pmc.Info.GameVersion === "edge_of_darkness") {
+                fullProfile.characters.pmc.Customization.DogTag = "6746fd09bafff85008048838";
+            }
+
+            if (fullProfile.characters.pmc.Info.GameVersion === "unheard_edition") {
+                fullProfile.characters.pmc.Customization.DogTag = "67471928d17d6431550563b5";
+            }
+
+            for (const clothing of fullProfile.suits) {
+                // Default Bear clothing, dont need to add this
+                if (
+                    clothing === "5cd946231388ce000d572fe3" ||
+                    clothing === "5cd945d71388ce000a659dfb" ||
+                    clothing === "666841a02537107dc508b704"
+                ) {
+                    continue;
+                }
+
+                const traderClothing = this.databaseService
+                    .getTrader("5ac3b934156ae10c4430e83c")
+                    .suits?.find((item) => item.suiteId === clothing);
+
+                if (traderClothing) {
+                    const clothingToAdd: ICustomisationStorage = {
+                        id: traderClothing.suiteId,
+                        source: CustomisationSource.UNLOCKED_IN_GAME,
+                        type: CustomisationType.SUITE,
+                    };
+
+                    fullProfile.customisationUnlocks.push(clothingToAdd);
+                } else {
+                    // Modded clothing, this will have to be re-setup by the user in 4.0
+                    clothingToRemove.push(clothing);
+                }
+            }
+        }
+
+        if (fullProfile.characters.pmc.Info.Side === "Usec") {
+            // Reset clothing customization back to default as customization changed in 4.0
+            fullProfile.characters.pmc.Customization.Body = "5cde95d97d6c8b647a3769b0"; //Usec default clothing
+            fullProfile.characters.pmc.Customization.Feet = "5cde95ef7d6c8b04713c4f2d";
+            fullProfile.characters.pmc.Customization.Hands = "5cde95fa7d6c8b04737c2d13";
+            fullProfile.characters.pmc.Customization.DogTag = "674731d1170146228c0d222a"; //Usec base dogtag
+
+            if (fullProfile.characters.pmc.Info.GameVersion === "edge_of_darkness") {
+                fullProfile.characters.pmc.Customization.DogTag = "67471938bafff850080488b7";
+            }
+
+            if (fullProfile.characters.pmc.Info.GameVersion === "unheard_edition") {
+                fullProfile.characters.pmc.Customization.DogTag = "6747193f170146228c0d2226";
+            }
+
+            for (const clothing of fullProfile.suits) {
+                // Default Usec clothing, dont need to add this
+                if (
+                    clothing === "5cde9ec17d6c8b04723cf479" ||
+                    clothing === "5cde9e957d6c8b0474535da7" ||
+                    clothing === "666841a02537107dc508b704"
+                ) {
+                    continue;
+                }
+
+                const traderClothing = this.databaseService
+                    .getTrader("5ac3b934156ae10c4430e83c")
+                    .suits?.find((item) => item.suiteId === clothing);
+
+                if (traderClothing) {
+                    const clothingToAdd: ICustomisationStorage = {
+                        id: traderClothing.suiteId,
+                        source: CustomisationSource.UNLOCKED_IN_GAME,
+                        type: CustomisationType.SUITE,
+                    };
+
+                    fullProfile.customisationUnlocks.push(clothingToAdd);
+                } else {
+                    // Modded clothing, this will have to be re-setup by the user in 4.0
+                    clothingToRemove.push(clothing);
+                }
+            }
+
+            // Filter out modded items, we dont need to keep any of those here as these will not appear as bought
+            fullProfile.suits = fullProfile.suits.filter((clothing) => !clothingToRemove.includes(clothing));
+        }
+
+        if (Object.keys(fullProfile.characters.pmc.Achievements).length > 0) {
+            const achievementsDb = this.databaseService.getTemplates().achievements;
+
+            for (const achievementId in fullProfile.characters.pmc.Achievements) {
+                let rewards = achievementsDb.find((achievementDb) => achievementDb.id === achievementId)?.rewards;
+
+                if (!rewards) {
+                    continue;
+                }
+
+                // Only hand out the new hideout customization rewards.
+                rewards = rewards.filter(
+                    (achievementReward) => achievementReward.type === RewardType.CUSTOMIZATION_DIRECT,
+                );
+
+                this.rewardHelper.applyRewards(
+                    rewards,
+                    CustomisationSource.ACHIEVEMENT,
+                    fullProfile,
+                    fullProfile.characters.pmc,
+                    achievementId,
+                );
+            }
+        }
+
+        fullProfile.spt.version = `${this.profileHelper.getDefaultSptDataObject().version} (Migrated from 3.10)`;
     }
 
     protected migrate39xProfile(fullProfile: ISptProfile) {
@@ -254,6 +447,7 @@ export class GameController {
         // Hideout Improvement property changed name
         if ((fullProfile.characters.pmc.Hideout as any).Improvement) {
             fullProfile.characters.pmc.Hideout.Improvements = (fullProfile.characters.pmc.Hideout as any).Improvement;
+            // biome-ignore lint/performance/noDelete: Delete is fine here, as we're seeking to remove these entirely
             delete (fullProfile.characters.pmc.Hideout as any).Improvement;
             this.logger.warning(`Migration: Moved Hideout Improvement data to new property 'Improvements'`);
         }
@@ -271,12 +465,14 @@ export class GameController {
         // Remove PMC 'ragfair' from trader list
         if (fullProfile.characters.pmc.TradersInfo.ragfair) {
             this.logger.warning("Migration: deleting: ragfair traderinfo object from PMC");
+            // biome-ignore lint/performance/noDelete: Delete is fine here, as we're seeking to remove these entirely
             delete fullProfile.characters.pmc.TradersInfo.ragfair;
         }
 
         // Remove SCAV 'ragfair' from trader list
         if (fullProfile.characters.scav.TradersInfo.ragfair) {
             this.logger.warning("Migration: deleting: ragfair traderinfo object from PMC");
+            // biome-ignore lint/performance/noDelete: Delete is fine here, as we're seeking to remove these entirely
             delete fullProfile.characters.scav.TradersInfo.ragfair;
         }
 
@@ -313,6 +509,12 @@ export class GameController {
             useProtobuf: false,
             utc_time: new Date().getTime() / 1000,
             totalInGame: gameTime,
+            sessionMode: "pve",
+            purchasedGames: {
+                eft: true,
+                arena: false,
+            },
+            isGameSynced: true,
         };
 
         return config;
@@ -321,7 +523,7 @@ export class GameController {
     /**
      * Handle client/game/mode
      */
-    public getGameMode(sessionID: string, info: IGameModeRequestData): any {
+    public getGameMode(sessionID: string, info: IGameModeRequestData): IGameModeResponse {
         return { gameMode: ESessionMode.PVE, backendUrl: this.httpServerHelper.getBackendUrl() };
     }
 
@@ -329,7 +531,7 @@ export class GameController {
      * Handle client/server/list
      */
     public getServer(sessionId: string): IServerDetails[] {
-        return [{ ip: this.httpConfig.backendIp, port: Number.parseInt(this.httpConfig.backendPort) }];
+        return [{ ip: this.httpConfig.backendIp, port: this.httpConfig.backendPort }];
     }
 
     /**
@@ -358,11 +560,6 @@ export class GameController {
      * Handle singleplayer/settings/getRaidTime
      */
     public getRaidTime(sessionId: string, request: IGetRaidTimeRequest): IGetRaidTimeResponse {
-        // Set interval times to in-raid value
-        this.ragfairConfig.runIntervalSeconds = this.ragfairConfig.runIntervalValues.inRaid;
-
-        this.hideoutConfig.runIntervalSeconds = this.hideoutConfig.runIntervalValues.inRaid;
-
         return this.raidTimeAdjustmentService.getRaidAdjustments(sessionId, request);
     }
 
@@ -483,6 +680,14 @@ export class GameController {
     }
 
     /**
+     * Mechanic sends players a measuring tape on profile start for some reason
+     * @param pmcProfile Player profile
+     */
+    protected sendMechanicGiftsToNewProfile(pmcProfile: IPmcData) {
+        this.giftService.sendGiftWithSilentReceivedCheck("MechanicGiftDay1", pmcProfile.sessionId, 1);
+    }
+
+    /**
      * Get a list of installed mods and save their details to the profile being used
      * @param fullProfile Profile to add mod details to
      */
@@ -554,6 +759,7 @@ export class GameController {
     protected checkForAndRemoveUndefinedDialogs(fullProfile: ISptProfile): void {
         const undefinedDialog = fullProfile.dialogues.undefined;
         if (undefinedDialog) {
+            // biome-ignore lint/performance/noDelete: Delete is fine here, as we're seeking to delete undefined dialogs.
             delete fullProfile.dialogues.undefined;
         }
     }
@@ -561,10 +767,10 @@ export class GameController {
     protected logProfileDetails(fullProfile: ISptProfile): void {
         this.logger.debug(`Profile made with: ${fullProfile.spt.version}`);
         this.logger.debug(
-            `Server version: ${globalThis.G_SPTVERSION || this.coreConfig.sptVersion} ${globalThis.G_COMMIT}`,
+            `Server version: ${ProgramStatics.SPT_VERSION || this.coreConfig.sptVersion} ${ProgramStatics.COMMIT}`,
         );
-        this.logger.debug(`Debug enabled: ${globalThis.G_DEBUG_CONFIGURATION}`);
-        this.logger.debug(`Mods enabled: ${globalThis.G_MODS_ENABLED}`);
+        this.logger.debug(`Debug enabled: ${ProgramStatics.DEBUG}`);
+        this.logger.debug(`Mods enabled: ${ProgramStatics.MODS}`);
     }
 
     public getSurvey(sessionId: string): ISurveyResponseData {

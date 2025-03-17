@@ -83,11 +83,15 @@
   },
   "skills": {
     "Common": {
-      "Endurance": {
+      "BotReload": {
+        "min": 3000,
+        "max": 3000
+      },
+      "BotSound": {
         "min": 5000,
         "max": 5000
       },
-      "Strength": {
+      "Endurance": {
         "min": 5000,
         "max": 5000
       },
@@ -95,21 +99,17 @@
         "min": 5000,
         "max": 5000
       },
-      "StressResistance": {
-        "min": 5000,
-        "max": 5000
-      },
-      "BotSound": {
-        "min": 5000,
-        "max": 5000
-      },
       "SilentOps": {
         "min": 5000,
         "max": 5000
       },
-      "BotReload": {
-        "min": 3000,
-        "max": 3000
+      "Strength": {
+        "min": 5000,
+        "max": 5000
+      },
+      "StressResistance": {
+        "min": 5000,
+        "max": 5000
       }
     }
   },
@@ -148,8 +148,8 @@
     },
     "Ammo": {
       "Caliber762x54R": {
-        "5e023d48186a883be655e551": 155,
-        "5e023cf8186a883be655e54f": 18
+        "5e023d48186a883be655e551": 128,
+        "5e023cf8186a883be655e54f": 15
       },
       "Caliber545x39": {
         "56dff4a2d2720bbd668b456a": 1
@@ -223,6 +223,11 @@
           "5c791e872e2216001219c40a"
         ]
       },
+      "67112695fe5c8bf33f02476d": {
+        "mod_bipod": [
+          "5888961624597754281f93f3"
+        ]
+      },
       "6197b229af1f5202c57a9bea": {
         "mod_stock": [
           "5947e98b86f774778f1448bc"
@@ -272,11 +277,6 @@
         "mod_magazine": [
           "59f99a7d86f7745b134aa97b"
         ]
-      },
-      "67112695fe5c8bf33f02476d": {
-        "mod_bipod": [
-          "5888961624597754281f93f3"
-        ]
       }
     },
     "items": {
@@ -291,10 +291,10 @@
       },
       "Backpack": {},
       "SecuredContainer": {
-        "5e023d48186a883be655e551": 541,
-        "56dff4a2d2720bbd668b456a": 182,
-        "5a26abfac4a28232980eabff": 91,
-        "5e023cf8186a883be655e54f": 5
+        "5e023d48186a883be655e551": 1147,
+        "56dff4a2d2720bbd668b456a": 424,
+        "5a26abfac4a28232980eabff": 212,
+        "5e023cf8186a883be655e54f": 125
       },
       "SpecialLoot": {}
     }
@@ -413,7 +413,12 @@
         "DIST_CHECK_WALL": 20,
         "LOOK_LAST_POSENEMY_IF_NO_DANGER_SEC": 25,
         "MIN_LOOK_AROUD_TIME": 20,
-        "OPTIMIZE_TO_ONLY_BODY": true
+        "OPTIMIZE_TO_ONLY_BODY": true,
+        "LOOK_THROUGH_GRASS": true,
+        "LOOK_THROUGH_PERIOD_BY_HIT": 10,
+        "NO_GREEN_DIST": 5,
+        "NO_GRASS_DIST": 5,
+        "GOAL_TO_FULL_DISSAPEAR_GREEN": 1.5
       },
       "Shoot": {
         "RECOIL_TIME_NORMALIZE": 1,
@@ -524,14 +529,14 @@
       },
       "Change": {
         "SMOKE_VISION_DIST": 0.6,
-        "SMOKE_GAIN_SIGHT": 1.6,
+        "SMOKE_GAIN_SIGHT": 0.625,
         "SMOKE_SCATTERING": 1.6,
         "SMOKE_PRECICING": 1.6,
         "SMOKE_HEARING": 1,
         "SMOKE_ACCURATY": 1.6,
         "SMOKE_LAY_CHANCE": 1.6,
         "FLASH_VISION_DIST": 0.05,
-        "FLASH_GAIN_SIGHT": 1.8,
+        "FLASH_GAIN_SIGHT": 0.555,
         "FLASH_SCATTERING": 1.6,
         "FLASH_PRECICING": 1.6,
         "FLASH_HEARING": 1,
@@ -694,6 +699,10 @@
           "pmcBEAR",
           "pmcUSEC"
         ],
+        "FRIENDLY_BOT_TYPES": [
+          "bossZryachiy",
+          "followerZryachiy"
+        ],
         "DEFAULT_ENEMY_USEC": true,
         "DEFAULT_ENEMY_BEAR": true
       },
@@ -745,7 +754,7 @@
       "Core": {
         "VisibleAngle": 188,
         "VisibleDistance": 392,
-        "GainSightCoef": 0.1,
+        "GainSightCoef": 2,
         "ScatteringPerMeter": 0.002,
         "ScatteringClosePerMeter": 0.12,
         "DamageCoeff": 1,
@@ -902,7 +911,12 @@
         "DIST_CHECK_WALL": 20,
         "LOOK_LAST_POSENEMY_IF_NO_DANGER_SEC": 25,
         "MIN_LOOK_AROUD_TIME": 20,
-        "OPTIMIZE_TO_ONLY_BODY": true
+        "OPTIMIZE_TO_ONLY_BODY": true,
+        "LOOK_THROUGH_GRASS": true,
+        "LOOK_THROUGH_PERIOD_BY_HIT": 10,
+        "NO_GREEN_DIST": 5,
+        "NO_GRASS_DIST": 5,
+        "GOAL_TO_FULL_DISSAPEAR_GREEN": 1.5
       },
       "Shoot": {
         "RECOIL_TIME_NORMALIZE": 1,
@@ -1013,14 +1027,14 @@
       },
       "Change": {
         "SMOKE_VISION_DIST": 0.6,
-        "SMOKE_GAIN_SIGHT": 1.6,
+        "SMOKE_GAIN_SIGHT": 0.625,
         "SMOKE_SCATTERING": 1.6,
         "SMOKE_PRECICING": 1.6,
         "SMOKE_HEARING": 1,
         "SMOKE_ACCURATY": 1.6,
         "SMOKE_LAY_CHANCE": 1.6,
         "FLASH_VISION_DIST": 0.05,
-        "FLASH_GAIN_SIGHT": 1.8,
+        "FLASH_GAIN_SIGHT": 0.555,
         "FLASH_SCATTERING": 1.6,
         "FLASH_PRECICING": 1.6,
         "FLASH_HEARING": 1,
@@ -1183,6 +1197,10 @@
           "pmcBEAR",
           "pmcUSEC"
         ],
+        "FRIENDLY_BOT_TYPES": [
+          "bossZryachiy",
+          "followerZryachiy"
+        ],
         "DEFAULT_ENEMY_USEC": true,
         "DEFAULT_ENEMY_BEAR": true
       },
@@ -1234,7 +1252,7 @@
       "Core": {
         "VisibleAngle": 188,
         "VisibleDistance": 392,
-        "GainSightCoef": 0.1,
+        "GainSightCoef": 2,
         "ScatteringPerMeter": 0.002,
         "ScatteringClosePerMeter": 0.12,
         "DamageCoeff": 1,
@@ -1391,7 +1409,12 @@
         "DIST_CHECK_WALL": 20,
         "LOOK_LAST_POSENEMY_IF_NO_DANGER_SEC": 25,
         "MIN_LOOK_AROUD_TIME": 20,
-        "OPTIMIZE_TO_ONLY_BODY": true
+        "OPTIMIZE_TO_ONLY_BODY": true,
+        "LOOK_THROUGH_GRASS": true,
+        "LOOK_THROUGH_PERIOD_BY_HIT": 10,
+        "NO_GREEN_DIST": 5,
+        "NO_GRASS_DIST": 5,
+        "GOAL_TO_FULL_DISSAPEAR_GREEN": 1.5
       },
       "Shoot": {
         "RECOIL_TIME_NORMALIZE": 1,
@@ -1502,14 +1525,14 @@
       },
       "Change": {
         "SMOKE_VISION_DIST": 0.6,
-        "SMOKE_GAIN_SIGHT": 1.6,
+        "SMOKE_GAIN_SIGHT": 0.625,
         "SMOKE_SCATTERING": 1.6,
         "SMOKE_PRECICING": 1.6,
         "SMOKE_HEARING": 1,
         "SMOKE_ACCURATY": 1.6,
         "SMOKE_LAY_CHANCE": 1.6,
         "FLASH_VISION_DIST": 0.05,
-        "FLASH_GAIN_SIGHT": 1.8,
+        "FLASH_GAIN_SIGHT": 0.555,
         "FLASH_SCATTERING": 1.6,
         "FLASH_PRECICING": 1.6,
         "FLASH_HEARING": 1,
@@ -1672,6 +1695,10 @@
           "pmcBEAR",
           "pmcUSEC"
         ],
+        "FRIENDLY_BOT_TYPES": [
+          "bossZryachiy",
+          "followerZryachiy"
+        ],
         "DEFAULT_ENEMY_USEC": true,
         "DEFAULT_ENEMY_BEAR": true
       },
@@ -1723,7 +1750,7 @@
       "Core": {
         "VisibleAngle": 188,
         "VisibleDistance": 392,
-        "GainSightCoef": 0.1,
+        "GainSightCoef": 2,
         "ScatteringPerMeter": 0.002,
         "ScatteringClosePerMeter": 0.12,
         "DamageCoeff": 1,
@@ -1880,7 +1907,12 @@
         "DIST_CHECK_WALL": 20,
         "LOOK_LAST_POSENEMY_IF_NO_DANGER_SEC": 25,
         "MIN_LOOK_AROUD_TIME": 20,
-        "OPTIMIZE_TO_ONLY_BODY": true
+        "OPTIMIZE_TO_ONLY_BODY": true,
+        "LOOK_THROUGH_GRASS": true,
+        "LOOK_THROUGH_PERIOD_BY_HIT": 10,
+        "NO_GREEN_DIST": 5,
+        "NO_GRASS_DIST": 5,
+        "GOAL_TO_FULL_DISSAPEAR_GREEN": 1.5
       },
       "Shoot": {
         "RECOIL_TIME_NORMALIZE": 1,
@@ -1991,14 +2023,14 @@
       },
       "Change": {
         "SMOKE_VISION_DIST": 0.6,
-        "SMOKE_GAIN_SIGHT": 1.6,
+        "SMOKE_GAIN_SIGHT": 0.625,
         "SMOKE_SCATTERING": 1.6,
         "SMOKE_PRECICING": 1.6,
         "SMOKE_HEARING": 1,
         "SMOKE_ACCURATY": 1.6,
         "SMOKE_LAY_CHANCE": 1.6,
         "FLASH_VISION_DIST": 0.05,
-        "FLASH_GAIN_SIGHT": 1.8,
+        "FLASH_GAIN_SIGHT": 0.555,
         "FLASH_SCATTERING": 1.6,
         "FLASH_PRECICING": 1.6,
         "FLASH_HEARING": 1,
@@ -2161,6 +2193,10 @@
           "pmcBEAR",
           "pmcUSEC"
         ],
+        "FRIENDLY_BOT_TYPES": [
+          "bossZryachiy",
+          "followerZryachiy"
+        ],
         "DEFAULT_ENEMY_USEC": true,
         "DEFAULT_ENEMY_BEAR": true
       },
@@ -2212,7 +2248,7 @@
       "Core": {
         "VisibleAngle": 188,
         "VisibleDistance": 392,
-        "GainSightCoef": 0.1,
+        "GainSightCoef": 2,
         "ScatteringPerMeter": 0.002,
         "ScatteringClosePerMeter": 0.12,
         "DamageCoeff": 1,
@@ -2282,7 +2318,7 @@
       "mod_magazine": 100,
       "mod_stock": 75,
       "mod_mount_000": 33,
-      "mod_mount_002": 36,
+      "mod_mount_002": 50,
       "mod_muzzle": 100,
       "mod_mount": 0,
       "mod_sight_front": 0,
@@ -2290,11 +2326,11 @@
       "mod_tactical": 0,
       "mod_scope": 100,
       "mod_foregrip": 100,
+      "mod_bipod": 100,
       "mod_charge": 0,
       "mod_reciever": 100,
       "mod_tactical_000": 0,
-      "mod_tactical_001": 0,
-      "mod_bipod": 100
+      "mod_tactical_001": 0
     },
     "equipmentMods": {}
   },

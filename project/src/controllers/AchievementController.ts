@@ -1,6 +1,6 @@
 import { ICompletedAchievementsResponse } from "@spt/models/eft/profile/ICompletedAchievementsResponse";
 import { IGetAchievementsResponse } from "@spt/models/eft/profile/IGetAchievementsResponse";
-import { ILogger } from "@spt/models/spt/utils/ILogger";
+import type { ILogger } from "@spt/models/spt/utils/ILogger";
 import { DatabaseService } from "@spt/services/DatabaseService";
 import { inject, injectable } from "tsyringe";
 
@@ -19,7 +19,9 @@ export class AchievementController {
      * @param sessionID Session id
      */
     public getAchievements(sessionID: string): IGetAchievementsResponse {
-        return { elements: this.databaseService.getAchievements() };
+        return {
+            elements: this.databaseService.getAchievements(),
+        };
     }
 
     /**
@@ -35,6 +37,8 @@ export class AchievementController {
             stats[achievement.id] = 0;
         }
 
-        return { elements: stats };
+        return {
+            elements: stats,
+        };
     }
 }

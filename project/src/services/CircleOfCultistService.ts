@@ -27,7 +27,7 @@ import {
 } from "@spt/models/spt/config/IHideoutConfig";
 import { ICircleCraftDetails } from "@spt/models/spt/hideout/ICircleCraftDetails";
 import { IHideout } from "@spt/models/spt/hideout/IHideout";
-import { ILogger } from "@spt/models/spt/utils/ILogger";
+import type { ILogger } from "@spt/models/spt/utils/ILogger";
 import { EventOutputHolder } from "@spt/routers/EventOutputHolder";
 import { ConfigServer } from "@spt/servers/ConfigServer";
 import { DatabaseService } from "@spt/services/DatabaseService";
@@ -36,7 +36,7 @@ import { SeasonalEventService } from "@spt/services/SeasonalEventService";
 import { HashUtil } from "@spt/utils/HashUtil";
 import { RandomUtil } from "@spt/utils/RandomUtil";
 import { TimeUtil } from "@spt/utils/TimeUtil";
-import { ICloner } from "@spt/utils/cloners/ICloner";
+import type { ICloner } from "@spt/utils/cloners/ICloner";
 import { inject, injectable } from "tsyringe";
 
 @injectable()
@@ -180,8 +180,7 @@ export class CircleOfCultistService {
                 cultistCircleStashId,
                 CircleOfCultistService.circleOfCultistSlotId,
             );
-            // Add item + mods to output and profile inventory
-            output.profileChanges[sessionId].items.new.push(...itemToAdd);
+            // Add item + mods to profile inventory, NOT output object (confirmed on live)
             pmcData.Inventory.items.push(...itemToAdd);
         }
     }
@@ -403,6 +402,9 @@ export class CircleOfCultistService {
                 const presetAndMods = this.itemHelper.replaceIDs(defaultPreset._items);
                 this.itemHelper.remapRootItemId(presetAndMods);
 
+                // Set item as FiR
+                this.itemHelper.setFoundInRaid(presetAndMods);
+
                 rewardItemCount++;
                 totalRewardCost += this.itemHelper.getItemPrice(randomItemTplFromPool);
                 rewards.push(presetAndMods);
@@ -485,6 +487,9 @@ export class CircleOfCultistService {
                 // Ensure preset has unique ids and is cloned so we don't alter the preset data stored in memory
                 const presetAndMods = this.itemHelper.replaceIDs(defaultPreset._items);
                 this.itemHelper.remapRootItemId(presetAndMods);
+
+                // Set item as FiR
+                this.itemHelper.setFoundInRaid(presetAndMods);
 
                 rewards.push(presetAndMods);
 
@@ -661,12 +666,13 @@ export class CircleOfCultistService {
         // Get all items that match the blacklisted types and fold into item blacklist below
         const itemTypeBlacklist = this.itemFilterService.getItemRewardBaseTypeBlacklist();
         const itemsMatchingTypeBlacklist = Object.values(itemsDb)
-            .filter((templateItem) => this.itemHelper.isOfBaseclasses(templateItem._parent, itemTypeBlacklist))
+            .filter((templateItem) => this.itemHelper.isOfBaseclasses(templateItem._id, itemTypeBlacklist))
             .map((templateItem) => templateItem._id);
 
         // Create set of unique values to ignore
         const itemRewardBlacklist = new Set([
             ...this.seasonalEventService.getInactiveSeasonalEventItems(),
+            ...this.itemFilterService.getBlacklistedItems(),
             ...this.itemFilterService.getItemRewardBlacklist(),
             ...cultistCircleConfig.rewardItemBlacklist,
             ...itemsMatchingTypeBlacklist,
@@ -826,7 +832,7 @@ export class CircleOfCultistService {
                     continue;
                 }
             }
-            this.logger.debug(`Added: ${this.itemHelper.getItemName(randomItem._id)}`);
+            this.logger.debug(`Added: ${this.itemHelper.getItemName(randomItem._id)} Id: ${randomItem._id}`);
             rewardPool.add(randomItem._id);
             currentItemCount++;
         }

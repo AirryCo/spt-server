@@ -2,13 +2,13 @@ import { NotificationSendHelper } from "@spt/helpers/NotificationSendHelper";
 import { WeightedRandomHelper } from "@spt/helpers/WeightedRandomHelper";
 import { IPmcData } from "@spt/models/eft/common/IPmcData";
 import { IAggressor, IVictim } from "@spt/models/eft/common/tables/IBotBase";
-import { IUserDialogInfo } from "@spt/models/eft/profile/ISptProfile";
+import { IUserDialogInfo } from "@spt/models/eft/profile/IUserDialogInfo";
 import { ConfigTypes } from "@spt/models/enums/ConfigTypes";
 import { MemberCategory } from "@spt/models/enums/MemberCategory";
 import { MessageType } from "@spt/models/enums/MessageType";
 import { IGiftsConfig } from "@spt/models/spt/config/IGiftsConfig";
 import { IPmcChatResponse } from "@spt/models/spt/config/IPmChatResponse";
-import { ILogger } from "@spt/models/spt/utils/ILogger";
+import type { ILogger } from "@spt/models/spt/utils/ILogger";
 import { ConfigServer } from "@spt/servers/ConfigServer";
 import { GiftService } from "@spt/services/GiftService";
 import { LocaleService } from "@spt/services/LocaleService";
@@ -98,12 +98,16 @@ export class PmcChatResponseService {
             return;
         }
 
+        // Because we've cached PMC sides as "Savage" for the client, we need to figure out
+        // what side it really is
+        const side = killerDetailsInCache.Info.Settings.Role == "pmcUSEC" ? "Usec" : "Bear";
+
         const killerDetails: IUserDialogInfo = {
             _id: killerDetailsInCache._id,
             aid: this.hashUtil.generateAccountId(), // TODO- pass correct value
             Info: {
                 Nickname: killerDetailsInCache.Info.Nickname,
-                Side: killerDetailsInCache.Info.Side,
+                Side: side,
                 Level: killerDetailsInCache.Info.Level,
                 MemberCategory: killerDetailsInCache.Info.MemberCategory,
                 SelectedMemberCategory: killerDetailsInCache.Info.SelectedMemberCategory,

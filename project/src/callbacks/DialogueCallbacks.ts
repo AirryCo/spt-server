@@ -238,10 +238,6 @@ export class DialogueCallbacks implements OnUpdate {
         return this.httpResponse.emptyArrayResponse();
     }
 
-    public removeMail(url: string, request: IRemoveMailMessageRequest, sessionID: string): IGetBodyResponseData<any[]> {
-        return this.httpResponse.emptyArrayResponse();
-    }
-
     public createGroupMail(url: string, info: ICreateGroupMailRequest, sessionID: string): IGetBodyResponseData<any[]> {
         return this.httpResponse.emptyArrayResponse();
     }

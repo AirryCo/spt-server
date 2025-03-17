@@ -1,26 +1,26 @@
 {
   "appearance": {
     "body": {
-      "671654d56ccf4799d007d4b9": 3585,
-      "671654b5f68df05790043128": 3626
+      "671654b5f68df05790043128": 89,
+      "671654d56ccf4799d007d4b9": 88
     },
     "feet": {
-      "670d1907b7a8f34fce07fdab": 4769,
-      "670d18f87ca0004a2a022606": 4782,
-      "670d18e2e002387b88029112": 4871
+      "670d18f87ca0004a2a022606": 3187,
+      "670d18e2e002387b88029112": 3172,
+      "670d1907b7a8f34fce07fdab": 3199
     },
     "hands": {
       "5cc2e68f14c02e28b47de290": 1
     },
     "head": {
-      "670d176bb7a8f34fce07fd9d": 4849,
-      "670d17f9d2d5ce4514027e83": 4776,
-      "670d17df032591157e0c3538": 4798
+      "670d176bb7a8f34fce07fd9d": 1061,
+      "670d17df032591157e0c3538": 1063,
+      "670d17f9d2d5ce4514027e83": 1062
     },
     "voice": {
-      "Zombie_Fast": 2854,
-      "Zombie_Generic": 2930,
-      "Zombie_Medium": 1427
+      "Zombie_Medium": 629,
+      "Zombie_Generic": 1265,
+      "Zombie_Fast": 1292
     }
   },
   "experience": {
@@ -29,28 +29,16 @@
       "max": 1
     },
     "reward": {
-      "easy": {
-        "min": 20,
-        "max": 20
-      },
       "normal": {
         "min": 20,
         "max": 20
-      },
-      "hard": {
-        "min": -1,
-        "max": -1
       }
     },
     "standingForKill": {
-      "easy": 0,
-      "normal": 0,
-      "hard": 0
+      "normal": 0
     },
     "aggressorBonus": {
-      "easy": 0,
-      "normal": 0,
-      "hard": 0
+      "normal": 0
     },
     "useSimpleAnimator": true
   },
@@ -68,96 +56,6 @@
       "max": 40
     },
     "BodyParts": [
-      {
-        "Head": {
-          "min": 100,
-          "max": 100
-        },
-        "Chest": {
-          "min": 350,
-          "max": 350
-        },
-        "Stomach": {
-          "min": 300,
-          "max": 300
-        },
-        "LeftArm": {
-          "min": 150,
-          "max": 150
-        },
-        "RightArm": {
-          "min": 150,
-          "max": 150
-        },
-        "LeftLeg": {
-          "min": 150,
-          "max": 150
-        },
-        "RightLeg": {
-          "min": 150,
-          "max": 150
-        }
-      },
-      {
-        "Head": {
-          "min": 70,
-          "max": 70
-        },
-        "Chest": {
-          "min": 200,
-          "max": 200
-        },
-        "Stomach": {
-          "min": 180,
-          "max": 180
-        },
-        "LeftArm": {
-          "min": 70,
-          "max": 70
-        },
-        "RightArm": {
-          "min": 70,
-          "max": 70
-        },
-        "LeftLeg": {
-          "min": 70,
-          "max": 70
-        },
-        "RightLeg": {
-          "min": 70,
-          "max": 70
-        }
-      },
-      {
-        "Head": {
-          "min": 35,
-          "max": 35
-        },
-        "Chest": {
-          "min": 85,
-          "max": 85
-        },
-        "Stomach": {
-          "min": 70,
-          "max": 70
-        },
-        "LeftArm": {
-          "min": 60,
-          "max": 60
-        },
-        "RightArm": {
-          "min": 60,
-          "max": 60
-        },
-        "LeftLeg": {
-          "min": 65,
-          "max": 65
-        },
-        "RightLeg": {
-          "min": 65,
-          "max": 65
-        }
-      },
       {
         "Head": {
           "min": 60,
@@ -209,11 +107,11 @@
         "579204f224597773d619e051": 1
       },
       "Scabbard": {
-        "670ad7f1ad195290cd00da7a": 115900,
-        "601948682627df266209af05": 3770,
-        "5c012ffc0db834001d23f03f": 10440,
-        "5c07df7f0db834001b73588a": 10430,
-        "5bead2e00db834001c062938": 3689
+        "670ad7f1ad195290cd00da7a": 77290,
+        "5c07df7f0db834001b73588a": 6708,
+        "5c012ffc0db834001d23f03f": 6763,
+        "601948682627df266209af05": 2416,
+        "5bead2e00db834001c062938": 2412
       },
       "Pockets": {
         "557ffd194bdc2d28148b457f": 1
@@ -370,7 +268,10 @@
         "DIST_CHECK_WALL": 20,
         "LOOK_LAST_POSENEMY_IF_NO_DANGER_SEC": 25,
         "MIN_LOOK_AROUD_TIME": 20,
-        "OPTIMIZE_TO_ONLY_BODY": true
+        "OPTIMIZE_TO_ONLY_BODY": true,
+        "NO_GREEN_DIST": 5,
+        "NO_GRASS_DIST": 5,
+        "GOAL_TO_FULL_DISSAPEAR_GREEN": 0
       },
       "Shoot": {
         "RECOIL_TIME_NORMALIZE": 2,
@@ -484,14 +385,14 @@
       },
       "Change": {
         "SMOKE_VISION_DIST": 0.6,
-        "SMOKE_GAIN_SIGHT": 1.6,
+        "SMOKE_GAIN_SIGHT": 0.625,
         "SMOKE_SCATTERING": 1.6,
         "SMOKE_PRECICING": 1.6,
         "SMOKE_HEARING": 1,
         "SMOKE_ACCURATY": 1.6,
         "SMOKE_LAY_CHANCE": 1.6,
         "FLASH_VISION_DIST": 0.05,
-        "FLASH_GAIN_SIGHT": 1.8,
+        "FLASH_GAIN_SIGHT": 0.555,
         "FLASH_SCATTERING": 1.6,
         "FLASH_PRECICING": 1.6,
         "FLASH_HEARING": 1,
@@ -592,6 +493,7 @@
       },
       "Mind": {
         "HOW_WORK_OVER_DEAD_BODY": 2,
+        "REACT_ADD_DRUNK_ENEMY": true,
         "MIN_SHOOTS_TIME": 2,
         "MAX_SHOOTS_TIME": 4,
         "TIME_LEAVE_MAP": 23,
@@ -722,7 +624,7 @@
       "Core": {
         "VisibleAngle": 130,
         "VisibleDistance": 110,
-        "GainSightCoef": 0.2,
+        "GainSightCoef": 1,
         "ScatteringPerMeter": 0.07,
         "ScatteringClosePerMeter": 0.12,
         "DamageCoeff": 1,
@@ -879,7 +781,10 @@
         "DIST_CHECK_WALL": 20,
         "LOOK_LAST_POSENEMY_IF_NO_DANGER_SEC": 25,
         "MIN_LOOK_AROUD_TIME": 20,
-        "OPTIMIZE_TO_ONLY_BODY": true
+        "OPTIMIZE_TO_ONLY_BODY": true,
+        "NO_GREEN_DIST": 5,
+        "NO_GRASS_DIST": 5,
+        "GOAL_TO_FULL_DISSAPEAR_GREEN": 0
       },
       "Shoot": {
         "RECOIL_TIME_NORMALIZE": 2,
@@ -994,14 +899,14 @@
       },
       "Change": {
         "SMOKE_VISION_DIST": 0.6,
-        "SMOKE_GAIN_SIGHT": 1.6,
+        "SMOKE_GAIN_SIGHT": 0.625,
         "SMOKE_SCATTERING": 1.6,
         "SMOKE_PRECICING": 1.6,
         "SMOKE_HEARING": 1,
         "SMOKE_ACCURATY": 1.6,
         "SMOKE_LAY_CHANCE": 1.6,
         "FLASH_VISION_DIST": 0.05,
-        "FLASH_GAIN_SIGHT": 1.8,
+        "FLASH_GAIN_SIGHT": 0.555,
         "FLASH_SCATTERING": 1.6,
         "FLASH_PRECICING": 1.6,
         "FLASH_HEARING": 1,
@@ -1102,6 +1007,7 @@
       },
       "Mind": {
         "HOW_WORK_OVER_DEAD_BODY": 2,
+        "REACT_ADD_DRUNK_ENEMY": true,
         "MIN_SHOOTS_TIME": 2,
         "MAX_SHOOTS_TIME": 4,
         "TIME_LEAVE_MAP": 23,
@@ -1240,7 +1146,7 @@
       "Core": {
         "VisibleAngle": 130,
         "VisibleDistance": 120,
-        "GainSightCoef": 0.2,
+        "GainSightCoef": 1,
         "ScatteringPerMeter": 0.05,
         "ScatteringClosePerMeter": 0.1,
         "DamageCoeff": 1,
@@ -1397,7 +1303,10 @@
         "DIST_CHECK_WALL": 20,
         "LOOK_LAST_POSENEMY_IF_NO_DANGER_SEC": 25,
         "MIN_LOOK_AROUD_TIME": 20,
-        "OPTIMIZE_TO_ONLY_BODY": true
+        "OPTIMIZE_TO_ONLY_BODY": true,
+        "NO_GREEN_DIST": 5,
+        "NO_GRASS_DIST": 5,
+        "GOAL_TO_FULL_DISSAPEAR_GREEN": 0
       },
       "Shoot": {
         "RECOIL_TIME_NORMALIZE": 2,
@@ -1512,14 +1421,14 @@
       },
       "Change": {
         "SMOKE_VISION_DIST": 0.6,
-        "SMOKE_GAIN_SIGHT": 1.6,
+        "SMOKE_GAIN_SIGHT": 0.625,
         "SMOKE_SCATTERING": 1.6,
         "SMOKE_PRECICING": 1.6,
         "SMOKE_HEARING": 1,
         "SMOKE_ACCURATY": 1.6,
         "SMOKE_LAY_CHANCE": 1.6,
         "FLASH_VISION_DIST": 0.05,
-        "FLASH_GAIN_SIGHT": 1.8,
+        "FLASH_GAIN_SIGHT": 0.555,
         "FLASH_SCATTERING": 1.6,
         "FLASH_PRECICING": 1.6,
         "FLASH_HEARING": 1,
@@ -1620,6 +1529,7 @@
       },
       "Mind": {
         "HOW_WORK_OVER_DEAD_BODY": 2,
+        "REACT_ADD_DRUNK_ENEMY": true,
         "MIN_SHOOTS_TIME": 2,
         "MAX_SHOOTS_TIME": 4,
         "TIME_LEAVE_MAP": 23,
@@ -1756,7 +1666,7 @@
       "Core": {
         "VisibleAngle": 140,
         "VisibleDistance": 130,
-        "GainSightCoef": 0.1,
+        "GainSightCoef": 2,
         "ScatteringPerMeter": 0.05,
         "ScatteringClosePerMeter": 0.1,
         "DamageCoeff": 1,
@@ -1913,7 +1823,10 @@
         "DIST_CHECK_WALL": 20,
         "LOOK_LAST_POSENEMY_IF_NO_DANGER_SEC": 25,
         "MIN_LOOK_AROUD_TIME": 20,
-        "OPTIMIZE_TO_ONLY_BODY": true
+        "OPTIMIZE_TO_ONLY_BODY": true,
+        "NO_GREEN_DIST": 5,
+        "NO_GRASS_DIST": 5,
+        "GOAL_TO_FULL_DISSAPEAR_GREEN": 0
       },
       "Shoot": {
         "RECOIL_TIME_NORMALIZE": 2,
@@ -2027,14 +1940,14 @@
       },
       "Change": {
         "SMOKE_VISION_DIST": 0.6,
-        "SMOKE_GAIN_SIGHT": 1.6,
+        "SMOKE_GAIN_SIGHT": 0.625,
         "SMOKE_SCATTERING": 1.6,
         "SMOKE_PRECICING": 1.6,
         "SMOKE_HEARING": 1,
         "SMOKE_ACCURATY": 1.6,
         "SMOKE_LAY_CHANCE": 1.6,
         "FLASH_VISION_DIST": 0.05,
-        "FLASH_GAIN_SIGHT": 1.8,
+        "FLASH_GAIN_SIGHT": 0.555,
         "FLASH_SCATTERING": 1.6,
         "FLASH_PRECICING": 1.6,
         "FLASH_HEARING": 1,
@@ -2135,6 +2048,7 @@
       },
       "Mind": {
         "HOW_WORK_OVER_DEAD_BODY": 2,
+        "REACT_ADD_DRUNK_ENEMY": true,
         "MIN_SHOOTS_TIME": 2,
         "MAX_SHOOTS_TIME": 4,
         "TIME_LEAVE_MAP": 23,
@@ -2265,7 +2179,7 @@
       "Core": {
         "VisibleAngle": 130,
         "VisibleDistance": 110,
-        "GainSightCoef": 0.2,
+        "GainSightCoef": 1,
         "ScatteringPerMeter": 0.07,
         "ScatteringClosePerMeter": 0.12,
         "DamageCoeff": 1,

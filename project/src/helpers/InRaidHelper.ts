@@ -6,10 +6,10 @@ import { IItem } from "@spt/models/eft/common/tables/IItem";
 import { ConfigTypes } from "@spt/models/enums/ConfigTypes";
 import { IInRaidConfig } from "@spt/models/spt/config/IInRaidConfig";
 import { ILostOnDeathConfig } from "@spt/models/spt/config/ILostOnDeathConfig";
-import { ILogger } from "@spt/models/spt/utils/ILogger";
+import type { ILogger } from "@spt/models/spt/utils/ILogger";
 import { ConfigServer } from "@spt/servers/ConfigServer";
 import { DatabaseService } from "@spt/services/DatabaseService";
-import { ICloner } from "@spt/utils/cloners/ICloner";
+import type { ICloner } from "@spt/utils/cloners/ICloner";
 import { inject, injectable } from "tsyringe";
 import { ProfileHelper } from "./ProfileHelper";
 import { QuestHelper } from "./QuestHelper";
@@ -84,7 +84,7 @@ export class InRaidHelper {
 
         // Handle Removing of FIR status if player did not survive + not transferring
         // Do after above filtering code to reduce work done
-        if (!isSurvived && !isTransfer && !this.inRaidConfig.alwaysKeepFoundInRaidonRaidEnd) {
+        if (!isSurvived && !isTransfer && !this.inRaidConfig.alwaysKeepFoundInRaidOnRaidEnd) {
             this.removeFiRStatusFromCertainItems(postRaidProfile.Inventory.items);
         }
 
@@ -118,7 +118,9 @@ export class InRaidHelper {
         });
 
         for (const item of itemsToRemovePropertyFrom) {
-            delete item.upd.SpawnedInSession;
+            if (item.upd) {
+                item.upd.SpawnedInSession = false;
+            }
         }
     }
 

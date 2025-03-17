@@ -2,24 +2,26 @@ import { SaveLoadRouter } from "@spt/di/Router";
 import { ISptProfile, Info } from "@spt/models/eft/profile/ISptProfile";
 import { ConfigTypes } from "@spt/models/enums/ConfigTypes";
 import { ICoreConfig } from "@spt/models/spt/config/ICoreConfig";
-import { ILogger } from "@spt/models/spt/utils/ILogger";
+import type { ILogger } from "@spt/models/spt/utils/ILogger";
 import { ConfigServer } from "@spt/servers/ConfigServer";
 import { LocalisationService } from "@spt/services/LocalisationService";
+import { FileSystem } from "@spt/utils/FileSystem";
 import { HashUtil } from "@spt/utils/HashUtil";
 import { JsonUtil } from "@spt/utils/JsonUtil";
-import { VFS } from "@spt/utils/VFS";
+import { Timer } from "@spt/utils/Timer";
+import { Mutex, MutexInterface, withTimeout } from "async-mutex";
 import { inject, injectAll, injectable } from "tsyringe";
 
 @injectable()
 export class SaveServer {
     protected profileFilepath = "user/profiles/";
-    protected profiles = {};
-    // onLoad = require("../bindings/SaveLoad");
-    protected onBeforeSaveCallbacks = {};
-    protected saveMd5 = {};
+    protected profiles: Map<string, ISptProfile> = new Map();
+    protected profilesBeingSavedMutex: Map<string, MutexInterface> = new Map();
+    protected onBeforeSaveCallbacks: Map<string, (profile: ISptProfile) => Promise<ISptProfile>> = new Map();
+    protected saveSHA1: { [key: string]: string } = {};
 
     constructor(
-        @inject("VFS") protected vfs: VFS,
+        @inject("FileSystem") protected fileSystem: FileSystem,
         @injectAll("SaveLoadRouter") protected saveLoadRouters: SaveLoadRouter[],
         @inject("JsonUtil") protected jsonUtil: JsonUtil,
         @inject("HashUtil") protected hashUtil: HashUtil,
@@ -33,8 +35,8 @@ export class SaveServer {
      * @param id Id for save callback
      * @param callback Callback to execute prior to running SaveServer.saveProfile()
      */
-    public addBeforeSaveCallback(id: string, callback: (profile: Partial<ISptProfile>) => Partial<ISptProfile>): void {
-        this.onBeforeSaveCallbacks[id] = callback;
+    public addBeforeSaveCallback(id: string, callback: (profile: ISptProfile) => Promise<ISptProfile>): void {
+        this.onBeforeSaveCallbacks.set(id, callback);
     }
 
     /**
@@ -42,45 +44,48 @@ export class SaveServer {
      * @param id Id of callback to remove
      */
     public removeBeforeSaveCallback(id: string): void {
-        this.onBeforeSaveCallbacks[id] = undefined;
+        this.onBeforeSaveCallbacks.delete(id);
     }
 
     /**
      * Load all profiles in /user/profiles folder into memory (this.profiles)
+     * @returns A promise that resolves when loading all profiles is completed.
      */
-    public load(): void {
-        // get files to load
-        if (!this.vfs.exists(this.profileFilepath)) {
-            this.vfs.createDir(this.profileFilepath);
-        }
+    public async load(): Promise<void> {
+        await this.fileSystem.ensureDir(this.profileFilepath);
 
-        const files = this.vfs.getFiles(this.profileFilepath).filter((item) => {
-            return this.vfs.getFileExtension(item) === "json";
-        });
+        // get files to load
+        const files = await this.fileSystem.getFiles(this.profileFilepath, false, ["json"]);
 
         // load profiles
-        const start = performance.now();
-        let loadTimeCount = 0;
+        const timer = new Timer();
         for (const file of files) {
-            this.loadProfile(this.vfs.stripExtension(file));
-            loadTimeCount += performance.now() - start;
+            await this.loadProfile(FileSystem.getFileName(file));
         }
-
-        this.logger.debug(`${files.length} Profiles took: ${loadTimeCount.toFixed(2)}ms to load.`);
+        this.logger.debug(
+            `Loading ${files.length} profile${files.length > 1 ? "s" : ""} took ${timer.getTime("ms")}ms`,
+        );
     }
 
     /**
      * Save changes for each profile from memory into user/profiles json
+     * @returns A promise that resolves when saving all profiles is completed.
      */
-    public save(): void {
-        // Save every profile
-        let totalTime = 0;
-        for (const sessionID in this.profiles) {
-            totalTime += this.saveProfile(sessionID);
+    public async save(): Promise<void> {
+        const timer = new Timer();
+        let savedProfiles = 0;
+
+        for (const [sessionId] of this.profiles) {
+            try {
+                await this.saveProfile(sessionId);
+                savedProfiles++;
+            } catch (error) {
+                this.logger.error(`Could not save profile ${sessionId} | ${error}`);
+            }
         }
 
         this.logger.debug(
-            `Saved ${Object.keys(this.profiles).length} profiles, took: ${totalTime.toFixed(2)}ms`,
+            `Saving ${savedProfiles} profile${savedProfiles > 1 ? "s" : ""} took ${timer.getTime("ms")}ms`,
             false,
         );
     }
@@ -99,33 +104,35 @@ export class SaveServer {
             throw new Error(`no profiles found in saveServer with id: ${sessionId}`);
         }
 
-        if (!this.profiles[sessionId]) {
+        const profile = this.profiles.get(sessionId);
+
+        if (!profile) {
             throw new Error(`no profile found for sessionId: ${sessionId}`);
         }
 
-        return this.profiles[sessionId];
+        return profile;
     }
 
     public profileExists(id: string): boolean {
-        return !!this.profiles[id];
+        return !!this.profiles.get(id);
     }
 
     /**
-     * Get all profiles from memory
+     * Gets all profiles from memory
      * @returns Dictionary of ISptProfile
      */
     public getProfiles(): Record<string, ISptProfile> {
-        return this.profiles;
+        return Object.fromEntries(this.profiles);
     }
 
     /**
-     * Delete a profile by id
+     * Delete a profile by id (Does not remove the profile file!)
      * @param sessionID Id of profile to remove
      * @returns true when deleted, false when profile not found
      */
     public deleteProfileById(sessionID: string): boolean {
-        if (this.profiles[sessionID]) {
-            delete this.profiles[sessionID];
+        if (this.profiles.get(sessionID)) {
+            this.profiles.delete(sessionID);
             return true;
         }
 
@@ -137,11 +144,14 @@ export class SaveServer {
      * @param profileInfo Basic profile data
      */
     public createProfile(profileInfo: Info): void {
-        if (this.profiles[profileInfo.id]) {
+        if (this.profiles.get(profileInfo.id)) {
             throw new Error(`profile already exists for sessionId: ${profileInfo.id}`);
         }
 
-        this.profiles[profileInfo.id] = { info: profileInfo, characters: { pmc: {}, scav: {} } };
+        this.profiles.set(profileInfo.id, {
+            info: profileInfo,
+            characters: { pmc: {}, scav: {} },
+        } as ISptProfile); // Cast to ISptProfile so the errors of having empty pmc and scav data disappear
     }
 
     /**
@@ -149,25 +159,26 @@ export class SaveServer {
      * @param profileDetails Profile to save
      */
     public addProfile(profileDetails: ISptProfile): void {
-        this.profiles[profileDetails.info.id] = profileDetails;
+        this.profiles.set(profileDetails.info.id, profileDetails);
     }
 
     /**
      * Look up profile json in user/profiles by id and store in memory
      * Execute saveLoadRouters callbacks after being loaded into memory
      * @param sessionID Id of profile to store in memory
+     * @returns A promise that resolves when loading is completed.
      */
-    public loadProfile(sessionID: string): void {
+    public async loadProfile(sessionID: string): Promise<void> {
         const filename = `${sessionID}.json`;
         const filePath = `${this.profileFilepath}${filename}`;
-        if (this.vfs.exists(filePath)) {
+        if (await this.fileSystem.exists(filePath)) {
             // File found, store in profiles[]
-            this.profiles[sessionID] = this.jsonUtil.deserialize(this.vfs.readFile(filePath), filename);
+            this.profiles.set(sessionID, await this.fileSystem.readJson(filePath));
         }
 
         // Run callbacks
         for (const callback of this.saveLoadRouters) {
-            this.profiles[sessionID] = callback.handleLoad(this.getProfile(sessionID));
+            this.profiles.set(sessionID, await callback.handleLoad(this.getProfile(sessionID)));
         }
     }
 
@@ -175,49 +186,77 @@ export class SaveServer {
      * Save changes from in-memory profile to user/profiles json
      * Execute onBeforeSaveCallbacks callbacks prior to being saved to json
      * @param sessionID profile id (user/profiles/id.json)
-     * @returns time taken to save in MS
+     * @returns A promise that resolves when saving is completed.
      */
-    public saveProfile(sessionID: string): number {
-        const filePath = `${this.profileFilepath}${sessionID}.json`;
+    public async saveProfile(sessionID: string): Promise<void> {
+        if (!this.profiles.get(sessionID)) {
+            throw new Error(`Profile ${sessionID} does not exist! Unable to save this profile!`);
+        }
 
-        // Run pre-save callbacks before we save into json
-        for (const callback in this.onBeforeSaveCallbacks) {
-            const previous = this.profiles[sessionID];
-            try {
-                this.profiles[sessionID] = this.onBeforeSaveCallbacks[callback](this.profiles[sessionID]);
-            } catch (error) {
-                this.logger.error(this.localisationService.getText("profile_save_callback_error", { callback, error }));
-                this.profiles[sessionID] = previous;
+        // Get the current mutex if it exists, create a new one if it doesn't for this profile
+        const mutex =
+            this.profilesBeingSavedMutex.get(sessionID) ||
+            withTimeout(new Mutex(), 5000, new Error(`Saving timed out for profile ${sessionID}`));
+        this.profilesBeingSavedMutex.set(sessionID, mutex);
+
+        const release = await mutex.acquire();
+
+        try {
+            const filePath = `${this.profileFilepath}${sessionID}.json`;
+
+            // Run pre-save callbacks before we save into json
+            for (const [id, callback] of this.onBeforeSaveCallbacks) {
+                const previous = this.profiles.get(sessionID) as ISptProfile; // Cast as ISptProfile here since there should be no reason we're getting an undefined profile
+                try {
+                    this.profiles.set(sessionID, await callback(this.profiles.get(sessionID) as ISptProfile)); // Cast as ISptProfile here since there should be no reason we're getting an undefined profile
+                } catch (error) {
+                    this.logger.error(
+                        this.localisationService.getText("profile_save_callback_error", { callback, error }),
+                    );
+                    this.profiles.set(sessionID, previous);
+                }
             }
-        }
 
-        const start = performance.now();
-        const jsonProfile = this.jsonUtil.serialize(
-            this.profiles[sessionID],
-            !this.configServer.getConfig<ICoreConfig>(ConfigTypes.CORE).features.compressProfile,
-        );
-        const fmd5 = this.hashUtil.generateMd5ForData(jsonProfile);
-        if (typeof this.saveMd5[sessionID] !== "string" || this.saveMd5[sessionID] !== fmd5) {
-            this.saveMd5[sessionID] = String(fmd5);
-            // save profile to disk
-            this.vfs.writeFile(filePath, jsonProfile);
-        }
+            const jsonProfile = this.jsonUtil.serialize(
+                this.profiles.get(sessionID),
+                !this.configServer.getConfig<ICoreConfig>(ConfigTypes.CORE).features.compressProfile,
+            );
 
-        return Number(performance.now() - start);
+            const sha1 = await this.hashUtil.generateSha1ForDataAsync(jsonProfile);
+
+            if (typeof this.saveSHA1[sessionID] !== "string" || this.saveSHA1[sessionID] !== sha1) {
+                this.saveSHA1[sessionID] = sha1;
+                // save profile to disk
+                await this.fileSystem.write(filePath, jsonProfile);
+            }
+        } finally {
+            // Release the current lock
+            release();
+        }
     }
 
     /**
      * Remove a physical profile json from user/profiles
      * @param sessionID Profile id to remove
-     * @returns true if file no longer exists
+     * @returns A promise that is true if the file no longer exists
      */
-    public removeProfile(sessionID: string): boolean {
+    public async removeProfile(sessionID: string): Promise<boolean> {
         const file = `${this.profileFilepath}${sessionID}.json`;
 
-        delete this.profiles[sessionID];
+        this.profiles.delete(sessionID);
 
-        this.vfs.removeFile(file);
+        const pendingMutex = this.profilesBeingSavedMutex.get(sessionID);
 
-        return !this.vfs.exists(file);
+        if (pendingMutex) {
+            // If the profile already has a mutex assigned, cancel all pending locks and release.
+            pendingMutex.cancel();
+            pendingMutex.release();
+
+            this.profilesBeingSavedMutex.delete(sessionID);
+        }
+
+        await this.fileSystem.remove(file);
+
+        return !(await this.fileSystem.exists(file));
     }
 }

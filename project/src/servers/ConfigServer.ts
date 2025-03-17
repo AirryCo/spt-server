@@ -1,7 +1,8 @@
+import { ProgramStatics } from "@spt/ProgramStatics";
 import { ConfigTypes } from "@spt/models/enums/ConfigTypes";
-import { ILogger } from "@spt/models/spt/utils/ILogger";
+import type { ILogger } from "@spt/models/spt/utils/ILogger";
+import { FileSystemSync } from "@spt/utils/FileSystemSync";
 import { JsonUtil } from "@spt/utils/JsonUtil";
-import { VFS } from "@spt/utils/VFS";
 import { inject, injectable } from "tsyringe";
 
 @injectable()
@@ -11,7 +12,7 @@ export class ConfigServer {
 
     constructor(
         @inject("PrimaryLogger") protected logger: ILogger,
-        @inject("VFS") protected vfs: VFS,
+        @inject("FileSystemSync") protected fileSystemSync: FileSystemSync,
         @inject("JsonUtil") protected jsonUtil: JsonUtil,
     ) {
         this.initialize();
@@ -33,33 +34,25 @@ export class ConfigServer {
         this.logger.debug("Importing configs...");
 
         // Get all filepaths
-        const filepath = globalThis.G_RELEASE_CONFIGURATION ? "SPT_Data/Server/configs/" : "./assets/configs/";
-        const files = this.vfs.getFiles(filepath);
+        const filepath = ProgramStatics.COMPILED ? "SPT_Data/Server/configs/" : "./assets/configs/";
+        const files = this.fileSystemSync.getFiles(filepath, true, this.acceptableFileExtensions, true);
 
         // Add file content to result
         for (const file of files) {
-            if (this.acceptableFileExtensions.includes(this.vfs.getFileExtension(file.toLowerCase()))) {
-                const fileName = this.vfs.stripExtension(file);
-                const filePathAndName = `${filepath}${file}`;
-                const deserialsiedJson = this.jsonUtil.deserializeJsonC<any>(
-                    this.vfs.readFile(filePathAndName),
-                    filePathAndName,
+            const fileName = FileSystemSync.getFileName(file);
+            const deserialsiedJson = this.jsonUtil.deserializeJsonC<any>(this.fileSystemSync.read(file), fileName);
+
+            if (!deserialsiedJson) {
+                this.logger.error(
+                    `Config file: ${fileName} is corrupt. Use a site like: https://jsonlint.com to find the issue.`,
                 );
-
-                if (!deserialsiedJson) {
-                    this.logger.error(
-                        `Config file: ${filePathAndName} is corrupt. Use a site like: https://jsonlint.com to find the issue.`,
-                    );
-                    throw new Error(
-                        `Server will not run until the: ${filePathAndName} config error mentioned above is fixed`,
-                    );
-                }
-
-                this.configs[`spt-${fileName}`] = deserialsiedJson;
+                throw new Error(`Server will not run until the: ${fileName} config error mentioned above is fixed`);
             }
+
+            this.configs[`spt-${fileName}`] = deserialsiedJson;
         }
 
-        this.logger.info(`Commit hash: ${globalThis.G_COMMIT || "DEBUG"}`);
-        this.logger.info(`Build date: ${globalThis.G_BUILDTIME || "DEBUG"}`);
+        this.logger.info(`Commit hash: ${ProgramStatics.COMMIT || "DEBUG"}`);
+        this.logger.info(`Build date: ${ProgramStatics.BUILD_TIME || "DEBUG"}`);
     }
 }
