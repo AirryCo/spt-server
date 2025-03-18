@@ -2,6 +2,8 @@
 
 This is the Server project for the Single Player Tarkov mod for Escape From Tarkov. It can be run locally to replicate responses to the modified Escape From Tarkov client.
 
+![Alt](https://repobeats.axiom.co/api/embed/491942593a1a5743defb3215d5a1a7d59e61cb6e.svg "Repobeats analytics image")
+
 # Table of Contents
 
 - [Features](#features)
