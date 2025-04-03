@@ -11,12 +11,7 @@ import { SeasonalEventType } from "@spt/models/enums/SeasonalEventType";
 import { IHttpConfig } from "@spt/models/spt/config/IHttpConfig";
 import { ILocationConfig } from "@spt/models/spt/config/ILocationConfig";
 import { IQuestConfig } from "@spt/models/spt/config/IQuestConfig";
-import {
-    ISeasonalEvent,
-    ISeasonalEventConfig,
-    ISeasonalEventSettings,
-    IZombieSettings,
-} from "@spt/models/spt/config/ISeasonalEventConfig";
+import { ISeasonalEvent, ISeasonalEventConfig, IZombieSettings } from "@spt/models/spt/config/ISeasonalEventConfig";
 import { IWeatherConfig } from "@spt/models/spt/config/IWeatherConfig";
 import type { ILogger } from "@spt/models/spt/utils/ILogger";
 import { ConfigServer } from "@spt/servers/ConfigServer";
@@ -682,6 +677,10 @@ export class SeasonalEventService {
     }
 
     protected configureZombies(zombieSettings: IZombieSettings) {
+        // Flag zombies as being enabled
+        const botData = this.databaseService.getBots();
+        botData.core.ACTIVE_HALLOWEEN_ZOMBIES_EVENT = true;
+
         const infectionHalloween = this.databaseService.getGlobals().config.SeasonActivity.InfectionHalloween;
         infectionHalloween.DisplayUIEnabled = true;
         infectionHalloween.Enabled = true;
@@ -964,7 +963,10 @@ export class SeasonalEventService {
         for (const gifterMapSettings of gifterSettings) {
             const mapData: ILocation = maps[gifterMapSettings.map];
             // Dont add gifter to map twice
-            if (mapData.base.BossLocationSpawn.some((boss) => boss.BossName === "gifter")) {
+            const existingGifter = mapData.base.BossLocationSpawn.find((boss) => boss.BossName === "gifter");
+            if (existingGifter) {
+                existingGifter.BossChance = gifterMapSettings.spawnChance;
+
                 continue;
             }
 
@@ -984,6 +986,7 @@ export class SeasonalEventService {
                 TriggerName: "",
                 Delay: 0,
                 RandomTimeSpawn: false,
+                IgnoreMaxBots: true,
             });
         }
     }

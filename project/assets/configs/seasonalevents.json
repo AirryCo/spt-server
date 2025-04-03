@@ -7808,12 +7808,12 @@
             "type": "APRILFOOLS",
             "startDay": "1",
             "startMonth": "4",
-            "endDay": "2",
+            "endDay": "1",
             "endMonth": "4",
             "settings": {
                 "removeEntryRequirement": ["laboratory"],
                 "replaceBotHostility": true,
-				"forceSeason": 4,
+				"forceSeason": 2,
                 "zombieSettings": {
                     "enabled": true,
                     "mapInfectionAmount": {
